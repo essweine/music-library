@@ -1,7 +1,49 @@
 <html>
-    <head>
-        <title></title>
-    </head>
-    <body>
-    </body>
+  <head>
+    <title>{{recording.title}}</title>
+    <link rel="stylesheet" href="/static/import.css">
+  </head>
+  <body>
+    <div id="directory-detail">
+      <div id="directory-overview">
+        <p>{{recording.title}}</p>
+      </div>
+      {% if recording.artwork is not None %}
+      <div id="images-available">
+        <img id="cover-image" src="/file/{{recording.artwork}}" />
+      </div>
+      {% else %}
+      <p>No images available</p>
+      {% end %}
+      <div id=parsed-recording-data">
+        <div id="recording-info-container">
+          <div id="generic-data">
+            <div class="recording-info" id="title">{{recording.title}}</div> 
+            <div class="recording-info" id="artist">{{recording.artist}}</div>
+            {% if recording.composer is not None %}
+            <div class="recording-info" id="composer">{{recording.composer}}</div>
+            {% end %}
+            {% if recording.recording_date is not None %}
+            <div class="recording-info" id="recording-date">{{recording.recording_date}}</div>
+            {% end %}
+            {% if recording.venue is not None %}
+            <div class="recording-info" id="venue">{{recording.venue}}</div>
+            {% end %}
+          </div>
+          <div id="listen-data">
+            <div class="recording-info" id="rating">Rating: {{recording.rating}}</div>
+            <div class="recording-info" id="sound-rating">Sound quality: {{recording.sound_rating}}</div>
+          </div>
+        </div>
+        <div id="tracklist-container">
+          {% for track in recording.tracks %}
+          <div class="track-info">
+            <span class="tracklist-position">{{track.track_num}}</span>
+            <span class="track-title">{{track.title}}
+          </div>
+          {% end %}
+        </div>
+      </div>
+    </div>
+  </body>
 </html>

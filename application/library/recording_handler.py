@@ -16,7 +16,8 @@ class RecordingHandler(RequestHandler):
 
     def get(self, recording_id):
 
-        self.render("recording.html")
+        recording = Recording(self.application.conn.cursor(), recording_id)
+        self.render("recording.html", recording = recording)
 
     def post(self, recording_id):
 

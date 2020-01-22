@@ -26,7 +26,7 @@ create table if not exists track (
   track_num number,
   title text,
   filename text,
-  listen_count number,
+  listen_count number default 0,
   rating number
 )
 """

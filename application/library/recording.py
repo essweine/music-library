@@ -44,19 +44,43 @@ class Recording(object):
         except Exception as exc:
             raise
 
-    def __init__(self, recording_id):
+    def __init__(self, cursor, recording_id):
 
-        pass
+        try:
+            cursor.row_factory = sqlite3.Row
+            cursor.execute("select * from recording where id=?", (recording_id, ))
+            record = cursor.fetchone()
+            # Maybe this is a dumb idea?  I've already forgotten what all the columns are.
+            for col, val in zip(record.keys(), record):
+                self.__setattr__(col, val)
+            cursor.execute("select * from track where recording_id=? order by track_num", (recording_id, ))
+            self.tracks = [ Track(**dict(zip(track.keys(), track))) for track in cursor.fetchall() ]
+        except:
+            raise
 
+    def __repr__(self):
+
+        recording_info = "{artist} - {title} [{id}] [{directory}]".format(
+            artist = self.artist,
+            title = self.title,
+            id = self.id,
+            directory = self.directory,
+        )
+
+        track_info = "\n".join([ track.__repr__() for track in self.tracks ])
+        return "{0}\n{1}".format(recording_info, track_info)
 
 class Track(object):
 
     def __init__(self, **record):
 
-        self.recording_id = record.get("recording_id", None)
-        self.position = record.get("position", None)
-        self.title = record.get("title", None)
-        self.filename = record.get("filename", None)
-        self.rating = record.get("rating", None)
-        self.listen_count = record.get("listen_count", 0)
+        for col, val in record.items():
+            self.__setattr__(col, val)
 
+    def __repr__(self):
+
+        return "[{num}] {title} [{filename}]".format(
+            num = self.track_num,
+            title = self.title,
+            filename = self.filename,
+        )
