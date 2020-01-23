@@ -1,8 +1,9 @@
+#!/usr/bin/env python
 import os
 
 from tornado.httpserver import HTTPServer
 from tornado.options import define, options
-from tornado.ioloop import IOLoop
+from tornado.ioloop import IOLoop, PeriodicCallback
 
 from application import create_app
 
@@ -19,6 +20,7 @@ settings = {
 def print_options(options):
     print("Listening on port {port}".format(port = options.port))
     print("Root directory is {root}".format(root = options.root))
+    print("Database is {db}".format(db = options.db))
 
 def main():
 
@@ -31,6 +33,7 @@ def main():
     http_server.listen(options.port)
     app.init_db(options.db)
     app.init_unindexed_directory_list(options.root)
+    PeriodicCallback(app.update_state, 6000).start()
     IOLoop.current().start()
 
 if __name__ == "__main__":

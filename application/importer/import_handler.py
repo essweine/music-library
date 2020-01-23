@@ -2,7 +2,6 @@ import os, re, json
 from uuid import uuid4
 
 from tornado.web import RequestHandler
-from tornado.options import options
 from dateutil.parser import parse as parsedate
 
 from . import DirectoryListing

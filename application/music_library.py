@@ -1,12 +1,12 @@
 import sqlite3, os, re
 from uuid import uuid4
 
-from tornado.web import Application, StaticFileHandler
+from tornado.web import Application, StaticFileHandler, RequestHandler
 
 from .config import RECORDING_TABLE_DEFINITION, TRACK_TABLE_DEFINITION
-from .importer import DirectoryListing
-from .importer import ImportHandler
+from .importer import DirectoryListing, ImportHandler
 from .library import RecordingHandler
+from .player import Player
 
 handlers = [ 
     (r"/importer", ImportHandler),
@@ -22,6 +22,7 @@ class MusicLibrary(Application):
         self.conn = None
         self.root = None
         self.unindexed_directory_list = { }
+        self.player = Player()
 
     def init_db(self, dbname):
 
@@ -56,4 +57,9 @@ class MusicLibrary(Application):
                     self.unindexed_directory_list[entry.name] = entry
         except:
             raise
+
+    def update_state(self):
+
+        while self.player.conn.poll():
+            self.player.update_state(*self.player.conn.recv())
 
