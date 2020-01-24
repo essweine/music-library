@@ -66,7 +66,7 @@ function getRecordingData() {
         venue: document.getElementById("venue").value,
         artwork: imageSelect != null ? imageSelect.value : null,
         notes: textSelect != null ? textSelect.value : null,
-        tracklist: [ ]
+        tracks: [ ]
     };
 
     let tracklist = Array.from(document.getElementsByClassName("tracklist-entry")).map(entry => {
@@ -80,7 +80,7 @@ function getRecordingData() {
             else if (child.classList.contains("tracklist-input"))
                 track.title = child.value;
         }
-        data.tracklist.push(track);
+        data.tracks.push(track);
     });
 
     return data;

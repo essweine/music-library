@@ -4,6 +4,7 @@ from tornado.web import RequestHandler
 from tornado.options import options
 
 from . import Recording
+from .db import create_recording
 
 class RecordingHandler(RequestHandler):
 
@@ -16,7 +17,9 @@ class RecordingHandler(RequestHandler):
 
     def get(self, recording_id):
 
-        recording = Recording(self.application.conn.cursor(), recording_id)
+        cursor = self.application.conn.cursor()
+        recording = Recording(cursor, recording_id)
+        cursor.close()
         self.render("recording.html", recording = recording)
 
     def post(self, recording_id):
@@ -30,7 +33,7 @@ class RecordingHandler(RequestHandler):
         if self.json_body:
             try:
                 cursor = self.application.conn.cursor()
-                Recording.create(cursor, id = recording_id, **self.json_body)
+                create_recording(cursor, id = recording_id, **self.json_body)
                 self.application.conn.commit()
             except:
                 raise

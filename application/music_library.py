@@ -27,7 +27,7 @@ class MusicLibrary(Application):
     def init_db(self, dbname):
 
         try:
-            self.conn = sqlite3.connect(dbname)
+            self.conn = sqlite3.connect(dbname, detect_types=sqlite3.PARSE_DECLTYPES)
             cursor = self.conn.cursor()
             cursor.execute(RECORDING_TABLE_DEFINITION)
             cursor.execute(TRACK_TABLE_DEFINITION)

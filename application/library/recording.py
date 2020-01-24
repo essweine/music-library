@@ -1,66 +1,60 @@
 import sqlite3
+import json
 from datetime import datetime
 
+RECORDING_COLUMNS = [
+    ("id", "text", None),
+    ("directory", "text", None),
+    ("title", "text", None),
+    ("artist", "text", None),
+    ("composer", "text", None),
+    ("genre", "text", None),
+    ("notes", "text", None),
+    ("artwork", "text", None),
+    ("recording_date", "date", None),
+    ("venue", "text", None),
+    ("added_date", "date", None),
+    ("rating", "int", None),
+    ("sound_rating", "int", None),
+]
+
+TRACK_COLUMNS = [
+    ("recording_id", "text", None),
+    ("track_num", "int", None),
+    ("title", "text", None),
+    ("filename", "text", None),
+    ("listen_count", "int", 0),
+    ("rating", "int", None),
+]
+
 class Recording(object):
-
-    @classmethod
-    def create(cls, cursor, **record):
-
-        columns = [ "id", "directory", "title", "artist", "notes", "artwork", "recording_date", "venue", "added_date" ]
-        values = dict([ (col, record.get(col, None)) for col in columns ])
-        values["added_date"] = datetime.utcnow().strftime("%Y-%m-%d")
-        if values["id"] is None or values["directory"] is None:
-            raise Exception("Directory and recording id are required")
-
-        tracks = record.get("tracklist", [ ])
-
-        insert_stmt = "insert into recording ({columns}) values ({placeholders})".format(
-            columns = ", ".join(columns),
-            placeholders = ", ".join([ "?" for col in columns ])
-        )
-
-        try:
-            cursor.execute(insert_stmt, [ values[col] for col in columns ])
-            for track in tracks:
-                cls.create_track(cursor, recording_id = values["id"], **track)
-        except Exception as exc:
-            raise
-
-    @classmethod
-    def create_track(cls, cursor, **track):
-
-        columns = [ "recording_id", "track_num", "title", "filename" ]
-        values = dict([ (col, track.get(col, None)) for col in columns ])
-        if values["filename"] is None:
-            raise Exception("Filename is required")
-
-        insert_stmt = "insert into track ({columns}) values ({placeholders})".format(
-            columns = ", ".join(columns),
-            placeholders = ", ".join([ "?" for col in columns ])
-        )
-
-        try:
-            cursor.execute(insert_stmt, [ values[col] for col in columns ])
-        except Exception as exc:
-            raise
 
     def __init__(self, cursor, recording_id):
 
         try:
             cursor.row_factory = sqlite3.Row
             cursor.execute("select * from recording where id=?", (recording_id, ))
-            record = cursor.fetchone()
-            # Maybe this is a dumb idea?  I've already forgotten what all the columns are.
-            for col, val in zip(record.keys(), record):
-                self.__setattr__(col, val)
+            recording = cursor.fetchone()
+
+            for col, col_type, default in RECORDING_COLUMNS:
+                self.__setattr__(col, recording[col])
+
             cursor.execute("select * from track where recording_id=? order by track_num", (recording_id, ))
-            self.tracks = [ Track(**dict(zip(track.keys(), track))) for track in cursor.fetchall() ]
+            self.tracks = [ Track(track) for track in cursor.fetchall() ]
         except:
             raise
 
+    def as_json(self):
+
+        recording = self.__dict__.copy()
+        recording["tracks"] = [ track.__dict__.copy() for track in recording["tracks"] ]
+        recording["recording_date"] = recording["recording_date"].strftime("%Y-%m-%d")
+        recording["added_date"] = recording["added_date"].strftime("%Y-%m-%d")
+        return json.dumps(recording)
+
     def __repr__(self):
 
-        recording_info = "{artist} - {title} [{id}] [{directory}]".format(
+        recording_info = "{artist} - {title} [{id} / {directory}]".format(
             artist = self.artist,
             title = self.title,
             id = self.id,
@@ -72,15 +66,20 @@ class Recording(object):
 
 class Track(object):
 
-    def __init__(self, **record):
+    def __init__(self, track):
 
-        for col, val in record.items():
-            self.__setattr__(col, val)
+        for col, col_type, default in TRACK_COLUMNS:
+            self.__setattr__(col, track[col])
+
+    def as_json(self):
+
+        return json.dumps(self.__dict__)
 
     def __repr__(self):
 
-        return "[{num}] {title} [{filename}]".format(
+        return "[{num} / {recording}] {title} [{filename}]".format(
             num = self.track_num,
+            recording = self.recording_id,
             title = self.title,
             filename = self.filename,
         )
