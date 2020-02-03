@@ -4,12 +4,13 @@ from uuid import uuid4
 from tornado.web import Application, StaticFileHandler, RequestHandler
 
 from .config import RECORDING_TABLE_DEFINITION, TRACK_TABLE_DEFINITION
-from .importer import DirectoryListing, ImportHandler
+from .importer import DirectoryListing, ImportHandler, ImportRootHandler
 from .library import RecordingHandler
 from .player import Player
 
 handlers = [ 
-    (r"/importer", ImportHandler),
+    (r"/importer", ImportRootHandler),
+    (r"/importer/(.*)", ImportHandler),
     (r"/recording/(.*?)", RecordingHandler),
     (r"/static", StaticFileHandler),
 ]
@@ -54,7 +55,7 @@ class MusicLibrary(Application):
                 relative_name = re.sub("^{0}/?".format(self.root), "", dirpath)
                 if DirectoryListing.contains_audio(files) and relative_name not in indexed_directories:
                     entry = DirectoryListing(relative_name, root)
-                    self.unindexed_directory_list[entry.name] = entry
+                    self.unindexed_directory_list[entry.id] = entry
         except:
             raise
 

@@ -3,7 +3,7 @@
     <title>Add directory to library: {{entry.name}}</title>
     <link rel="stylesheet" href="/static/import.css">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-    <script>const root = "{{entry.name}}"; const prefix = "file"</script>
+    <script>const root = "{{entry.name}}"; const prefix = "file"; const recording_id = "{{entry.id}}";</script>
     <script src="/static/import.js" defer></script>
     {% if len(entry.images) %}
     <script src="/static/image_selector.js" defer></script>

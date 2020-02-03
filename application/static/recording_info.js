@@ -13,10 +13,9 @@ function updateRecordingInfo(e) {
 function getDataFromFile(filename) {
     let request = new XMLHttpRequest();
     let data = new FormData();
-    data.append("directory", root);
     data.append("filename", filename);
     request.addEventListener("load", e => updateRecordingInfo(e));
-    request.open("POST", "/importer");
+    request.open("POST", "/importer/" + recording_id);
     request.send(data);
 }
 

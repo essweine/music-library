@@ -28,8 +28,7 @@ class RecordingHandler(RequestHandler):
 
     def put(self, recording_id):
 
-        directory =  self.json_body.get("directory", None)
-        entry = self.application.unindexed_directory_list.pop(directory)
+        entry = self.application.unindexed_directory_list.pop(recording_id)
         if self.json_body:
             try:
                 cursor = self.application.conn.cursor()
@@ -40,9 +39,14 @@ class RecordingHandler(RequestHandler):
             finally:
                 cursor.close()
 
-        for subdir in entry.children:
+        to_remove = [ ]
+        for directory in self.application.unindexed_directory_list.values():
+            if directory.name in entry.children:
+                to_remove.append(directory.id)
+
+        for item in to_remove:
             try:
-                del self.application.unindexed_directory_list[subdir]
+                del self.application.unindexed_directory_list[item]
             except:
                 pass
 

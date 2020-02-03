@@ -12,10 +12,8 @@
           <br/>{{len(entry.audio)}} tracks
         </div>
         <div class="directory-options">
-          <form action="/importer" method="get">
-            <button type="submit" name="directory" value="{{entry.name}}">Add directory to library</button>
-            <button type="submit" name="directory" value="{{entry.parent}}">Add parent to library</button>
-          </form>
+          <button name="directory" onclick="window.location.href='/importer/{{entry.id}}'">Add directory to library</button>
+          <button name="directory" onclick="window.location.href='/importer/{{entry.id}}?parent=true'">Add parent to library</button>
         </div>
       </div>
       {% end %}

@@ -1,2 +1,2 @@
 from .directory_listing import DirectoryListing
-from .import_handler import ImportHandler
+from .import_handler import ImportHandler, ImportRootHandler
