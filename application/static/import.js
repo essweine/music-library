@@ -91,7 +91,7 @@ function addToLibrary(e) {
     let id = document.getElementById("add-to-library").getAttribute("name");
     let request = new XMLHttpRequest();
     request.addEventListener("load", e => window.location = "/recording/" + id);
-    request.open("PUT", "/recording/" + id);
+    request.open("POST", "/api/recording/" + id);
     request.setRequestHeader("Content-Type", "application/json");
     request.send(JSON.stringify(data));
 }

@@ -14,7 +14,7 @@ class ImportRootHandler(RequestHandler):
             directory_list = sorted(self.application.unindexed_directory_list.values(), key = lambda e: e.name)
         )
 
-class ImportHandler(RequestHandler):
+class ImportDisplayHandler(RequestHandler):
 
     def get(self, directory_id):
         entry = self.application.unindexed_directory_list[directory_id]
@@ -31,3 +31,8 @@ class ImportHandler(RequestHandler):
         entry = self.application.unindexed_directory_list[directory_id]
         self.write(json.dumps(entry.parse_text_file(filename)))
 
+class ImportHandler(RequestHandler):
+
+    def get(self, directory_id):
+
+        pass

@@ -6,6 +6,15 @@ from tornado.options import options
 from . import Recording
 from .db import create_recording
 
+class RecordingDisplayHandler(RequestHandler):
+
+    def get(self, recording_id):
+
+        cursor = self.application.conn.cursor()
+        recording = Recording(cursor, recording_id)
+        cursor.close()
+        self.render("recording.html", recording = recording)
+
 class RecordingHandler(RequestHandler):
 
     def prepare(self):
@@ -17,16 +26,13 @@ class RecordingHandler(RequestHandler):
 
     def get(self, recording_id):
 
-        cursor = self.application.conn.cursor()
-        recording = Recording(cursor, recording_id)
-        cursor.close()
-        self.render("recording.html", recording = recording)
-
-    def post(self, recording_id):
-
         pass
 
     def put(self, recording_id):
+
+        pass
+
+    def post(self, recording_id):
 
         entry = self.application.unindexed_directory_list.pop(recording_id)
         if self.json_body:

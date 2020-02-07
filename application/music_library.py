@@ -4,14 +4,16 @@ from uuid import uuid4
 from tornado.web import Application, StaticFileHandler, RequestHandler
 
 from .config import RECORDING_TABLE_DEFINITION, TRACK_TABLE_DEFINITION
-from .importer import DirectoryListing, ImportHandler, ImportRootHandler
-from .library import RecordingHandler
+from .importer import DirectoryListing, ImportHandler, ImportRootHandler, ImportDisplayHandler
+from .library import RecordingHandler, RecordingDisplayHandler
 from .player import Player
 
 handlers = [ 
     (r"/importer", ImportRootHandler),
-    (r"/importer/(.*)", ImportHandler),
-    (r"/recording/(.*?)", RecordingHandler),
+    (r"/importer/(.*)", ImportDisplayHandler),
+    (r"/api/importer/(.*)", ImportHandler),
+    (r"/recording/(.*?)", RecordingDisplayHandler),
+    (r"/api/recording/(.*?)", RecordingHandler),
     (r"/static", StaticFileHandler),
 ]
 
