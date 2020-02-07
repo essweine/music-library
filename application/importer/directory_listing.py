@@ -5,6 +5,7 @@ from uuid import uuid4
 from dateutil.parser import parse as parsedate
 
 from ..config import AUDIO_FILETYPES, IMAGE_FILETYPES, TEXT_FILETYPES
+from ..library import Recording, Track
 
 class DirectoryListing(object):
 
@@ -45,6 +46,30 @@ class DirectoryListing(object):
         self.audio = sorted(self.audio)
         self.images = sorted(self.images)
         self.text = sorted(self.text)
+
+    def as_json(self, textfile = None):
+
+        data = Recording.new()
+        data["id"], data["directory"] = self.id, self.name
+        data["tracks"] = [ ]
+        for idx, filename in enumerate(self.audio):
+            track = Track.new()
+            track["filename"]     = filename
+            track["title"]        = filename
+            track["track_num"]    = idx + 1
+            track["recording_id"] = self.id
+            data["tracks"].append(track)
+
+        if textfile:
+            parsed_text = self.parse_text_file(textfile)
+            for field in [ "title", "artist", "recording_date", "venue" ]:
+                data["field"] = parsed_text[field]
+            data["notes"] = self.text[0]
+            for idx, title in enumerate(parsed_text["tracks"]):
+                if idx < len(self.audio):
+                    data["tracks"][idx]["title"] = title
+
+        return json.dumps(data)
 
     def get_display_name(self, filename):
 

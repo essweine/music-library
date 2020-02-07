@@ -1,5 +1,6 @@
 import sqlite3
 import json
+import os.path
 from datetime import datetime
 
 RECORDING_COLUMNS = [
@@ -28,6 +29,12 @@ TRACK_COLUMNS = [
 ]
 
 class Recording(object):
+
+    @staticmethod
+    def new():
+        obj = dict([ (col, default) for col, col_type, default in RECORDING_COLUMNS ])
+        obj["tracks"] = [ ]
+        return obj
 
     def __init__(self, cursor, recording_id):
 
@@ -65,6 +72,10 @@ class Recording(object):
         return "{0}\n{1}".format(recording_info, track_info)
 
 class Track(object):
+
+    @staticmethod
+    def new():
+        return dict([ (col, default) for col, col_type, default in TRACK_COLUMNS ])
 
     def __init__(self, track):
 
