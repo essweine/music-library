@@ -21,7 +21,7 @@ class ImportDisplayHandler(RequestHandler):
         if self.get_argument("parent", None):
             parent = DirectoryListing(entry.parent, self.application.root)
             self.application.unindexed_directory_list[parent.id] = parent
-            self.render("import.html", entry = parent)
+            self.redirect("/importer/{0}".format(parent.id))
         else:
             self.render("import.html", entry = entry)
 
