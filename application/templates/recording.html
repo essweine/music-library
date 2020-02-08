@@ -1,47 +1,54 @@
 <html>
   <head>
-    <title>{{recording.title}}</title>
-    <link rel="stylesheet" href="/static/import.css">
+    <title>{{page_title}}</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/recording.css">
+    <link rel="stylesheet" href="/static/css/rating-container.css">
+    <script src="/static/recording.js" type="module" defer></script>
   </head>
   <body>
-    <div id="directory-detail">
-      <div id="directory-overview">
-        <p>{{recording.title}}</p>
+    <div id="root-container">
+      <div id="navigation">
       </div>
-      {% if recording.artwork is not None %}
-      <div id="images-available">
-        <img id="cover-image" src="/file/{{recording.artwork}}" />
-      </div>
-      {% else %}
-      <p>No images available</p>
-      {% end %}
-      <div id=parsed-recording-data">
-        <div id="recording-info-container">
-          <div id="generic-data">
-            <div class="recording-info" id="title">{{recording.title}}</div> 
-            <div class="recording-info" id="artist">{{recording.artist}}</div>
-            {% if recording.composer is not None %}
-            <div class="recording-info" id="composer">{{recording.composer}}</div>
-            {% end %}
-            {% if recording.recording_date is not None %}
-            <div class="recording-info" id="recording-date">{{recording.recording_date}}</div>
-            {% end %}
-            {% if recording.venue is not None %}
-            <div class="recording-info" id="venue">{{recording.venue}}</div>
-            {% end %}
+      <div id="content">
+
+          <div is="recording-container" directory="{{recording['directory']}}" context="{{context}}">
+
+          <div id="recording-overview">
+            <span>{{page_title}}</span>
           </div>
-          <div id="listen-data">
-            <div class="recording-info" id="rating">Rating: {{recording.rating}}</div>
-            <div class="recording-info" id="sound-rating">Sound quality: {{recording.sound_rating}}</div>
+
+          <div is="recording-image" {% raw images %}>
+            <p>No images available</p>
           </div>
-        </div>
-        <div id="tracklist-container">
-          {% for track in recording.tracks %}
-          <div class="track-info">
-            <span class="tracklist-position">{{track.track_num}}</span>
-            <span class="track-title">{{track.title}}
+
+          <div is="recording-info"
+               title="{{recording['title']}}"
+               artist="{{recording['artist']}}"
+               recording-date="{{recording['recording_date']}}"
+               venue="{{recording['venue']}}"
+               {% if recording["rating"] %}rating="{{track['rating']}}"{% end %}
+               {% if recording["sound_rating"] %}sound-rating="{{track['rating']}}"{% end %}>
           </div>
-          {% end %}
+
+          <div is="tracklist-container">
+
+            {% for track in recording["tracks"] %}
+            <div is="tracklist-entry"
+                 title="{{track['title']}}" 
+                 filename="{{track['filename']}}" 
+                 {% if track["rating"] %}rating="{{track['rating']}}"{% end %}
+                 listen-count="{{track['listen_count']}}"
+                 track-num={{track['track_num']}}>
+            </div>
+            {% end %}
+
+            <div is="raw-recording-info" {% raw text %}>
+              <p>No notes available.</p>
+            </div>
+
+          </div>
+
         </div>
       </div>
     </div>

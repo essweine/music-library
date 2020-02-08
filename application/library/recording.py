@@ -51,13 +51,17 @@ class Recording(object):
         except:
             raise
 
-    def as_json(self):
+    def as_dict(self):
 
         recording = self.__dict__.copy()
         recording["tracks"] = [ track.__dict__.copy() for track in recording["tracks"] ]
         recording["recording_date"] = recording["recording_date"].strftime("%Y-%m-%d")
         recording["added_date"] = recording["added_date"].strftime("%Y-%m-%d")
-        return json.dumps(recording)
+        return recording
+
+    def as_json(self):
+
+        return json.dumps(self.as_dict())
 
     def __repr__(self):
 

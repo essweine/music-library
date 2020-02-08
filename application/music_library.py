@@ -11,6 +11,7 @@ from .player import Player
 handlers = [ 
     (r"/importer", ImportRootHandler),
     (r"/importer/(.*)", ImportDisplayHandler),
+    (r"/api/importer/(.*)/(.*?)", ImportHandler),
     (r"/api/importer/(.*)", ImportHandler),
     (r"/recording/(.*?)", RecordingDisplayHandler),
     (r"/api/recording/(.*?)", RecordingHandler),

@@ -47,58 +47,55 @@ class DirectoryListing(object):
         self.images = sorted(self.images)
         self.text = sorted(self.text)
 
-    def as_json(self, textfile = None):
+    def as_json(self):
 
-        data = Recording.new()
-        data["id"], data["directory"] = self.id, self.name
-        data["tracks"] = [ ]
-        for idx, filename in enumerate(self.audio):
-            track = Track.new()
-            track["filename"]     = filename
-            track["title"]        = filename
-            track["track_num"]    = idx + 1
-            track["recording_id"] = self.id
-            data["tracks"].append(track)
+        return json.dumps({
+            "id": self.id,
+            "name": self.name,
+            "audio": self.audio,
+            "images": self.images,
+            "text": self.text,
+        })
+
+    def as_recording(self, textfile = None, as_json = True):
 
         if textfile:
-            parsed_text = self.parse_text_file(textfile)
-            for field in [ "title", "artist", "recording_date", "venue" ]:
-                data["field"] = parsed_text[field]
-            data["notes"] = self.text[0]
-            for idx, title in enumerate(parsed_text["tracks"]):
-                if idx < len(self.audio):
-                    data["tracks"][idx]["title"] = title
+            data = self._parse(textfile)
+            data["notes"] = textfile
+        else:
+            data = Recording.new()
+            data["tracks"] = [ ]
 
-        return json.dumps(data)
+        data["id"], data["directory"] = self.id, self.name
+        for idx, filename in enumerate(self.audio):
+            if idx < len(data["tracks"]):
+                track = data["tracks"][idx]
+            else:
+                track = Track.new()
+                data["tracks"].append(track)
+            track["filename"]     = filename
+            track["track_num"]    = idx + 1
+            track["recording_id"] = self.id
 
-    def get_display_name(self, filename):
+        if as_json:
+            return json.dumps(data)
+        else:
+            return data
 
-        return re.sub("^{0}/".format(self.name), "", filename)
-
-    def parse_text_file(self, filename):
-
-        record = {
-            "filename": None,
-            "contents": [ ],
-            "artist": None, 
-            "title": None,
-            "recording_date": None,
-            "venue": None,
-            "tracks": [ ]
-        }
+    def _parse(self, filename):
 
         try:
             text = open(os.path.join(self.root, filename))
-            record["filename"] = filename
         except:
-            record["tracks"] = self.audio
-            return record
+            raise
+
+        record = Recording.new()
+        record["tracks"] = [ ]
 
         in_first_section, in_setlist = True, False
 
         for line in text:
 
-            record["contents"].append(line)
             line = line.strip()
 
             if not re.search("\w+", line):
@@ -135,16 +132,16 @@ class DirectoryListing(object):
 
                 numbered_track = re.match("(D\d+)?(T\d+)?(\d+)(\W+?\s*|\s+)(.*)", line, flags = re.I)
                 timed_track = re.search("(.*)\(?\d+:\d{2}\)?", line)
+                track = Track.new()
                 if numbered_track:
-                    record["tracks"].append(numbered_track.group(5))
+                    track["title"] = numbered_track.group(5)
                 elif timed_track:
-                    record["tracks"].append(timed_track.group(1))
+                    track["title"] = timed_track.group(1)
                 elif in_setlist:
-                    record["tracks"].append(line)
+                    track["title"] = line
 
-        mismatched = len(record["tracks"]) - len(self.audio)
-        if mismatched < 0:
-            record["tracks"].extend([ ".".join(f.split(".")[:-1]) for f in self.audio[mismatched:] ])
+                if track["title"]:
+                    record["tracks"].append(track)
 
         return record
 
@@ -170,11 +167,5 @@ class DirectoryListing(object):
 
     def __repr__(self):
 
-        return "Directory {name}:\n{audio} audio files\n{images} images\n{text} text files\n{children} subdirectories.".format(
-            name     = self.name,
-            audio    = len(self.audio),
-            images   = len(self.images),
-            text     = len(self.text),
-            children = len(self.children)
-        )
+        return json.dumps(self.as_recording(), indent = 2, separators = [ ", ", ": " ])
 

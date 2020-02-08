@@ -13,7 +13,13 @@ class RecordingDisplayHandler(RequestHandler):
         cursor = self.application.conn.cursor()
         recording = Recording(cursor, recording_id)
         cursor.close()
-        self.render("recording.html", recording = recording)
+        self.render("recording.html",
+            context = "display",
+            page_title = recording.title,
+            recording = recording.as_dict(),
+            images = 'file="{0}"'.format(recording.artwork) if recording.artwork else "",
+            text = 'file="{0}"'.format(recording.notes) if recording.notes else "",
+        )
 
 class RecordingHandler(RequestHandler):
 
@@ -24,7 +30,7 @@ class RecordingHandler(RequestHandler):
         else:
             self.json_body = None
 
-    def get(self, recording_id):
+    def get(self, recording_id, item = None):
 
         pass
 
@@ -38,21 +44,22 @@ class RecordingHandler(RequestHandler):
         if self.json_body:
             try:
                 cursor = self.application.conn.cursor()
-                create_recording(cursor, id = recording_id, **self.json_body)
+                create_recording(cursor, **self.json_body)
                 self.application.conn.commit()
             except:
                 raise
             finally:
                 cursor.close()
 
-        to_remove = [ ]
-        for directory in self.application.unindexed_directory_list.values():
-            if directory.name in entry.children:
-                to_remove.append(directory.id)
+        if entry.children:
+            to_remove = [ ]
+            for directory in self.application.unindexed_directory_list.values():
+                if directory.name in entry.children:
+                    to_remove.append(directory.id)
 
-        for item in to_remove:
-            try:
-                del self.application.unindexed_directory_list[item]
-            except:
-                pass
+            for item in to_remove:
+                try:
+                    del self.application.unindexed_directory_list[item]
+                except:
+                    pass
 
