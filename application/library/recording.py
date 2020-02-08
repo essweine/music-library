@@ -2,37 +2,40 @@ import sqlite3
 import json
 import os.path
 from datetime import datetime
+from collections import namedtuple
+
+Column = namedtuple('Column', [ 'name', 'type', 'default', 'updateable' ])
 
 RECORDING_COLUMNS = [
-    ("id", "text", None),
-    ("directory", "text", None),
-    ("title", "text", None),
-    ("artist", "text", None),
-    ("composer", "text", None),
-    ("genre", "text", None),
-    ("notes", "text", None),
-    ("artwork", "text", None),
-    ("recording_date", "date", None),
-    ("venue", "text", None),
-    ("added_date", "date", None),
-    ("rating", "int", None),
-    ("sound_rating", "int", None),
+    Column("id", "text", None, False),
+    Column("directory", "text", None, False),
+    Column("title", "text", None, True),
+    Column("artist", "text", None, True),
+    Column("composer", "text", None, True),
+    Column("genre", "text", None, True),
+    Column("notes", "text", None, True),
+    Column("artwork", "text", None, True),
+    Column("recording_date", "date", None, True),
+    Column("venue", "text", None, True),
+    Column("added_date", "date", None, False),
+    Column("rating", "int", None, True),
+    Column("sound_rating", "int", None, True),
 ]
 
 TRACK_COLUMNS = [
-    ("recording_id", "text", None),
-    ("track_num", "int", None),
-    ("title", "text", None),
-    ("filename", "text", None),
-    ("listen_count", "int", 0),
-    ("rating", "int", None),
+    Column("recording_id", "text", None, False),
+    Column("track_num", "int", None, True),
+    Column("title", "text", None, True),
+    Column("filename", "text", None, False),
+    Column("listen_count", "int", 0, True),
+    Column("rating", "int", None, True),
 ]
 
 class Recording(object):
 
     @staticmethod
     def new():
-        obj = dict([ (col, default) for col, col_type, default in RECORDING_COLUMNS ])
+        obj = dict([ (column.name, column.default) for column in RECORDING_COLUMNS ])
         obj["tracks"] = [ ]
         return obj
 
@@ -43,8 +46,8 @@ class Recording(object):
             cursor.execute("select * from recording where id=?", (recording_id, ))
             recording = cursor.fetchone()
 
-            for col, col_type, default in RECORDING_COLUMNS:
-                self.__setattr__(col, recording[col])
+            for column in RECORDING_COLUMNS:
+                self.__setattr__(column.name, recording[column.name])
 
             cursor.execute("select * from track where recording_id=? order by track_num", (recording_id, ))
             self.tracks = [ Track(track) for track in cursor.fetchall() ]
@@ -79,12 +82,12 @@ class Track(object):
 
     @staticmethod
     def new():
-        return dict([ (col, default) for col, col_type, default in TRACK_COLUMNS ])
+        return dict([ (column.name, column.default) for column in TRACK_COLUMNS ])
 
     def __init__(self, track):
 
-        for col, col_type, default in TRACK_COLUMNS:
-            self.__setattr__(col, track[col])
+        for column in TRACK_COLUMNS:
+            self.__setattr__(column.name, track[column.name])
 
     def as_json(self):
 

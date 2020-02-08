@@ -4,15 +4,20 @@ from tornado.web import RequestHandler
 from tornado.options import options
 
 from . import Recording
-from .db import create_recording
+from .db import create_recording, update_recording, update_rating
+from ..importer import DirectoryListing
 
 class RecordingDisplayHandler(RequestHandler):
 
     def get(self, recording_id):
 
-        cursor = self.application.conn.cursor()
-        recording = Recording(cursor, recording_id)
-        cursor.close()
+        try:
+            cursor = self.application.conn.cursor()
+            recording = Recording(cursor, recording_id)
+            cursor.close()
+        except:
+            raise
+
         self.render("recording.html",
             context = "display",
             page_title = recording.title,
@@ -32,11 +37,37 @@ class RecordingHandler(RequestHandler):
 
     def get(self, recording_id, item = None):
 
-        pass
+        try:
+            cursor = self.application.conn.cursor()
+            recording = Recording(cursor, recording_id)
+            cursor.close()
+        except:
+            raise
 
-    def put(self, recording_id):
+        if item == "entry":
+            entry = DirectoryListing(recording.directory, self.application.root)
+            entry.id = recording_id
+            self.write(entry.as_json())
+        elif item == "notes":
+            entry = DirectoryListing(recording.directory, self.application.root)
+            entry.id = recording_id
+            self.write(entry.as_recording(recording.notes, as_json = True))
+        else:
+            self.write(recordin.as_json())
 
-        pass
+    def put(self, recording_id, item = None):
+
+        if self.json_body:
+            try:
+                cursor = self.application.conn.cursor()
+                if item is None:
+                    update_recording(cursor, **self.json_body)
+                elif item == "rating":
+                    update_rating(cursor, recording_id, self.json_body)
+                cursor.close()
+                self.application.conn.commit()
+            except:
+                raise
 
     def post(self, recording_id):
 

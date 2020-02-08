@@ -14,6 +14,7 @@ handlers = [
     (r"/api/importer/(.*)/(.*?)", ImportHandler),
     (r"/api/importer/(.*)", ImportHandler),
     (r"/recording/(.*?)", RecordingDisplayHandler),
+    (r"/api/recording/(.*?)/(.*?)", RecordingHandler),
     (r"/api/recording/(.*?)", RecordingHandler),
     (r"/static", StaticFileHandler),
 ]
