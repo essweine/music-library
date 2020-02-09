@@ -15,6 +15,8 @@ class TracklistEntry extends HTMLDivElement {
             this.firstChild.remove();
         if (context == "display")
             this.createDisplayEntry();
+        else if (context == "import")
+            this.createEditEntry(true);
         else
             this.createEditEntry();
     }
@@ -31,7 +33,7 @@ class TracklistEntry extends HTMLDivElement {
         this.append(this.createRatingContainer());
     }
 
-    createEditEntry() {
+    createEditEntry(updateAttributes = false) {
 
         this.append(this.createPositionMarker());
 
@@ -49,7 +51,8 @@ class TracklistEntry extends HTMLDivElement {
         input.value = title;
         input.size  = 40;
         input.classList.add("tracklist-input");
-        input.oninput = e => e.target.parentNode.setAttribute("title", e.target.value);
+        if (updateAttributes)
+            input.oninput = e => e.target.parentNode.setAttribute("title", e.target.value);
         this.append(input);
 
         let moveUp = this.createIcon("arrow_upward", "move-up");
@@ -79,8 +82,12 @@ class TracklistEntry extends HTMLDivElement {
         let ratingContainer = document.createElement("span", { is: "rating-container" });
         ratingContainer.classList.add("tracklist-rating");
         ratingContainer.setRating(this.getAttribute("rating"));
-        ratingContainer.addEventListener("rating-change", 
-            e => (e.detail != null) ? this.setAttribute("rating", e.detail) : this.removeAttribute("rating"));
+        ratingContainer.addEventListener("rating-change", e => {
+            (e.detail != null) ? this.setAttribute("rating", e.detail) : this.removeAttribute("rating");
+            let detail = { item: this.getAttribute("filename"), rating: e.detail };
+            let ev = new CustomEvent("update-rating", { detail: detail, bubbles: true });
+            this.dispatchEvent(ev);
+        });
         return ratingContainer;
     }
 
@@ -112,6 +119,10 @@ class TracklistEntry extends HTMLDivElement {
         for (let attr of this.getAttributeNames())
             if (! [ "is", "id", "class"].includes(attr))
                 data[attr.replace("-", "_")] = this.getAttribute(attr);
+        if (data.rating != null)
+            data.rating = parseInt(data.rating);
+        data.listen_count = parseInt(data.listen_count);
+        data.track_num = parseInt(data.track_num);
         return data;
     }
 }

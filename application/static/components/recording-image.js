@@ -33,6 +33,22 @@ class RecordingImage extends HTMLDivElement {
         }
     }
 
+    add(directory, newFiles) {
+        let files = [ ];
+        for (let attr of this.getAttributeNames())
+            if (attr.startsWith("file"))
+                files.push(this.getAttribute(attr));
+
+        for (let file of newFiles) {
+            if (!files.includes(file)) {
+                let option = document.createElement("option");
+                option.value = file;
+                option.innerText = file.replace(directory + "/", "");
+                this.select.append(option);
+            }
+        }
+    }
+
     update(context) {
         if (this.imagesAvailable) {
             if (context == "display")

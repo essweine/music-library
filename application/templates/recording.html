@@ -27,8 +27,8 @@
                artist="{{recording['artist']}}"
                recording-date="{{recording['recording_date']}}"
                venue="{{recording['venue']}}"
-               {% if recording["rating"] %}rating="{{track['rating']}}"{% end %}
-               {% if recording["sound_rating"] %}sound-rating="{{track['rating']}}"{% end %}>
+               {% if recording["rating"] %}rating="{{recording['rating']}}"{% end %}
+               {% if recording["sound_rating"] %}sound-rating="{{recording['rating']}}"{% end %}>
           </div>
 
           <div is="tracklist-container">

@@ -35,8 +35,9 @@ class TracklistContainer extends HTMLDivElement {
         if (context == "display") {
             this.options.remove();
         } else {
-            this.tracks.item(0).querySelector("[class~='move-up']").style.display = "none";
-            this.tracks.item(this.tracks.length - 1).querySelector("[class~='move-down']").style.display = "none";
+            let tracks = this.querySelectorAll("[is='tracklist-entry']");
+            tracks.item(0).querySelector("[class~='move-up']").style.display = "none";
+            tracks.item(this.tracks.length - 1).querySelector("[class~='move-down']").style.display = "none";
             this.insertBefore(this.options, this.rawInfo);
         }
     }
@@ -57,16 +58,21 @@ class TracklistContainer extends HTMLDivElement {
         let tracks = this.querySelectorAll("[is='tracklist-entry']");
         let original = Array.from(tracks).map(item => item.querySelector("[class~='tracklist-input']").value);
         let newNames = original.slice(1, original.length).concat("");
-        this.setTitles(newNames);
+        this.setInputValues(newNames);
     }
 
-    setTitles(names) {
+    setInputValues(names) {
         let tracks = this.querySelectorAll("[is='tracklist-entry']");
         for (let i = 0; i < this.tracks.length; i++) {
-            tracks.item(i).setAttribute("title", (names.length >= tracks.length) ? names[i] : "");
             let input = tracks.item(i).querySelector("[class~='tracklist-input']");
             input.value = (names.length >= tracks.length) ? names[i] : "";
         }
+    }
+
+    setTitleAttributes(names) {
+        let tracks = this.querySelectorAll("[is='tracklist-entry']");
+        for (let i = 0; i < this.tracks.length; i++)
+            tracks.item(i).setAttribute("title", (names.length >= tracks.length) ? names[i] : "");
     }
 
     resetTracks() {
@@ -75,6 +81,13 @@ class TracklistContainer extends HTMLDivElement {
             track.updateTrackNum(i + 1);
             this.insertBefore(track, this.options);
         }
+    }
+
+    saveTracks() {
+        let tracks = this.querySelectorAll("[is='tracklist-entry']");
+        let names = Array.from(tracks).map(item => item.querySelector("[class~='tracklist-input']").value);
+        this.setTitleAttributes(names);
+        this.tracklist = tracks;
     }
 
     getTracklist() {
@@ -86,6 +99,8 @@ class TracklistContainer extends HTMLDivElement {
     }
 
     setText(text) { this.rawInfo.rawText.textContent = text; }
+
+    addNotes(directory, files) { this.rawInfo.addNotes(directory, files); }
 }
 
 export { TracklistContainer };
