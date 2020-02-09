@@ -9,9 +9,26 @@ class ImportRootHandler(RequestHandler):
 
     def get(self):
 
-        self.render("directory_list.html", 
-            directory_list = sorted(self.application.unindexed_directory_list.values(), key = lambda e: e.name)
-        )
+        items = [ ]
+        for entry in sorted(self.application.unindexed_directory_list.values(), key = lambda e: e.name):
+            items.append({
+                "title": entry.name,
+                "description": "{0} files".format(len(entry.audio)),
+                "buttons": [
+                    { 
+                        "id": "add",
+                        "action": "window.location.href='/importer/{0}'".format(entry.id),
+                        "text": "Add directory to library",
+                    },
+                    { 
+                        "id": "add-parent",
+                        "action": "window.location.href='/importer/{0}?parent=true'".format(entry.id),
+                        "text": "Add parent directory to library",
+                    },
+                ]
+            })
+
+        self.render("browse.html", page_title = "Unindexed Directory List", items = items)
 
 class ImportDisplayHandler(RequestHandler):
 

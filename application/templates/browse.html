@@ -1,7 +1,27 @@
 <html>
-    <head>
-        <title>Browse Library</title>
-    </head>
-    <body>
+  <head>
+    <title>{{page_title}}</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/listing.css">
+  </head>
+  <body>
+    <div id="root-container">
+      <div id="navigation">
+      </div>
+      <div id="content">
+        <div class="list-root">
+          {% for item in items %}
+          <div class="listing">
+            {{item['title']}}
+            <br/>{{item['description']}}
+            <div class="options">
+              {% for button in item['buttons'] %}
+              <button id="{{button['id']}}" onclick="{% raw button['action'] %}">{{button['text']}}</button>
+              {% end %}
+            </div>
+          </div>
+          {% end %}
+        </div>
+      </div>
     </body>
 </html>

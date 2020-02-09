@@ -1,4 +1,5 @@
 import os, re, json
+from sqlite3 import Row
 
 from tornado.web import RequestHandler
 from tornado.options import options
@@ -6,6 +7,33 @@ from tornado.options import options
 from . import Recording
 from .db import create_recording, update_recording, update_rating
 from ..importer import DirectoryListing
+
+class RecordingRootHandler(RequestHandler):
+
+    def get(self):
+
+        try:
+            cursor = self.application.conn.cursor()
+            cursor.row_factory = Row
+            cursor.execute("select id, title, artist from recording")
+        except:
+            raise
+
+        items = [ ]
+        for row in cursor:
+            items.append({
+                "title": row["title"],
+                "description": row["artist"],
+                "buttons": [
+                    {
+                        "id": "view-recording",
+                        "action": "window.location.href='/recording/{0}'".format(row["id"]),
+                        "text": "View recording",
+                    }
+                ]
+            })
+
+        self.render("browse.html", page_title = "Recordings", items = items)
 
 class RecordingDisplayHandler(RequestHandler):
 

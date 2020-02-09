@@ -5,7 +5,7 @@ from tornado.web import Application, StaticFileHandler, RequestHandler
 
 from .config import RECORDING_TABLE_DEFINITION, TRACK_TABLE_DEFINITION
 from .importer import DirectoryListing, ImportHandler, ImportRootHandler, ImportDisplayHandler
-from .library import RecordingHandler, RecordingDisplayHandler
+from .library import RecordingHandler, RecordingRootHandler, RecordingDisplayHandler
 from .player import Player
 
 handlers = [ 
@@ -13,6 +13,7 @@ handlers = [
     (r"/importer/(.*)", ImportDisplayHandler),
     (r"/api/importer/(.*)/(.*?)", ImportHandler),
     (r"/api/importer/(.*)", ImportHandler),
+    (r"/recording", RecordingRootHandler),
     (r"/recording/(.*?)", RecordingDisplayHandler),
     (r"/api/recording/(.*?)/(.*?)", RecordingHandler),
     (r"/api/recording/(.*?)", RecordingHandler),

@@ -1,0 +1,26 @@
+
+/* Directory listing only */
+
+.list-root {
+    display: grid;
+    grid-auto-flow: row;
+    justify-content: center;
+}
+
+.listing {
+    display: grid;
+    grid-auto-flow: column;
+    color: #000;
+}
+
+.listing:nth-child(even) {
+    background-color: #eee;
+}
+
+.options {
+    align-self: center;
+    justify-self: end;
+    padding-left: 20px;
+}
+
+
