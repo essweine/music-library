@@ -81,7 +81,7 @@ class RecordingHandler(RequestHandler):
             entry.id = recording_id
             self.write(entry.as_recording(recording.notes, as_json = True))
         else:
-            self.write(recordin.as_json())
+            self.write(recording.as_json())
 
     def put(self, recording_id, item = None):
 

@@ -68,15 +68,7 @@ class Recording(object):
 
     def __repr__(self):
 
-        recording_info = "{artist} - {title} [{id} / {directory}]".format(
-            artist = self.artist,
-            title = self.title,
-            id = self.id,
-            directory = self.directory,
-        )
-
-        track_info = "\n".join([ track.__repr__() for track in self.tracks ])
-        return "{0}\n{1}".format(recording_info, track_info)
+        return json.dumps(self.as_dict(), indent = 2, separators = [ ", ", ": " ])
 
 class Track(object):
 
@@ -95,9 +87,4 @@ class Track(object):
 
     def __repr__(self):
 
-        return "[{num} / {recording}] {title} [{filename}]".format(
-            num = self.track_num,
-            recording = self.recording_id,
-            title = self.title,
-            filename = self.filename,
-        )
+        return json.dumps(self.__dict__, indent = 2, separators = [ ", ", ": " ])

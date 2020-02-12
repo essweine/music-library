@@ -1,3 +1,5 @@
+import json
+
 from tornado.web import RequestHandler
 
 class PlayerHandler(RequestHandler):
@@ -11,8 +13,12 @@ class PlayerHandler(RequestHandler):
 
     def get(self):
 
-        pass
+        return self.application.player.state.as_json()
 
     def post(self):
 
-        pass
+        if self.json_body:
+            for task in self.json_body["tasks"]:
+                self.application.player.send_task(**task)
+        else:
+            raise Exception("Expected json")
