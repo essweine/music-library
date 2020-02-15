@@ -70,5 +70,11 @@ class MusicLibrary(Application):
     def update_state(self):
 
         while self.player.conn.poll():
-            self.player.update_state(self.player.conn.recv())
-            print(self.player.state)
+            try:
+                cursor = self.conn.cursor()
+                self.player.update_state(self.player.conn.recv(), cursor)
+                cursor.close()
+                self.conn.commit()
+                print(self.player.state)
+            except:
+                raise

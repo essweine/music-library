@@ -2,9 +2,11 @@ from multiprocessing import Process, Pipe
 import subprocess, signal, time
 import os, fcntl
 import re
+from datetime import datetime
 
 from ..library import Track
-from .state import State
+from .state import State, HistoryEntry
+from .history import History
 
 CMD = [ "ffmpeg", "-hide_banner" ]
 OUTPUT_ARGS = [ "-f", "alsa", "hw:0" ]
@@ -22,7 +24,7 @@ class Player(object):
     def __init__(self, root):
 
         self.root = root
-        self.state = State(True, None, [ ], [ ], None, None)
+        self.state = State(True, None, None, [ ])
         self._subprocess = None
 
         try:
@@ -54,7 +56,7 @@ class Player(object):
                     self._handle_stop()
 
             if not self.state.stopped and not self._subprocess_running():
-                self._update_recently_played()
+                self._update_last_entry()
                 self._handle_advance_playlist()
 
             if self.state != initial_state:
@@ -72,15 +74,23 @@ class Player(object):
         task = Task(name, track = track, position = position)
         self.conn.send(task)
 
-    def update_state(self, state):
+    def update_state(self, state, cursor):
 
+        if state.last_entry is not None and (state.last_entry.end_time - state.last_entry.start_time).seconds > 10:
+            values = state.last_entry.get_values()
+            try:
+                History.add_entry(cursor, **values)
+            except:
+                raise
+        state.last_entry = None
         self.state = state
 
     def _handle_stop(self):
 
         try:
             self._subprocess.send_signal(signal.SIGTERM)
-            self._update_recently_played()
+            self._subprocess = None
+            self._update_last_entry()
             self.state.stopped = True
         except:
             raise
@@ -103,7 +113,7 @@ class Player(object):
             fd = self._subprocess.stderr.fileno()
             fl = fcntl.fcntl(fd, fcntl.F_GETFL)
             fcntl.fcntl(fd, fcntl.F_SETFL, fl | os.O_NONBLOCK)
-            self.state.current_track = track
+            self.state.current = HistoryEntry(track, datetime.utcnow())
             self.state.stopped = False
         except:
             raise
@@ -136,26 +146,25 @@ class Player(object):
         if self._subprocess is not None:
             data = self._subprocess.stderr.read()
             retval = self._subprocess.poll()
-            self._log_status(data, retval)
+            if retval is not None and retval > 0:
+                self._log_error(data, retval)
             return retval is None
         return False
 
-    def _log_status(self, data, retval):
+    def _log_error(self, data, retval):
 
+        self.state.current.error = True
         if data:
             lines = [ line for line in re.split("[\n\r]+", data.decode("utf-8")) if line ]
             if lines:
-                self.state.last_output = lines[0]
-        if retval is not None and retval > 0:
-            self.state.last_error = self.state.last_output
+                self.state.current.error_output = lines[0]
 
-    def _update_recently_played(self):
+    def _update_last_entry(self):
 
-        if self.state.current_track is not None:
-            while self.state.recently_played.count(self.state.current_track):
-                self.state.recently_played.remove(self.state.current_track)
-            self.state.recently_played.append(self.state.current_track)
-        self.state.current_track = None
+        if self.state.current is not None:
+            self.state.current.end_time = datetime.utcnow()
+        self.state.last_entry = self.state.current
+        self.state.current = None
 
     def _append_to_root(self, filename):
 
