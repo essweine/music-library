@@ -3,7 +3,7 @@ from uuid import uuid4
 
 from tornado.web import Application, StaticFileHandler, RequestHandler
 
-from .config import RECORDING_TABLE_DEFINITION, TRACK_TABLE_DEFINITION
+from .config import TABLE_DEFS
 from .importer import DirectoryListing, ImportHandler, ImportRootHandler, ImportDisplayHandler
 from .library import RecordingHandler, RecordingRootHandler, RecordingDisplayHandler
 from .player import Player, PlayerHandler
@@ -36,8 +36,8 @@ class MusicLibrary(Application):
         try:
             self.conn = sqlite3.connect(dbname, detect_types=sqlite3.PARSE_DECLTYPES)
             cursor = self.conn.cursor()
-            cursor.execute(RECORDING_TABLE_DEFINITION)
-            cursor.execute(TRACK_TABLE_DEFINITION)
+            for stmt in TABLE_DEFS:
+                cursor.execute(stmt)
             self.conn.commit()
             cursor.close()
         except:

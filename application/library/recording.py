@@ -2,9 +2,8 @@ import sqlite3
 import json
 import os.path
 from datetime import datetime
-from collections import namedtuple
 
-Column = namedtuple('Column', [ 'name', 'type', 'default', 'updateable' ])
+from ..db import Column, insert_statement, update_statement
 
 RECORDING_COLUMNS = [
     Column("id", "text", None, False),
@@ -27,17 +26,10 @@ TRACK_COLUMNS = [
     Column("track_num", "int", None, True),
     Column("title", "text", None, True),
     Column("filename", "text", None, False),
-    Column("listen_count", "int", 0, True),
     Column("rating", "int", None, True),
 ]
 
 class Recording(object):
-
-    @staticmethod
-    def new():
-        obj = dict([ (column.name, column.default) for column in RECORDING_COLUMNS ])
-        obj["tracks"] = [ ]
-        return obj
 
     def __init__(self, cursor, recording_id):
 
@@ -70,11 +62,71 @@ class Recording(object):
 
         return json.dumps(self.as_dict(), indent = 2, separators = [ ", ", ": " ])
 
-class Track(object):
+    @staticmethod
+    def create_recording(cursor, **recording):
+
+        insert_recording = insert_statement("recording", RECORDING_COLUMNS)
+        insert_track = insert_statement("track", TRACK_COLUMNS)
+
+        recording["added_date"] = datetime.utcnow().strftime("%Y-%m-%d")
+        recording_values = [ recording.get(col.name, col.default) for col in RECORDING_COLUMNS ]
+
+        for track in recording.get("tracks", [ ]):
+            track["recording_id"] = recording["id"]
+        get_track = lambda track: [ track.get(col.name, col.default) for col in TRACK_COLUMNS ]
+        tracks_values = [ get_track(track) for track in recording.get("tracks", [ ]) ]
+
+        try:
+            cursor.execute(insert_recording, recording_values)
+            cursor.executemany(insert_track, tracks_values)
+        except Exception as exc:
+            raise
+
+    @staticmethod
+    def update_recording(cursor, **recording):
+
+        recording_vals = [ recording.get(col.name) for col in RECORDING_COLUMNS if col.updateable ] + [ recording.get("id") ]
+        update_recording = update_statement("recording", "id", RECORDING_COLUMNS)
+
+        get_track = lambda track: [ track.get(col.name) for col in TRACK_COLUMNS if col.updateable ] + [ track.get("filename") ]
+        track_vals = [ get_track(track) for track in recording.get("tracks", [ ]) ]
+        update_track = update_statement("track", "filename", TRACK_COLUMNS)
+
+        try:
+            cursor.execute(update_recording, recording_vals)
+            cursor.executemany(update_track, track_vals)
+        except:
+            raise
+
+    @staticmethod
+    def update_rating(cursor, recording_id, data):
+
+        item = data.get("item")
+        rating = data.get("rating")
+
+        if item == "recording":
+            update = "update recording set rating=? where id=?"
+            values = (rating, recording_id)
+        elif item == "sound_rating":
+            update = "update recording set sound_rating=? where id=?"
+            values = (rating, recording_id)
+        else:
+            update = "update track set rating=? where filename=?"
+            values = (rating, item)
+
+        try:
+            cursor.execute(update, values)
+        except:
+            raise
 
     @staticmethod
     def new():
-        return dict([ (column.name, column.default) for column in TRACK_COLUMNS ])
+
+        obj = dict([ (column.name, column.default) for column in RECORDING_COLUMNS ])
+        obj["tracks"] = [ ]
+        return obj
+
+class Track(object):
 
     def __init__(self, track):
 
@@ -88,3 +140,8 @@ class Track(object):
     def __repr__(self):
 
         return json.dumps(self.__dict__, indent = 2, separators = [ ", ", ": " ])
+
+    @staticmethod
+    def new():
+        return dict([ (column.name, column.default) for column in TRACK_COLUMNS ])
+

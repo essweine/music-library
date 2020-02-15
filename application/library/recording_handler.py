@@ -5,7 +5,6 @@ from tornado.web import RequestHandler
 from tornado.options import options
 
 from . import Recording
-from .db import create_recording, update_recording, update_rating
 from ..importer import DirectoryListing
 
 class RecordingRootHandler(RequestHandler):
@@ -86,9 +85,9 @@ class RecordingHandler(RequestHandler):
             try:
                 cursor = self.application.conn.cursor()
                 if item is None:
-                    update_recording(cursor, **self.json_body)
+                    Recording.update_recording(cursor, **self.json_body)
                 elif item == "rating":
-                    update_rating(cursor, recording_id, self.json_body)
+                    Recording.update_rating(cursor, recording_id, self.json_body)
                 cursor.close()
                 self.application.conn.commit()
             except:
@@ -100,7 +99,7 @@ class RecordingHandler(RequestHandler):
         if self.json_body:
             try:
                 cursor = self.application.conn.cursor()
-                create_recording(cursor, **self.json_body)
+                Recording.create_recording(cursor, **self.json_body)
                 self.application.conn.commit()
             except:
                 raise
