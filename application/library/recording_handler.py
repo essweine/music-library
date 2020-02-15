@@ -25,11 +25,8 @@ class RecordingRootHandler(RequestHandler):
                 "title": row["title"],
                 "description": row["artist"],
                 "buttons": [
-                    {
-                        "id": "view-recording",
-                        "action": "window.location.href='/recording/{0}'".format(row["id"]),
-                        "text": "View recording",
-                    }
+                    { "id": "view-recording", "item": row["id"], "text": "View recording" },
+                    { "id": "play-recording", "item": row["id"], "text": "Play recording" },
                 ]
             })
 

@@ -15,16 +15,8 @@ class ImportRootHandler(RequestHandler):
                 "title": entry.name,
                 "description": "{0} files".format(len(entry.audio)),
                 "buttons": [
-                    { 
-                        "id": "add",
-                        "action": "window.location.href='/importer/{0}'".format(entry.id),
-                        "text": "Add directory to library",
-                    },
-                    { 
-                        "id": "add-parent",
-                        "action": "window.location.href='/importer/{0}?parent=true'".format(entry.id),
-                        "text": "Add parent directory to library",
-                    },
+                    { "id": "add", "item": entry.id, "text": "Add directory to library" },
+                    { "id": "add-parent", "item": entry.id, "text": "Add parent directory to library" },
                 ]
             })
 

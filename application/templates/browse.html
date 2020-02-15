@@ -3,6 +3,7 @@
     <title>{{page_title}}</title>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/listing.css">
+    <script src="/static/browse.js" type="module" defer></script>
   </head>
   <body>
     <div id="root-container">
@@ -12,11 +13,11 @@
         <div class="list-root">
           {% for item in items %}
           <div class="listing">
-            {{item['title']}}
-            <br/>{{item['description']}}
+            {{item["title"]}}
+            <br/>{{item["description"]}}
             <div class="options">
               {% for button in item['buttons'] %}
-              <button id="{{button['id']}}" onclick="{% raw button['action'] %}">{{button['text']}}</button>
+              <button class="{{button['id']}}" item="{{button['item']}}">{{button["text"]}}</button>
               {% end %}
             </div>
           </div>

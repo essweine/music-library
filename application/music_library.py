@@ -71,4 +71,4 @@ class MusicLibrary(Application):
 
         while self.player.conn.poll():
             self.player.update_state(self.player.conn.recv())
-
+            print(self.player.state)
