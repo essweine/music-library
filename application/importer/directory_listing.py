@@ -85,7 +85,7 @@ class DirectoryListing(object):
     def _parse(self, filename):
 
         try:
-            text = open(os.path.join(self.root, filename))
+            text = open(os.path.join(self.root, filename), 'rb')
         except:
             raise
 
@@ -95,6 +95,13 @@ class DirectoryListing(object):
         in_first_section, in_setlist = True, False
 
         for line in text:
+
+            try:
+                line = line.decode("utf-8")
+            except UnicodeDecodeError:
+                line = line.decode("latin-1")
+            except:
+                raise
 
             line = line.strip()
 

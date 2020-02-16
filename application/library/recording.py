@@ -50,8 +50,10 @@ class Recording(object):
 
         recording = self.__dict__.copy()
         recording["tracks"] = [ track.__dict__.copy() for track in recording["tracks"] ]
-        recording["recording_date"] = recording["recording_date"].strftime("%Y-%m-%d")
-        recording["added_date"] = recording["added_date"].strftime("%Y-%m-%d")
+        if recording["recording_date"] is not None:
+            recording["recording_date"] = recording["recording_date"].strftime("%Y-%m-%d")
+        if recording["added_date"] is not None:
+            recording["added_date"] = recording["added_date"].strftime("%Y-%m-%d")
         return recording
 
     def as_json(self):

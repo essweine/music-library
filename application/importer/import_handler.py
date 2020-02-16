@@ -32,6 +32,7 @@ class ImportDisplayHandler(RequestHandler):
             self.redirect("/importer/{0}".format(parent.id))
         else:
             recording = entry.as_recording(entry.text[0] if entry.text else None, False)
+            recording["tracks"] = [ track for track in recording["tracks"] if track["filename"] is not None ]
             self.render("recording.html",
                 context = "import",
                 page_title = entry.name,
