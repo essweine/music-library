@@ -1,15 +1,9 @@
 import json
 
 from tornado.web import RequestHandler
+from ..util import BaseApiHandler
 
-class PlayerHandler(RequestHandler):
-
-    def prepare(self):
-
-        if "application/json" in self.request.headers.get("Content-Type", ""):
-            self.json_body = json.loads(self.request.body)
-        else:
-            self.json_body = None
+class PlayerHandler(BaseApiHandler):
 
     def get(self):
 

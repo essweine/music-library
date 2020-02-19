@@ -6,6 +6,7 @@ from tornado.options import options
 
 from . import Recording
 from ..importer import DirectoryListing
+from ..util import BaseApiHandler
 
 class RecordingRootHandler(RequestHandler):
 
@@ -50,14 +51,7 @@ class RecordingDisplayHandler(RequestHandler):
             text = 'file="{0}"'.format(recording.notes) if recording.notes else "",
         )
 
-class RecordingHandler(RequestHandler):
-
-    def prepare(self):
-
-        if "application/json" in self.request.headers.get("Content-Type", ""):
-            self.json_body = json.loads(self.request.body)
-        else:
-            self.json_body = None
+class RecordingHandler(BaseApiHandler):
 
     def get(self, recording_id, item = None):
 

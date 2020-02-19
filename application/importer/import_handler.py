@@ -2,6 +2,7 @@ import os, re, json
 from uuid import uuid4
 
 from tornado.web import RequestHandler
+from ..util import BaseApiHandler
 
 from . import DirectoryListing
 
@@ -41,7 +42,7 @@ class ImportDisplayHandler(RequestHandler):
                 text = " ".join([ 'file{0}="{1}"'.format(idx, fn) for idx, fn in enumerate(entry.text) ]),
             )
 
-class ImportHandler(RequestHandler):
+class ImportHandler(BaseApiHandler):
 
     def get(self, directory_id):
 
