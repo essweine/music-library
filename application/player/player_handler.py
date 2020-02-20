@@ -7,7 +7,7 @@ class PlayerHandler(BaseApiHandler):
 
     def get(self):
 
-        return self.application.player.state.as_json()
+        self.write(json.dumps(self.application.player.state, cls = self.JsonEncoder))
 
     def post(self):
 

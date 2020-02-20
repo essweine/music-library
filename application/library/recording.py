@@ -1,9 +1,9 @@
 import sqlite3
-import json
 import os.path
 from datetime import datetime
 
 from ..db import Column, insert_statement, update_statement
+from ..util import JsonEncoder
 
 RECORDING_COLUMNS = [
     Column("id", "text", None, False),
@@ -31,41 +31,38 @@ TRACK_COLUMNS = [
 
 class Recording(object):
 
-    def __init__(self, cursor, recording_id):
+    def __init__(self, recording = { }):
 
-        try:
-            cursor.row_factory = sqlite3.Row
-            cursor.execute("select * from recording where id=?", (recording_id, ))
-            recording = cursor.fetchone()
-
-            for column in RECORDING_COLUMNS:
-                self.__setattr__(column.name, recording[column.name])
-
-            cursor.execute("select * from track where recording_id=? order by track_num", (recording_id, ))
-            self.tracks = [ Track(track) for track in cursor.fetchall() ]
-        except:
-            raise
+        for column in RECORDING_COLUMNS:
+            self.__setattr__(column.name, recording.get(column.name, column.default))
+        self.tracks = [ Track(track) for track in recording.get("tracks", [ ]) ]
 
     def as_dict(self):
 
         recording = self.__dict__.copy()
-        recording["tracks"] = [ track.__dict__.copy() for track in recording["tracks"] ]
-        if recording["recording_date"] is not None:
-            recording["recording_date"] = recording["recording_date"].strftime("%Y-%m-%d")
-        if recording["added_date"] is not None:
-            recording["added_date"] = recording["added_date"].strftime("%Y-%m-%d")
+        recording["tracks"] = [ track.as_dict() for track in recording["tracks"] ]
         return recording
 
-    def as_json(self):
-
-        return json.dumps(self.as_dict())
-
     def __repr__(self):
+        return json.dumps(self, cls = JsonEncoder, indent = 2, separators = [ ", ", ": " ])
 
-        return json.dumps(self.as_dict(), indent = 2, separators = [ ", ", ": " ])
+    @classmethod
+    def get(cls, cursor, recording_id):
+
+        try:
+            cursor.row_factory = sqlite3.Row
+            cursor.execute("select * from recording where id=?", (recording_id, ))
+            recording = dict(cursor.fetchone())
+
+            cursor.execute("select * from track where recording_id=? order by track_num", (recording_id, ))
+            recording["tracks"] = [ dict(track) for track in cursor.fetchall() ]
+        except:
+            raise
+
+        return cls(recording)
 
     @staticmethod
-    def create_recording(cursor, **recording):
+    def create(cursor, recording):
 
         insert_recording = insert_statement("recording", RECORDING_COLUMNS)
         insert_track = insert_statement("track", TRACK_COLUMNS)
@@ -85,7 +82,7 @@ class Recording(object):
             raise
 
     @staticmethod
-    def update_recording(cursor, **recording):
+    def update(cursor, recording):
 
         recording_vals = [ recording.get(col.name) for col in RECORDING_COLUMNS if col.updateable ] + [ recording.get("id") ]
         update_recording = update_statement("recording", "id", RECORDING_COLUMNS)
@@ -101,7 +98,7 @@ class Recording(object):
             raise
 
     @staticmethod
-    def update_rating(cursor, recording_id, data):
+    def set_rating(cursor, recording_id, data):
 
         item = data.get("item")
         rating = data.get("rating")
@@ -121,29 +118,16 @@ class Recording(object):
         except:
             raise
 
-    @staticmethod
-    def new():
-
-        obj = dict([ (column.name, column.default) for column in RECORDING_COLUMNS ])
-        obj["tracks"] = [ ]
-        return obj
-
 class Track(object):
 
-    def __init__(self, track):
-
+    def __init__(self, track = { }):
         for column in TRACK_COLUMNS:
-            self.__setattr__(column.name, track[column.name])
+            self.__setattr__(column.name, track.get(column.name, column.default))
 
-    def as_json(self):
-
-        return json.dumps(self.__dict__)
+    def as_dict(self):
+        return self.__dict__.copy()
 
     def __repr__(self):
+        return json.dumps(self, cls = JsonEncoder, indent = 2, separators = [ ", ", ": " ])
 
-        return json.dumps(self.__dict__, indent = 2, separators = [ ", ", ": " ])
-
-    @staticmethod
-    def new():
-        return dict([ (column.name, column.default) for column in TRACK_COLUMNS ])
 

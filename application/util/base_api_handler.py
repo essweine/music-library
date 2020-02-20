@@ -1,6 +1,13 @@
+import json
 from tornado.web import RequestHandler
 
+from .json_encoder import JsonEncoder
+
 class BaseApiHandler(RequestHandler):
+
+    def initialize(self):
+
+        self.JsonEncoder = JsonEncoder
 
     def prepare(self):
 

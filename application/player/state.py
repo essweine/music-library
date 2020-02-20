@@ -1,5 +1,7 @@
 import json
 
+from ..util import JsonEncoder
+
 class HistoryEntry(object):
 
     def __init__(self, track, start_time):
@@ -9,6 +11,10 @@ class HistoryEntry(object):
         self.end_time = None
         self.error = False
         self.error_output = None
+
+    def as_dict(self):
+
+        return self.__dict__.copy()
 
     def get_values(self):
 
@@ -34,6 +40,10 @@ class State(object):
         self.last_entry = last_entry
         self.next_tracks = next_tracks
 
+    def as_dict(self):
+
+        return self.__dict__.copy()
+
     def copy(self):
 
         return State(
@@ -54,13 +64,4 @@ class State(object):
 
     def __repr__(self):
 
-        stopped = "stopped" if self.stopped else "playing"
-        current = " " + self.current.track.title if self.current is not None else ""
-        up_next = ": " + self.next_tracks[0].title if self.next_tracks else ""
-        later = " + " + str(len(self.next_tracks) - 1) if len(self.next_tracks) > 1 else ""
-        return "{stopped}{current}, next{up_next}{later}".format(
-            stopped = stopped,
-            current = current,
-            up_next = up_next,
-            later = later
-        )
+        return json.dumps(self, cls = JsonEncoder, indent = 2, separators = [ ", ", ": " ])

@@ -6,6 +6,7 @@ from dateutil.parser import parse as parsedate
 
 from ..config import AUDIO_FILETYPES, IMAGE_FILETYPES, TEXT_FILETYPES
 from ..library import Recording, Track
+from ..util import JsonEncoder
 
 class DirectoryListing(object):
 
@@ -47,40 +48,37 @@ class DirectoryListing(object):
         self.images = sorted(self.images)
         self.text = sorted(self.text)
 
-    def as_json(self):
+    def as_dict(self):
 
-        return json.dumps({
+        return {
             "id": self.id,
             "name": self.name,
             "audio": self.audio,
             "images": self.images,
             "text": self.text,
-        })
+        }
 
-    def as_recording(self, textfile = None, as_json = True):
+    def as_recording(self, textfile = None):
 
         if textfile:
-            data = self._parse(textfile)
-            data["notes"] = textfile
+            recording = self._parse(textfile)
+            recording.notes = textfile
         else:
-            data = Recording.new()
-            data["tracks"] = [ ]
+            data = Recording()
+            data.tracks = [ ]
 
-        data["id"], data["directory"] = self.id, self.name
+        recording.id, recording.directory = self.id, self.name
         for idx, filename in enumerate(self.audio):
-            if idx < len(data["tracks"]):
-                track = data["tracks"][idx]
+            if idx < len(recording.tracks):
+                track = recording.tracks[idx]
             else:
-                track = Track.new()
-                data["tracks"].append(track)
-            track["filename"]     = filename
-            track["track_num"]    = idx + 1
-            track["recording_id"] = self.id
+                track = Track()
+                recording.tracks.append(track)
+            track.filename     = filename
+            track.track_num    = idx + 1
+            track.recording_id = self.id
 
-        if as_json:
-            return json.dumps(data)
-        else:
-            return data
+        return recording
 
     def _parse(self, filename):
 
@@ -89,8 +87,7 @@ class DirectoryListing(object):
         except:
             raise
 
-        record = Recording.new()
-        record["tracks"] = [ ]
+        recording = Recording()
 
         in_first_section, in_setlist = True, False
 
@@ -106,7 +103,7 @@ class DirectoryListing(object):
             line = line.strip()
 
             if not re.search("\w+", line):
-                if record["artist"] is not None:
+                if recording.artist is not None:
                     in_first_section = False
                 in_setlist = False
                 continue
@@ -118,39 +115,39 @@ class DirectoryListing(object):
 
             if in_first_section:
 
-                if record["artist"] is None:
-                    record["artist"] = line
+                if recording.artist is None:
+                    recording.artist = line
                     continue
 
-                if record["recording_date"] is None:
+                if recording.recording_date is None:
                     try:
-                        record["recording_date"] = parsedate(line).strftime("%Y-%m-%d")
+                        recording.recording_date = parsedate(line).strftime("%Y-%m-%d")
                         continue
                     except:
-                        record["recording_date"] = self._get_date_from_line(line)
+                        recording.recording_date = self._get_date_from_line(line)
 
-                if record["venue"] is None and not re.match("\w+,\s+\w+", line):
-                    record["venue"] = line
+                if recording.venue is None and not re.match("\w+,\s+\w+", line):
+                    recording.venue = line
 
                 if not re.match("source|lineage|transfer", line, flags = re.I):
-                    record["title"] = line if record["title"] is None else record["title"] + " " + line
+                    recording.title = line if recording.title is None else recording.title + " " + line
 
             else:
 
                 numbered_track = re.match("(D\d+)?(T\d+)?(\d+)(\W+?\s*|\s+)(.*)", line, flags = re.I)
                 timed_track = re.search("(.*)\(?\d+:\d{2}\)?", line)
-                track = Track.new()
+                track = Track()
                 if numbered_track:
-                    track["title"] = numbered_track.group(5)
+                    track.title = numbered_track.group(5)
                 elif timed_track:
-                    track["title"] = timed_track.group(1)
+                    track.title = timed_track.group(1)
                 elif in_setlist:
-                    track["title"] = line
+                    track.title = line
 
-                if track["title"]:
-                    record["tracks"].append(track)
+                if track.title:
+                    recording.tracks.append(track)
 
-        return record
+        return recording
 
     def _get_date_from_line(self, line):
 
@@ -174,5 +171,5 @@ class DirectoryListing(object):
 
     def __repr__(self):
 
-        return json.dumps(self.as_recording(), indent = 2, separators = [ ", ", ": " ])
+        return json.dumps(self, cls = JsonEncoder, indent = 2, separators = [ ", ", ": " ])
 

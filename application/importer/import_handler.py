@@ -32,8 +32,8 @@ class ImportDisplayHandler(RequestHandler):
             self.application.unindexed_directory_list[parent.id] = parent
             self.redirect("/importer/{0}".format(parent.id))
         else:
-            recording = entry.as_recording(entry.text[0] if entry.text else None, False)
-            recording["tracks"] = [ track for track in recording["tracks"] if track["filename"] is not None ]
+            recording = entry.as_recording(entry.text[0] if entry.text else None)
+            recording.tracks = [ track for track in recording.tracks if track.filename is not None ]
             self.render("recording.html",
                 context = "import",
                 page_title = entry.name,
@@ -51,12 +51,13 @@ class ImportHandler(BaseApiHandler):
         entry = self.application.unindexed_directory_list[directory_id]
         if output_type == "recording":
             if source is not None:
-                self.write(entry.as_recording(source))
+                response = entry.as_recording(source)
             elif entry.text:
-                self.write(entry.as_recording(entry.text[0]))
+                response = entry.as_recording(entry.text[0])
             else:
-                self.write(entry.as_recording())
+                response = entry.as_recording()
         else:
-            self.write(entry.as_json())
+           response = entry
 
+        self.write(json.dumps(response, cls = self.JsonEncoder, indent = 2, separators = [ ", ", ": " ]))
 

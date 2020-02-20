@@ -79,7 +79,7 @@ class Player(object):
         if state.last_entry is not None and (state.last_entry.end_time - state.last_entry.start_time).seconds > 10:
             values = state.last_entry.get_values()
             try:
-                History.add_entry(cursor, **values)
+                History.create(cursor, values)
             except:
                 raise
         state.last_entry = None

@@ -2,14 +2,22 @@ from ..db import Column, insert_statement
 
 HISTORY_COLUMNS = [
     Column("filename", "text", None, False),
-    Column("start_time", "date", None, False),
-    Column("end_time", "date", None, False),
+    Column("start_time", "datetime", None, False),
+    Column("end_time", "datetime", None, False),
 ]
 
 class History(object):
 
+    def __init__(self, entry = { }):
+
+        for column in HISTORY_COLUMNS:
+            self.__setattr__(column.name, entry.get(column.name, column.default))
+
+    def as_dict(self):
+        return self.__dict__.copy()
+
     @staticmethod
-    def add_entry(cursor, **entry):
+    def create(cursor, entry):
 
         statement = insert_statement("history", HISTORY_COLUMNS)
         values = [ entry.get(col.name) for col in HISTORY_COLUMNS ]
@@ -17,3 +25,4 @@ class History(object):
             cursor.execute(statement, values)
         except:
             raise
+

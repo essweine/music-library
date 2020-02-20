@@ -38,7 +38,7 @@ class RecordingDisplayHandler(RequestHandler):
 
         try:
             cursor = self.application.conn.cursor()
-            recording = Recording(cursor, recording_id)
+            recording = Recording.get(cursor, recording_id)
             cursor.close()
         except:
             raise
@@ -46,7 +46,7 @@ class RecordingDisplayHandler(RequestHandler):
         self.render("recording.html",
             context = "display",
             page_title = recording.title,
-            recording = recording.as_dict(),
+            recording = recording,
             images = 'file="{0}"'.format(recording.artwork) if recording.artwork else "",
             text = 'file="{0}"'.format(recording.notes) if recording.notes else "",
         )
@@ -57,7 +57,7 @@ class RecordingHandler(BaseApiHandler):
 
         try:
             cursor = self.application.conn.cursor()
-            recording = Recording(cursor, recording_id)
+            recording = Recording.get(cursor, recording_id)
             cursor.close()
         except:
             raise
@@ -65,13 +65,15 @@ class RecordingHandler(BaseApiHandler):
         if item == "entry":
             entry = DirectoryListing(recording.directory, self.application.root)
             entry.id = recording_id
-            self.write(entry.as_json())
+            response = entry
         elif item == "notes":
             entry = DirectoryListing(recording.directory, self.application.root)
             entry.id = recording_id
-            self.write(entry.as_recording(recording.notes, as_json = True))
+            response = entry.as_recording(recording.notes)
         else:
-            self.write(recording.as_json())
+            response = recording
+
+        self.write(json.dumps(response, cls = self.JsonEncoder))
 
     def put(self, recording_id, item = None):
 
@@ -79,9 +81,9 @@ class RecordingHandler(BaseApiHandler):
             try:
                 cursor = self.application.conn.cursor()
                 if item is None:
-                    Recording.update_recording(cursor, **self.json_body)
+                    Recording.update(cursor, self.json_body)
                 elif item == "rating":
-                    Recording.update_rating(cursor, recording_id, self.json_body)
+                    Recording.set_rating(cursor, recording_id, self.json_body)
                 cursor.close()
                 self.application.conn.commit()
             except:
@@ -93,7 +95,7 @@ class RecordingHandler(BaseApiHandler):
         if self.json_body:
             try:
                 cursor = self.application.conn.cursor()
-                Recording.create_recording(cursor, **self.json_body)
+                Recording.create(cursor, self.json_body)
                 self.application.conn.commit()
             except:
                 raise

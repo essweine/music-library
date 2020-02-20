@@ -15,7 +15,7 @@
       </div>
       <div id="content">
 
-          <div is="recording-container" directory="{{recording['directory']}}" context="{{context}}">
+          <div is="recording-container" directory="{{recording.directory}}" context="{{context}}">
 
           <div id="recording-overview">
             <span>{{page_title}}</span>
@@ -26,22 +26,22 @@
           </div>
 
           <div is="recording-info"
-               title="{{recording['title']}}"
-               artist="{{recording['artist']}}"
-               recording-date="{{recording['recording_date']}}"
-               venue="{{recording['venue']}}"
-               {% if recording["rating"] %}rating="{{recording['rating']}}"{% end %}
-               {% if recording["sound_rating"] %}sound-rating="{{recording['rating']}}"{% end %}>
+               title="{{recording.title}}"
+               artist="{{recording.artist}}"
+               recording-date="{{recording.recording_date}}"
+               venue="{{recording.venue}}"
+               {% if recording.rating %}rating="{{recording.rating}}"{% end %}
+               {% if recording.sound_rating %}sound-rating="{{recording.rating}}"{% end %}>
           </div>
 
           <div is="tracklist-container">
 
-            {% for track in recording["tracks"] %}
+            {% for track in recording.tracks %}
             <div is="tracklist-entry"
-                 title="{{track['title']}}" 
-                 filename="{{track['filename']}}" 
-                 {% if track["rating"] %}rating="{{track['rating']}}"{% end %}
-                 track-num={{track['track_num']}}>
+                 title="{{track.title}}" 
+                 filename="{{track.filename}}" 
+                 {% if track.rating %}rating="{{track.rating}}"{% end %}
+                 track-num={{track.track_num}}>
             </div>
             {% end %}
 
