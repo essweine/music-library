@@ -2,8 +2,8 @@ from ..db import Column, insert_statement
 
 HISTORY_COLUMNS = [
     Column("filename", "text", None, False),
-    Column("start_time", "datetime", None, False),
-    Column("end_time", "datetime", None, False),
+    Column("start_time", "timestamp", None, False),
+    Column("end_time", "timestamp", None, False),
 ]
 
 class History(object):

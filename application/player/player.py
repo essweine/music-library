@@ -1,6 +1,5 @@
 from multiprocessing import Process, Pipe
-import subprocess, signal, time
-import os, fcntl
+import subprocess, signal, time, os
 import re
 from datetime import datetime
 
@@ -55,9 +54,13 @@ class Player(object):
                 elif task.name == "stop":
                     self._handle_stop()
 
-            if not self.state.stopped and not self._subprocess_running():
+            if self.state.stopped:
+                pass
+            elif self._subprocess is None:
                 self._update_last_entry()
                 self._handle_advance_playlist()
+            else:
+                self._check_subprocess()
 
             if self.state != initial_state:
                 conn.send(self.state)
@@ -76,47 +79,17 @@ class Player(object):
 
     def update_state(self, state, cursor):
 
-        if state.last_entry is not None and (state.last_entry.end_time - state.last_entry.start_time).seconds > 10:
-            values = state.last_entry.get_values()
-            try:
-                History.create(cursor, values)
-            except:
-                raise
-        state.last_entry = None
+        if self.state.last_entry is not None:
+            if (self.state.last_entry.end_time - self.state.last_entry.start_time).seconds > 10:
+                entry = self.state.last_entry.log()
+                History.create(cursor, entry)
         self.state = state
-
-    def _handle_stop(self):
-
-        try:
-            self._subprocess.send_signal(signal.SIGTERM)
-            self._subprocess = None
-            self._update_last_entry()
-            self.state.stopped = True
-        except:
-            raise
 
     def _handle_play_track(self, task):
 
         if self._subprocess_running():
             self._handle_stop()
         self._play(task.track)
-
-    def _play(self, track):
-
-        try:
-            filename = self._append_to_root(track.filename)
-            self._subprocess = subprocess.Popen(
-                CMD + [ "-i", filename ] + OUTPUT_ARGS,
-                stdout = subprocess.DEVNULL,
-                stderr = subprocess.PIPE,
-            )
-            fd = self._subprocess.stderr.fileno()
-            fl = fcntl.fcntl(fd, fcntl.F_GETFL)
-            fcntl.fcntl(fd, fcntl.F_SETFL, fl | os.O_NONBLOCK)
-            self.state.current = HistoryEntry(track, datetime.utcnow())
-            self.state.stopped = False
-        except:
-            raise
 
     def _handle_advance_playlist(self):
 
@@ -141,30 +114,59 @@ class Player(object):
         elif task.position < len(self.state.next_tracks):
             self.state.next_tracks.pop(task.position)
 
-    def _subprocess_running(self): 
+    def _handle_stop(self):
 
-        if self._subprocess is not None:
-            data = self._subprocess.stderr.read()
-            retval = self._subprocess.poll()
-            if retval is not None and retval > 0:
-                self._log_error(data, retval)
-            return retval is None
-        return False
+        try:
+            if self._subprocess is not None:
+                self._subprocess.send_signal(signal.SIGTERM)
+                self._reset_subprocess()
+            self.state.stopped = True
+        except:
+            raise
 
-    def _log_error(self, data, retval):
+    def _play(self, track):
 
-        self.state.current.error = True
-        if data:
-            lines = [ line for line in re.split("[\n\r]+", data.decode("utf-8")) if line ]
-            if lines:
-                self.state.current.error_output = lines[0]
+        try:
+            filename = self._append_to_root(track.filename)
+            self._subprocess = subprocess.Popen(
+                CMD + [ "-i", filename ] + OUTPUT_ARGS,
+                stderr = subprocess.PIPE,
+            )
+            fd = self._subprocess.stderr.fileno()
+            os.set_blocking(fd, False)
+            self.state.current = HistoryEntry(track, datetime.utcnow())
+            self.state.stopped = False
+        except:
+            raise
+
+    def _subprocess_running(self):
+
+        return self._subprocess is not None and self._subprocess.poll() is None
+
+    def _check_subprocess(self): 
+
+        data = self._subprocess.stderr.read()
+        retval = self._subprocess.poll()
+        if retval is not None:
+            if retval > 0:
+                self.state.current.error = True
+                self.state.current.error_output = data.decode("utf-8")
+            self._reset_subprocess()
+
+    def _reset_subprocess(self):
+
+        self._subprocess.wait()
+        fd = self._subprocess.stderr.fileno()
+        os.set_blocking(fd, True)
+        self._update_last_entry()
+        self._subprocess = None
 
     def _update_last_entry(self):
 
         if self.state.current is not None:
             self.state.current.end_time = datetime.utcnow()
-        self.state.last_entry = self.state.current
-        self.state.current = None
+            self.state.last_entry = self.state.current
+            self.state.current = None
 
     def _append_to_root(self, filename):
 

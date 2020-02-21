@@ -14,8 +14,8 @@ class JsonEncoder(json.JSONEncoder):
 
         if issubclass(obj.__class__, (JsonSerializable, )):
             return obj.as_dict()
-        elif isinstance(obj, (date, )):
-            return obj.strftime("%Y-%m-%d")
-        elif isinstance(obj, (datetime, )):
+        elif isinstance(obj, datetime):
             return obj.strftime("%Y-%m-%dT%H:%M:%S.%fZ")
+        elif isinstance(obj, date):
+            return obj.strftime("%Y-%m-%d")
         return json.JSONEncoder.default(self, obj)

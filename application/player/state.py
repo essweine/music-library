@@ -16,7 +16,7 @@ class HistoryEntry(object):
 
         return self.__dict__.copy()
 
-    def get_values(self):
+    def log(self):
 
         return { 
             "filename": self.track.filename, 
