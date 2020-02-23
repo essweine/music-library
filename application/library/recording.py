@@ -103,10 +103,10 @@ class Recording(object):
         item = data.get("item")
         rating = data.get("rating")
 
-        if item == "recording":
+        if item == "rating":
             update = "update recording set rating=? where id=?"
             values = (rating, recording_id)
-        elif item == "sound_rating":
+        elif item == "sound-rating":
             update = "update recording set sound_rating=? where id=?"
             values = (rating, recording_id)
         else:

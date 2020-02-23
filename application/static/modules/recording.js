@@ -11,6 +11,13 @@ class Recording {
         request.send();
     }
 
+    updateRating(recordingId, data) {
+        let request = new XMLHttpRequest();
+        request.open("PUT", this.base + "/" + recordingId + "/rating");
+        request.setRequestHeader("Content-Type", "application/json");
+        request.send(JSON.stringify(data));
+    }
+
     parseResponse(e, callback) {
         let recording = JSON.parse(e.target.response);
         callback(recording);

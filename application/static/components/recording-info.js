@@ -120,7 +120,7 @@ class RecordingInfo extends HTMLDivElement {
         ratingContainer.setRating(this.getAttribute(attribute));
         ratingContainer.addEventListener("rating-change", e => {
             (e.detail != null) ? this.setAttribute(attribute, e.detail) : this.removeAttribute(attribute);
-            let detail = { item: attribute, detail: e.detail };
+            let detail = { item: attribute, rating: e.detail };
             let ev = new CustomEvent("update-rating", { detail: detail, bubbles: true });
             this.dispatchEvent(ev);
         });

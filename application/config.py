@@ -1,6 +1,6 @@
 AUDIO_FILETYPES = [ "flac" ]
 TEXT_FILETYPES = [ "txt" ]
-IMAGE_FILETYPES = [ "png", "jpeg", "jpg" ]
+IMAGE_FILETYPES = [ "png", "jpeg", "jpg", "gif" ]
 
 from .library.recording import RECORDING_COLUMNS, TRACK_COLUMNS
 from .player.history import HISTORY_COLUMNS

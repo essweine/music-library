@@ -1,6 +1,10 @@
+import { Recording } from "/static/modules/recording.js";
+
 class RecordingContainer extends HTMLDivElement {
     constructor() {
         super();
+
+        this.recordingApi = new Recording();
 
         this.id =  "recording-container";
         this.recordingId = window.location.href.split("/").pop();
@@ -156,6 +160,7 @@ class RecordingContainer extends HTMLDivElement {
     }
 
     addToLibrary() {
+        this.tracklist.saveTracks();
         let data = this.createPayload();
         let request = new XMLHttpRequest();
         request.addEventListener("load", e => window.location = "/recording/" + this.recordingId);
@@ -172,12 +177,7 @@ class RecordingContainer extends HTMLDivElement {
         request.send(JSON.stringify(data));
     }
 
-    updateRating(data) {
-        let request = new XMLHttpRequest();
-        request.open("PUT", "/api/recording/" + this.recordingId + "/rating");
-        request.setRequestHeader("Content-Type", "application/json");
-        request.send(JSON.stringify(data));
-    }
+    updateRating(data) { this.recordingApi.updateRating(this.recordingId, data); }
 }
 
 export { RecordingContainer }
