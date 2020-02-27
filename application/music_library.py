@@ -6,7 +6,7 @@ from tornado.web import Application, StaticFileHandler, RequestHandler
 from .config import TABLE_DEFS
 from .importer import DirectoryListing, ImportHandler, ImportRootHandler, ImportDisplayHandler
 from .library import RecordingHandler, RecordingRootHandler, RecordingDisplayHandler
-from .player import Player, PlayerHandler
+from .player import Player, PlayerHandler, PlayerDisplayHandler
 
 handlers = [ 
     (r"/importer", ImportRootHandler),
@@ -19,6 +19,7 @@ handlers = [
     (r"/api/recording/(.*?)", RecordingHandler),
     (r"/api/player", PlayerHandler),
     (r"/static", StaticFileHandler),
+    (r"/", PlayerDisplayHandler),
 ]
 
 class MusicLibrary(Application):
@@ -75,6 +76,6 @@ class MusicLibrary(Application):
                 self.player.update_state(self.player.conn.recv(), cursor)
                 cursor.close()
                 self.conn.commit()
-                print(self.player.state)
+                print("state changed")
             except:
                 raise

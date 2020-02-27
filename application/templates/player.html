@@ -1,0 +1,39 @@
+<html>
+  <head>
+    <title>Now Playing</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/main.css">
+    <link rel="stylesheet" href="/static/css/player.css">
+    <link rel="stylesheet" href="/static/css/rating-container.css">
+    <script src="/static/player.js" type="module" defer></script>
+  </head>
+  <body>
+    <div id="root-container">
+      <div id="navigation">
+        <span class="navigation-item" id="now-playing"><a href="/">Now Playing</a></span>
+        <span class="navigation-item" id="browse-recordings"><a href="/recording">Recordings</a></span>
+        <span class="navigation-item" id="browse-directories"><a href="/importer">Unindexed Directory List</a></span>
+      </div>
+      <div id="content">
+        <div is="player-container">
+          <div is="current-track" 
+            filename="" 
+            track-title="" 
+            artist="" 
+            recording-id=""
+            recording-title="" 
+            rating="" 
+            artwork="">
+              <div id="bullshit-container-1"></div>
+              <div id="bullshit-container-2"></div>
+          </div>
+          <div id="next-tracks">
+            <div class="tracklist-heading">Next Tracks</div>
+          </div>
+          <div id="recently-played">
+            <div class="tracklist-heading">Recently Played</div>
+          </div>
+        </div>
+      </div>
+    </body>
+</html>

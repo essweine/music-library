@@ -1,0 +1,101 @@
+#player-container {
+    display: grid;
+    justify-content: center;
+    align-items: start;
+    grid-row-gap: 20px;
+}
+
+#current-track {
+    display: grid;
+    grid-template-columns: fit-content(25%) auto;
+    grid-column-gap: 15px;
+    align-items: start;
+}
+
+#bullshit-container-1 {
+    grid-column: 1;
+}
+
+#bullshit-container-2 {
+    grid-column: 2;
+    display: grid;
+}
+
+#artwork {
+    object-fit: cover;
+}
+
+#bullshit-container-1::after {
+    padding-bottom: 100%;
+}
+
+#track-title {
+    grid-row: 1;
+    font-size: x-large;
+    font-weight: bold;
+    padding-top: 10px;
+}
+
+#recording-title {
+    grid-row: 2;
+    width: max-content;
+}
+
+#recording-link {
+    font-size: large;
+    font-style: italic;
+}
+
+#artist {
+    grid-row: 3;
+    font-size: large;
+}
+
+#track-rating {
+}
+
+#next-tracks, #recently-played {
+    display: grid;
+    grid-row-gap: 5px;
+}
+
+.tracklist-heading {
+    grid-column: 1 / 4;
+    display: inline-grid;
+    justify-items: center;
+    padding: 5px;
+    font-size: large;
+    font-weight: bold;
+}
+
+.expand-tracks {
+    grid-column: 1 / 4;
+    display: inline-grid;
+    justify-items: center;
+    padding: 5px;
+}
+
+.playlist-entry {
+    display: contents;
+}
+
+.playlist-entry:nth-child(2) {
+    font-size: large;
+}
+
+.playlist-title {
+    grid-column: 1;
+    font-weight: bold;
+    width: max-content;
+}
+
+.playlist-recording {
+    grid-column: 2;
+    font-style: italic;
+    width: max-content;
+}
+
+.playlist-artist {
+    grid-column: 3;
+    width: max-content;
+}

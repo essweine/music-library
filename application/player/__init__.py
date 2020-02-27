@@ -1,2 +1,2 @@
 from .player import Player
-from .player_handler import PlayerHandler
+from .player_handler import PlayerHandler, PlayerDisplayHandler

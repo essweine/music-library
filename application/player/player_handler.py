@@ -3,6 +3,12 @@ import json
 from tornado.web import RequestHandler
 from ..util import BaseApiHandler
 
+class PlayerDisplayHandler(RequestHandler):
+
+    def get(self):
+
+        self.render("player.html")
+
 class PlayerHandler(BaseApiHandler):
 
     def get(self):
