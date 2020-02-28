@@ -41,6 +41,13 @@ class RatingContainer extends HTMLSpanElement {
         this.dispatchEvent(ev);
     }
 
+    sendRating(node, item, rating) {
+        (rating != null) ? node.setAttribute("rating", rating) : node.removeAttribute("rating");
+        let detail = { item: item, rating: rating };
+        let ev = new CustomEvent("update-rating", { detail: detail, bubbles: true });
+        this.dispatchEvent(ev);
+    }
+
     createIcon(iconName, iconClass) {
         let icon = document.createElement("i");
         icon.innerText = iconName;

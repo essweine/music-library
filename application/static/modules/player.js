@@ -1,7 +1,6 @@
 let Player = {
 
     url: "/api/player",
-    currentTrack: null,
 
     startTask: { "name": "start" },
     stopTask: { "name": "stop" },

@@ -60,7 +60,7 @@
 }
 
 .tracklist-heading {
-    grid-column: 1 / 4;
+    grid-column: 1 / 7;
     display: inline-grid;
     justify-items: center;
     padding: 5px;
@@ -68,18 +68,18 @@
     font-weight: bold;
 }
 
-.expand-tracks {
-    grid-column: 1 / 4;
+.list-toggle {
+    grid-column: 1 / 7;
     display: inline-grid;
     justify-items: center;
     padding: 5px;
 }
 
-.playlist-entry {
+.next-tracks-entry, .recently-played-entry {
     display: contents;
 }
 
-.playlist-entry:nth-child(2) {
+.playlist-entry:nth-child(2) .recently-played-entry:nth-child(2) {
     font-size: large;
 }
 
@@ -99,3 +99,9 @@
     grid-column: 3;
     width: max-content;
 }
+
+.move-up { grid-column: 4; }
+.move-down { grid-column: 5; }
+.remove-track { grid-column: 6; } 
+
+.recent-rating { grid-column: 4 / 7; }
