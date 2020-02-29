@@ -1,3 +1,5 @@
+import { Recording } from "/static/modules/api.js";
+
 class RatingContainer extends HTMLSpanElement {
     constructor() {
         super()
@@ -41,11 +43,11 @@ class RatingContainer extends HTMLSpanElement {
         this.dispatchEvent(ev);
     }
 
-    sendRating(node, item, rating) {
+    sendRating(node, recordingId, item, rating) {
         (rating != null) ? node.setAttribute("rating", rating) : node.removeAttribute("rating");
-        let detail = { item: item, rating: rating };
-        let ev = new CustomEvent("update-rating", { detail: detail, bubbles: true });
-        this.dispatchEvent(ev);
+        let recordingApi = new Recording(recordingId);
+        let data = { item: item, rating: rating };
+        recordingApi.updateRating(data);
     }
 
     createIcon(iconName, iconClass) {

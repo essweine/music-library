@@ -29,12 +29,9 @@ class PlaylistContainer extends HTMLDivElement {
         for (let position in tracklist) {
             let track = tracklist[position];
             let entry = document.createElement("div", { is: this.childClass });
-            entry.setAttribute("title", track.title);
-            entry.setAttribute("recording", track.recording);
-            entry.setAttribute("artist", track.artist);
-            entry.setAttribute("filename", track.filename);
-            if (track.rating)
-                entry.setAttribute("rating", track.rating);
+            for (let attribute of this.childAttributes)
+                if (track[attribute] != null)
+                    entry.setAttribute(attribute, track[attribute])
             entry.initialize();
             entry.update(position, position == 0, position == tracklist.length - 1);
             this.append(entry);
@@ -91,6 +88,7 @@ class NextTracksContainer extends PlaylistContainer {
         super();
         this.id = "next-tracks";
         this.childClass = "next-tracks-entry";
+        this.childAttributes = [ "title", "recording", "artist" ];
     }
 
     initialize() { }
@@ -105,6 +103,7 @@ class RecentlyPlayedContainer extends PlaylistContainer {
         super();
         this.id = "recently-played";
         this.childClass = "recently-played-entry";
+        this.childAttributes = [ "title", "recording", "artist", "recording-id", "filename", "rating" ];
     }
 
     initialize() { }

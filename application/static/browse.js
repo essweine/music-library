@@ -1,9 +1,7 @@
-import { Recording } from "/static/modules/recording.js";
+import { Recording } from "/static/modules/api.js";
 import { Player } from "/static/modules/player.js";
 
 window.onload = e => {
-    let recordingApi = new Recording();
-
     let addDirectory  = document.getElementsByClassName("add");
     let addParent     = document.getElementsByClassName("add-parent");
     let viewRecording = document.getElementsByClassName("view-recording");
@@ -26,7 +24,8 @@ window.onload = e => {
 
     for (let elem of playRecording) {
         let itemId = elem.getAttribute("item");
-        elem.onclick = e => recordingApi.get(itemId, Player.playAll.bind(Player));
+        let recordingApi = new Recording(itemId);
+        elem.onclick = e => recordingApi.get(Player.playAll.bind(Player));
     }
 
 }

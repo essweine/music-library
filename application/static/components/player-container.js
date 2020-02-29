@@ -1,4 +1,3 @@
-import { Recording } from "/static/modules/recording.js";
 import { NextTracksEntry, RecentlyPlayedEntry } from "/static/components/playlist-entry.js";
 
 class PlayerContainer extends HTMLDivElement {
@@ -7,8 +6,6 @@ class PlayerContainer extends HTMLDivElement {
 
         this.id = "player-container";
         this.addEventListener("update-rating", e => this.updateRating(e.detail));
-
-        this.recordingApi = new Recording();
     }
 
     initialize() {
@@ -41,7 +38,9 @@ class PlayerContainer extends HTMLDivElement {
     }
 
     //should also update player state here
-    updateRating(data) { this.recordingApi.updateRating(this.currentTrack.getAttribute("recording-id"), data); }
+    updateRating(data) {
+        console.log("update rating", data);
+    }
 }
 
 export { PlayerContainer };

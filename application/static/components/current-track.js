@@ -56,7 +56,7 @@ class CurrentTrack extends HTMLDivElement {
         ratingContainer.classList.add("tracklist-rating");
         ratingContainer.setRating(this.getAttribute("rating"));
         ratingContainer.addEventListener("rating-change", e => 
-            this.ratingContainer.sendRating(this, this.getAttribute("filename"), e.detail));
+            this.ratingContainer.sendRating(this, this.getAttribute("recording-id"), this.getAttribute("filename"), e.detail));
         return ratingContainer;
     }
 }

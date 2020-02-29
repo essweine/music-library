@@ -92,7 +92,7 @@ class RecentlyPlayedEntry extends PlaylistEntry {
         super.initialize();
         this.ratingContainer = document.createElement("span", { is: "rating-container" });
         this.ratingContainer.addEventListener("rating-change", e => 
-            this.ratingContainer.sendRating(this, this.getAttribute("filename"), e.detail));
+            this.ratingContainer.sendRating(this, this.getAttribute("recording-id"), this.getAttribute("filename"), e.detail));
         this.append(this.ratingContainer);
     }
 

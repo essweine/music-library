@@ -1,14 +1,16 @@
-import { Recording } from "/static/modules/recording.js";
+import { Recording, Importer } from "/static/modules/api.js";
 
 class RecordingContainer extends HTMLDivElement {
+
     constructor() {
         super();
 
-        this.recordingApi = new Recording();
+        this.id = "recording-container";
 
-        this.id =  "recording-container";
+        this.directory = this.getAttribute("directory");
         this.recordingId = window.location.href.split("/").pop();
-        this.directory   = this.getAttribute("directory");
+        this.importerApi = new Importer(this.recordingId);
+        this.recordingApi = new Recording(this.recordingId);
 
         this.directoryListing;
         this.recordingInfoFromNotes;
@@ -26,9 +28,7 @@ class RecordingContainer extends HTMLDivElement {
         this.addEventListener("update-rating", e => this.updateRating(e.detail));
 
         let elem = this;
-        this.edit = document.createElement("button");
-        this.edit.innerText = "Edit";
-        this.edit.name = this.recordingId;
+        this.edit = this.createButton("Edit")
         this.edit.onclick = e => {
             elem.setAttribute("context", "edit");
             elem.getDirectoryListing();
@@ -36,29 +36,21 @@ class RecordingContainer extends HTMLDivElement {
             elem.update();
         };
 
-        this.save = document.createElement("button");
-        this.save.innerText = "Save";
-        this.save.name = this.recordingId;
+        this.save = this.createButton("Save");
         this.save.onclick = e => {
-            this.tracklist.saveTracks();
-            this.info.save();
             elem.setAttribute("context", "display");
-            elem.update();
             elem.saveRecording();
+            elem.update();
         };
 
-        this.cancel = document.createElement("button");
-        this.cancel.innerText = "Cancel";
-        this.cancel.name = this.recordingId;
+        this.cancel = this.createButton("Cancel");
         this.cancel.onclick = e => {
             elem.setAttribute("context", "display");
             elem.tracklist.resetTracks();
             elem.update();
         };
 
-        this.add = document.createElement("button");
-        this.add.innerText = "Add to Library";
-        this.add.name = this.recordingId;
+        this.add = this.createButton("Add to Library");
         this.add.onclick = e => this.addToLibrary();
     }
 
@@ -98,40 +90,28 @@ class RecordingContainer extends HTMLDivElement {
         this.tracklist.update(context);
     }
 
+    createButton(text) {
+        let button = document.createElement("button");
+        button.innerText = text;
+        button.name = this.recordingId;
+        return button;
+    }
+
     getDirectoryListing() {
         let context = this.getAttribute("context");
-        let url;
-        if (context == "import")
-            url = "/api/importer/" + this.recordingId;
-        else
-            url = "/api/recording/" + this.recordingId + "/entry";
-        let request = new XMLHttpRequest();
-        request.open("GET", url);
-        request.addEventListener("load", e => {
-            this.directoryListing = JSON.parse(e.target.response);
-            if (context == "edit") {
-                let ev = new CustomEvent("update-files");
-                this.dispatchEvent(ev);
-            }
-        });
-        request.send();
+        let callback = response => {
+            this.directoryListing = response;
+            if (this.getAttribute("context") == "edit")
+                this.dispatchEvent(new CustomEvent("update-files"));
+        }
+        (context == "import") ? this.importerApi.get(callback) : this.recordingApi.getDirectoryListing(callback);
     }
 
     getRecordingInfoFromNotes(source = null) {
         let context = this.getAttribute("context");
-        let url;
-        if (context == "import") {
-            url = "/api/importer/" + this.recordingId + "?as=recording";
-            if (source != null)
-                url += "&source=" + encodeURIComponent(source);
-        } else {
-            url = "/api/recording/" + this.recordingId + "/notes";
-        }
-        let request = new XMLHttpRequest();
-        request.open("GET", url);
-        request.addEventListener("load", e => {
-            this.recordingInfoFromNotes = JSON.parse(e.target.response);
-            if (context == "import") {
+        let callback = response => {
+            this.recordingInfoFromNotes = response;
+            if (this.getAttribute("context") == "import") {
                 let names = this.recordingInfoFromNotes.tracks.map(track => track.title);
                 this.tracklist.setInputValues(names); 
                 this.tracklist.setTitleAttributes(names); 
@@ -142,8 +122,8 @@ class RecordingContainer extends HTMLDivElement {
                     this.recordingInfoFromNotes.venue,
                 );
             }
-        })
-        request.send();
+        }
+        (context == "import") ? this.importerApi.getRecording(source, callback) : this.recordingApi.getFromNotes(callback);
     }
 
     createPayload() {
@@ -161,23 +141,17 @@ class RecordingContainer extends HTMLDivElement {
 
     addToLibrary() {
         this.tracklist.saveTracks();
-        let data = this.createPayload();
-        let request = new XMLHttpRequest();
-        request.addEventListener("load", e => window.location = "/recording/" + this.recordingId);
-        request.open("POST", "/api/recording/" + this.recordingId);
-        request.setRequestHeader("Content-Type", "application/json");
-        request.send(JSON.stringify(data));
+        this.info.save();
+        this.recordingApi.addToLibrary(this.createPayload());
     }
 
     saveRecording() {
-        let data = this.createPayload();
-        let request = new XMLHttpRequest();
-        request.open("PUT", "/api/recording/" + this.recordingId);
-        request.setRequestHeader("Content-Type", "application/json");
-        request.send(JSON.stringify(data));
+        this.tracklist.saveTracks();
+        this.info.save();
+        this.recordingApi.saveRecording(this.createPayload());
     }
 
-    updateRating(data) { this.recordingApi.updateRating(this.recordingId, data); }
+    updateRating(data) { this.recordingApi.updateRating(data); }
 }
 
 export { RecordingContainer }
