@@ -3,12 +3,14 @@ class RecordingInfo extends HTMLDivElement {
         super();
         this.id = "recording-info";
 
-        this.titleDisplay  = document.createElement("span");
-        this.artistDisplay = document.createElement("span");
-        this.dateDisplay   = document.createElement("span");
-        this.venueDisplay  = document.createElement("span");
-        this.ratingDisplay = document.createElement("span");
-        this.soundDisplay  = document.createElement("span");
+        this.titleDisplay    = document.createElement("span");
+        this.artistDisplay   = document.createElement("span");
+        this.dateDisplay     = document.createElement("span");
+        this.venueDisplay    = document.createElement("span");
+        this.ratingDisplay   = document.createElement("span");
+        this.soundDisplay    = document.createElement("span");
+        this.recordingRating = this.createRatingContainer("rating");
+        this.soundRating     = this.createRatingContainer("sound-rating");
 
         this.ratingDisplay.innerText = "Rating";
         this.soundDisplay.innerText  = "Sound Rating";
@@ -19,7 +21,9 @@ class RecordingInfo extends HTMLDivElement {
             this.dateDisplay,
             this.venueDisplay,
             this.ratingDisplay,
-            this.soundDisplay
+            this.recordingRating,
+            this.soundDisplay,
+            this.soundRating
         ]
 
         for (let item of this.displayElements)

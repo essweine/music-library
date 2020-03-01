@@ -62,6 +62,8 @@ class MusicLibrary(Application):
 
             for dirpath, dirs, files in os.walk(self.root):
                 relative_name = re.sub("^{0}/?".format(self.root), "", dirpath)
+                if relative_name in indexed_directories:
+                    dirs.clear()
                 if DirectoryListing.contains_audio(files) and relative_name not in indexed_directories:
                     entry = DirectoryListing(relative_name, root)
                     self.unindexed_directory_list[entry.id] = entry
