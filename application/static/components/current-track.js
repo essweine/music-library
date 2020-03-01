@@ -1,7 +1,3 @@
-import { RatingContainer } from "/static/components/rating-container.js";
-
-customElements.define("rating-container", RatingContainer, { extends: "span" });
-
 class CurrentTrack extends HTMLDivElement {
 
     constructor() {

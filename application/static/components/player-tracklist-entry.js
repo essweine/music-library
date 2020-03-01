@@ -1,10 +1,3 @@
-import { UpArrow, DownArrow } from "/static/components/move-button.js";
-import { RemoveButton } from "/static/components/remove-button.js";
-
-customElements.define("up-arrow", UpArrow, { extends: "span" });
-customElements.define("down-arrow", DownArrow, { extends: "span" });
-customElements.define("remove-button", RemoveButton, { extends: "span" });
-
 class PlaylistEntry extends HTMLDivElement {
 
     constructor() {
@@ -29,8 +22,7 @@ class PlaylistEntry extends HTMLDivElement {
         this.artist.innerText = this.getAttribute("artist");
     }
 
-    update() {
-    }
+    updatePosition() { };
 }
 
 class NextTracksEntry extends PlaylistEntry {
@@ -67,7 +59,7 @@ class NextTracksEntry extends PlaylistEntry {
 
     initialize() { super.initialize(); }
 
-    update (position, firstTrack, lastTrack) {
+    updatePosition (position, firstTrack, lastTrack) {
         this.setAttribute("position", position);
         if (firstTrack) {
             this.querySelector("[class~='move-up']").style.display = "none";
@@ -96,8 +88,7 @@ class RecentlyPlayedEntry extends PlaylistEntry {
         this.append(this.ratingContainer);
     }
 
-    update() {
-    }
+    updatePosition() { }
 }
 
 export { NextTracksEntry, RecentlyPlayedEntry };

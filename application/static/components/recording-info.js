@@ -1,90 +1,69 @@
-import { RatingContainer } from "/static/components/rating-container.js";
-
 class RecordingInfo extends HTMLDivElement {
     constructor() {
         super();
         this.id = "recording-info";
+
+        this.titleDisplay  = document.createElement("span");
+        this.artistDisplay = document.createElement("span");
+        this.dateDisplay   = document.createElement("span");
+        this.venueDisplay  = document.createElement("span");
+        this.ratingDisplay = document.createElement("span");
+        this.soundDisplay  = document.createElement("span");
+
+        this.ratingDisplay.innerText = "Rating";
+        this.soundDisplay.innerText  = "Sound Rating";
+
+        this.displayElements = [
+            this.titleDisplay,
+            this.artistDisplay,
+            this.dateDisplay,
+            this.venueDisplay,
+            this.ratingDisplay,
+            this.soundDisplay
+        ]
+
+        for (let item of this.displayElements)
+            item.classList.add("recording-display");
+
+        this.titleLabel = this.createLabel("title", "Title");
+        this.titleInput = this.createInput("title", 30);
+        this.artistLabel = this.createLabel("artist", "Artist");
+        this.artistInput = this.createInput("artist", 30);
+        this.dateLabel = this.createLabel("recording-date", "Recording date");
+        this.dateInput = this.createInput("recording-date", 30);
+        this.venueLabel = this.createLabel("venue", "Venue");
+        this.venueInput = this.createInput("venue", 30);
+
+        this.editElements = [
+            this.titleLabel,
+            this.titleInput,
+            this.artistLabel,
+            this.artistInput,
+            this.dateLabel,
+            this.dateInput,
+            this.venueLabel,
+            this.venueInput
+        ]
+    }
+
+    initialize(recordingId) {
+        this.recordingId = recordingId; 
+        this.reset();
     }
 
     update(context) {
-        while (this.firstChild)
-            this.firstChild.remove();
-        if (context == "display")
-            this.updateForDisplay();
-        else if (context == "import")
-            this.updateForEdit(true);
-        else
-            this.updateForEdit();
-    }
-
-    updateForDisplay() {
-
-        let title         = this.getAttribute("title");
-        let artist        = this.getAttribute("artist");
-        let recordingDate = this.getAttribute("recording-date");
-        let venue         = this.getAttribute("venue");
-
-        let titleDisplay        = document.createElement("span");
-        titleDisplay.innerText  = title;
-
-        let artistDisplay       = document.createElement("span");
-        artistDisplay.innerText = artist;
-
-        let dateDisplay         = document.createElement("span");
-        dateDisplay.innerText   = recordingDate;
-
-        let venueDisplay        = document.createElement("span");
-        venueDisplay.innerText  = venue;
-
-        let ratingDisplay       = document.createElement("span");
-        ratingDisplay.innerText = "Rating";
-
-        let soundDisplay        = document.createElement("span");
-        soundDisplay.innerText  = "Sound Rating";
-
-        for (let item of [ titleDisplay, artistDisplay, dateDisplay, venueDisplay, ratingDisplay, soundDisplay ])
-            item.classList.add("recording-display");
-
-        this.append(titleDisplay);
-        this.append(artistDisplay);
-        this.append(dateDisplay);
-        this.append(venueDisplay);
-        this.append(ratingDisplay);
-        this.append(this.createRatingContainer("rating"));
-        this.append(soundDisplay);
-        this.append(this.createRatingContainer("sound-rating"));
-    }
-
-    updateForEdit(updateAttributes = false) {
-
-        let title         = this.getAttribute("title");
-        let artist        = this.getAttribute("artist");
-        let recordingDate = this.getAttribute("recording-date");
-        let venue         = this.getAttribute("venue");
-
-        this.append(this.createLabel("title", "Title"));
-        this.append(this.createInput("title", title, 30, updateAttributes));
-        this.append(this.createLabel("artist", "Artist"));
-        this.append(this.createInput("artist", artist, 30, updateAttributes));
-        this.append(this.createLabel("recording-date", "Recording date"));
-        this.append(this.createInput("recording-date", recordingDate, 30, updateAttributes));
-        this.append(this.createLabel("venue", "Venue"));
-        this.append(this.createInput("venue", venue, 30, updateAttributes));
-    }
-
-    set(title, artist, recordingDate, venue) {
-        this.setAttribute("title", title);
-        this.setAttribute("artist", artist);
-        this.setAttribute("recording-date", recordingDate);
-        this.setAttribute("venue", venue);
-        this.update("import");
-    }
-
-    save() {
-        this.setAttribute("title", this.querySelector("[id='title']").value);
-        this.setAttribute("artist", this.querySelector("[id='artist']").value);
-        this.setAttribute("recording-date", this.querySelector("[id='recording-date']").value);
-        this.setAttribute("venue", this.querySelector("[id='venue']").value);
+        if (context == "display") {
+            for (let elem of this.editElements)
+                elem.remove();
+            for (let elem of this.displayElements)
+                this.append(elem);
+        } else {
+            for (let elem of this.displayElements)
+                elem.remove();
+            for (let elem of this.editElements)
+                this.append(elem);
+        }
+        this.reset();
     }
 
     get(attribute) { 
@@ -92,6 +71,42 @@ class RecordingInfo extends HTMLDivElement {
             return parseInt(this.getAttribute(attribute));
         else
             return this.getAttribute(attribute); 
+    }
+
+    set(title, artist, recordingDate, venue) {
+        this.setAttribute("title", title);
+        this.setAttribute("artist", artist);
+        this.setAttribute("recording-date", recordingDate);
+        this.setAttribute("venue", venue);
+    }
+
+    reset() {
+        this.titleDisplay.innerText      = this.getAttribute("title");
+        this.artistDisplay.innerText     = this.getAttribute("artist");
+        this.dateDisplay.innerText       = this.getAttribute("recording-date");
+        this.venueDisplay.innerText      = this.getAttribute("venue");
+
+        this.titleInput.value  = this.getAttribute("title");
+        this.artistInput.value = this.getAttribute("artist");
+        this.dateInput.value   = this.getAttribute("recording-date");
+        this.venueInput.value   = this.getAttribute("venue");
+    }
+
+    save() {
+        this.setAttribute("title", this.titleInput.value);
+        this.setAttribute("artist", this.artistInput.value);
+        this.setAttribute("recording-date", this.dateInput.value);
+        this.setAttribute("venue", this.venueInput.value);
+    }
+
+    createRatingContainer(attribute) {
+        let ratingContainer = document.createElement("span", { is: "rating-container" });
+        ratingContainer.classList.add("recording-rating");
+        ratingContainer.setRating(this.getAttribute(attribute));
+        ratingContainer.addEventListener("rating-change", e => 
+            ratingContainer.sendRating(this, this.recordingId, attribute, e.detail)
+        );
+        return ratingContainer;
     }
 
     createLabel(name, display) {
@@ -102,30 +117,14 @@ class RecordingInfo extends HTMLDivElement {
         return label;
     }
 
-    createInput(name, value, size, updateAttributes = false) {
+    createInput(name, size) {
         let input = document.createElement("input");
         input.type = "text";
         input.id = name;
-        input.value = value;
         input.size = size;
-        if (updateAttributes)
-            input.oninput = e => e.target.parentNode.setAttribute(name, e.target.value);
         input.classList.add("recording-input");
         return input;
     }
-
-    createRatingContainer(attribute) {
-        let ratingContainer = document.createElement("span", { is: "rating-container" });
-        ratingContainer.classList.add("recording-rating");
-        ratingContainer.setRating(this.getAttribute(attribute));
-        ratingContainer.addEventListener("rating-change", e => {
-            (e.detail != null) ? this.setAttribute(attribute, e.detail) : this.removeAttribute(attribute);
-            let detail = { item: attribute, rating: e.detail };
-            let ev = new CustomEvent("update-rating", { detail: detail, bubbles: true });
-            this.dispatchEvent(ev);
-        });
-        return ratingContainer;
-    }
 }
 
-export { RecordingInfo }
+export { RecordingInfo };

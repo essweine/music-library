@@ -6,12 +6,12 @@ class RatingContainer extends HTMLSpanElement {
 
         for (let i = 0; i < 5; i++) {
             let icon = this.createIcon("grade", "star-icon");
-            icon.onclick = e => this.setRating(i + 1);
+            icon.onclick = e => this.updateRating(i + 1);
             this.append(icon);
         }
 
         let clearIcon = this.createIcon("clear", "clear-icon");
-        clearIcon.onclick = e => this.setRating(null);
+        clearIcon.onclick = e => this.updateRating(null);
         this.append(clearIcon);
     }
 
@@ -39,6 +39,11 @@ class RatingContainer extends HTMLSpanElement {
             }
         }
 
+        return newRating;
+    }
+
+    updateRating(rating) {
+        let newRating = this.setRating(rating);
         let ev = new CustomEvent("rating-change", { detail: newRating, bubbles: true });
         this.dispatchEvent(ev);
     }

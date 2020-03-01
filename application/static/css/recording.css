@@ -63,7 +63,7 @@
     width: max-content;
 }
 
-#tracklist-container {
+#recording-tracklist {
     grid-column: 2;
     display: grid;
     column-gap: 10px;
@@ -74,36 +74,36 @@
     background-color: #eee;
 }
 
-.tracklist-entry {
+.recording-track {
     display: contents;
 }
 
-.tracklist-position {
+.recording-tracklist-position {
     grid-column: 1;
     justify-self: end;
     align-self: center;
     width: min-content;
 }
 
-.tracklist-label {
+.recording-tracklist-label {
     grid-column: 2;
     align-self: center;
     width: max-content;
 }
 
-.tracklist-input {
+.recording-tracklist-input {
     grid-column: 3;
     justify-self: start;
     width: max-content;
 }
 
-.tracklist-display {
+.recording-tracklist-display {
     grid-column: 2;
     align-self: center;
     width: max-content;
 }
 
-.tracklist-rating {
+.recording-tracklist-rating {
     grid-column: 3;
     align-self: center;
     width: max-content;
@@ -119,14 +119,14 @@
     width: min-content;
 }
 
-#tracklist-options {
+#recording-tracklist-options {
     grid-column: 1 / 6;
     align-self: center;
     justify-self: center;
     padding: 20px;
 }
 
-#raw-recording-info {
+#recording-raw-info {
     grid-column: 1 / 6;
     justify-self: stretch;
 }

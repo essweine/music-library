@@ -35,18 +35,19 @@
                {% if recording.sound_rating %}sound-rating="{{recording.sound_rating}}"{% end %}>
           </div>
 
-          <div is="tracklist-container">
+          <div is="recording-tracklist">
 
             {% for track in recording.tracks %}
-            <div is="tracklist-entry"
+            <div is="recording-track"
                  title="{{track.title}}" 
                  filename="{{track.filename}}" 
                  {% if track.rating %}rating="{{track.rating}}"{% end %}
-                 track-num={{track.track_num}}>
+                 recording-id="{{recording.id}}"
+                 position={{track.track_num - 1}}>
             </div>
             {% end %}
 
-            <div is="raw-recording-info" {% raw text %}>
+            <div is="recording-raw-info" {% raw text %}>
               <p>No notes available.</p>
             </div>
 

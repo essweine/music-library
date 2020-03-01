@@ -1,106 +1,44 @@
 class TracklistContainer extends HTMLDivElement {
+
     constructor() {
         super();
-        this.id = "tracklist-container";
-        this.addEventListener("move-track", e => { this.shiftTrackUp(e.detail); });
-
-        this.options    = document.createElement("div");
-        this.options.id = "tracklist-options";
-
-        this.shift           = document.createElement("button");
-        this.shift.innerText = "Shift names up";
-        this.shift.onclick   = e => this.shiftNamesUp();
-        this.options.append(this.shift);
-
-        this.reapply           = document.createElement("button");
-        this.reapply.innerText = "Reapply names";
-        this.reapply.onclick   = e => {
-            let ev = new CustomEvent("reapply-titles", { bubbles: true });
-            this.dispatchEvent(ev);
-        };
-        this.options.append(this.reapply);
+        this.addEventListener("move-track", e => this.shiftTrackUp(e.detail));
+        this.addEventListener("remove-track", e => this.removeTrack(e.detail));
     }
 
-    initialize(directory) {
-        this.directory = directory;
-        this.tracks  = this.querySelectorAll("[is='tracklist-entry']");
-        this.rawInfo = document.getElementById("raw-recording-info");
-        this.rawInfo.initialize(directory);
-    }
+    update(tracklist) { 
+        let children = this.getElementsByClassName(this.childClass);
+        for (let track of children)
+            track.remove();
 
-    update(context) {
-        this.rawInfo.update(context);
-        for (let track of this.tracks)
-            track.update(context);
-        if (context == "display") {
-            this.options.remove();
-        } else {
-            let tracks = this.querySelectorAll("[is='tracklist-entry']");
-            tracks.item(0).querySelector("[class~='move-up']").style.display = "none";
-            tracks.item(this.tracks.length - 1).querySelector("[class~='move-down']").style.display = "none";
-            this.insertBefore(this.options, this.rawInfo);
+        for (let position in tracklist) {
+            let track = tracklist[position];
+            let entry = document.createElement("div", { is: this.childClass });
+            for (let attribute of this.childAttributes)
+                if (track[attribute] != null)
+                    entry.setAttribute(attribute, track[attribute])
+            entry.initialize();
+            entry.updatePosition(position, position == 0, position == tracklist.length - 1);
+            this.append(entry);
         }
     }
 
-    shiftTrackUp(trackNum) {
-        let listPosition = trackNum - 1;
-        let tracks = this.querySelectorAll("[is='tracklist-entry']");
-        let atEnd = listPosition == tracks.length - 1;
-        let item = tracks.item(listPosition);
-        let prev = tracks.item(listPosition - 1);
+    shiftTrackUp(position) {
+        let children = this.getElementsByClassName(this.childClass);
+        let item = children.item(position);
+        let prev = children.item(position - 1);
         this.removeChild(item);
         this.insertBefore(item, prev);
-        item.updateTrackNum(trackNum - 1);
-        prev.updateTrackNum(trackNum, atEnd);
+        item.updatePosition(position - 1, position - 1 == 0, position - 1 == children.length - 1);
+        prev.updatePosition(position, position == 0, position == children.length - 1);
     }
 
-    shiftNamesUp() {
-        let tracks = this.querySelectorAll("[is='tracklist-entry']");
-        let original = Array.from(tracks).map(item => item.querySelector("[class~='tracklist-input']").value);
-        let newNames = original.slice(1, original.length).concat("");
-        this.setInputValues(newNames);
+    removeTrack(position) {
+        let children = this.getElementsByClassName(this.childClass);
+        children.item(position).remove();
+        for (let i = position; i < tracklist.length; i++)
+            children.item(i).updatePosition(i, i == 0, i == children.length - 1);
     }
-
-    setInputValues(names) {
-        let tracks = this.querySelectorAll("[is='tracklist-entry']");
-        for (let i = 0; i < this.tracks.length; i++) {
-            let input = tracks.item(i).querySelector("[class~='tracklist-input']");
-            input.value = (names.length >= tracks.length) ? names[i] : "";
-        }
-    }
-
-    setTitleAttributes(names) {
-        let tracks = this.querySelectorAll("[is='tracklist-entry']");
-        for (let i = 0; i < this.tracks.length; i++)
-            tracks.item(i).setAttribute("title", (names.length >= tracks.length) ? names[i] : "");
-    }
-
-    resetTracks() {
-        for (let i = 0; i < this.tracks.length; i++) {
-            let track = this.tracks.item(i);
-            track.updateTrackNum(i + 1);
-            this.insertBefore(track, this.options);
-        }
-    }
-
-    saveTracks() {
-        let tracks = this.querySelectorAll("[is='tracklist-entry']");
-        let names = Array.from(tracks).map(item => item.querySelector("[class~='tracklist-input']").value);
-        this.setTitleAttributes(names);
-        this.tracklist = tracks;
-    }
-
-    getTracklist() {
-        let tracks = this.querySelectorAll("[is='tracklist-entry']");
-        let data = [ ];
-        for (let track of tracks)
-            data.push(track.asObject());
-        return data;
-    }
-
-    setText(text) { this.rawInfo.rawText.textContent = text; }
-
-    addNotes(directory, files) { this.rawInfo.addNotes(directory, files); }
 }
 
 export { TracklistContainer };

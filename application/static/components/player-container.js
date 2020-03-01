@@ -1,9 +1,6 @@
-import { NextTracksEntry, RecentlyPlayedEntry } from "/static/components/playlist-entry.js";
-
 class PlayerContainer extends HTMLDivElement {
     constructor() {
         super();
-
         this.id = "player-container";
         this.addEventListener("update-rating", e => this.updateRating(e.detail));
     }
