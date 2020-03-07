@@ -75,7 +75,7 @@ class MusicLibrary(Application):
         while self.player.conn.poll():
             try:
                 cursor = self.conn.cursor()
-                self.player.update_state(self.player.conn.recv(), cursor)
+                self.player.update_state(cursor, self.player.conn.recv())
                 cursor.close()
                 self.conn.commit()
             except:

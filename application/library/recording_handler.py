@@ -56,9 +56,7 @@ class RecordingHandler(BaseApiHandler):
     def get(self, recording_id, item = None):
 
         try:
-            cursor = self.application.conn.cursor()
-            recording = Recording.get(cursor, recording_id)
-            cursor.close()
+            recording = self.db_action(Recording.get, recording_id)
         except:
             raise
 
@@ -79,13 +77,10 @@ class RecordingHandler(BaseApiHandler):
 
         if self.json_body:
             try:
-                cursor = self.application.conn.cursor()
                 if item is None:
-                    Recording.update(cursor, self.json_body)
+                    self.db_action(Recording.update, self.json_body)
                 elif item == "rating":
-                    Recording.set_rating(cursor, recording_id, self.json_body)
-                cursor.close()
-                self.application.conn.commit()
+                    self.db_action(Recording.set_rating, recording_id, self.json_body)
             except:
                 raise
 
@@ -94,13 +89,9 @@ class RecordingHandler(BaseApiHandler):
         entry = self.application.unindexed_directory_list.pop(recording_id)
         if self.json_body:
             try:
-                cursor = self.application.conn.cursor()
-                Recording.create(cursor, self.json_body)
-                self.application.conn.commit()
+                self.db_action(Recording.create, self.json_body)
             except:
                 raise
-            finally:
-                cursor.close()
 
         if entry.children:
             to_remove = [ ]

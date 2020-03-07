@@ -69,7 +69,7 @@ class Player(object):
         task = Task(name, filename, position)
         self.conn.send(task)
 
-    def update_state(self, state, cursor):
+    def update_state(self, cursor, state):
 
         # Maintain recently played only in parent (the forked process doesn't need it)
         state.recently_played = self.state.recently_played
