@@ -1,8 +1,8 @@
 import json
 
-from ..util import JsonEncoder
+from ..util import JsonSerializable
 
-class Task(object):
+class Task(JsonSerializable):
 
     def __init__(self, name, filename = None, position = None):
 
@@ -10,13 +10,7 @@ class Task(object):
         self.filename = filename
         self.position = position
 
-    def as_dict(self):
-        return self.__dict__.copy()
-
-    def __repr__(self):
-        return json.dumps(self, cls = JsonEncoder, indent = 2, separators = [ ", ", ": " ])
-
-class PlaylistEntry(object):
+class PlaylistEntry(JsonSerializable):
 
     def __init__(self, filename, start_time):
 
@@ -26,12 +20,6 @@ class PlaylistEntry(object):
         self.error = False
         self.error_output = None
 
-    def as_dict(self):
-        return self.__dict__.copy()
-
-    def __repr__(self):
-        return json.dumps(self, cls = JsonEncoder, indent = 2, separators = [ ", ", ": " ])
-
     def __eq__(self, other):
 
         if other is None:
@@ -39,7 +27,7 @@ class PlaylistEntry(object):
         else:
             return self.filename == other.filename and self.start_time == other.start_time
 
-class State(object):
+class State(JsonSerializable):
 
     def __init__(self, stopped, current, last_entry, next_entries, recently_played): 
 
@@ -68,8 +56,3 @@ class State(object):
             self.next_entries == other.next_entries,
         ])
 
-    def as_dict(self):
-        return self.__dict__.copy()
-
-    def __repr__(self):
-        return json.dumps(self, cls = JsonEncoder, indent = 2, separators = [ ", ", ": " ])

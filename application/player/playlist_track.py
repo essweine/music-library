@@ -1,8 +1,8 @@
 import re
 
-from ..util import JsonEncoder
+from ..util import JsonSerializable
 
-class PlaylistTrack(object):
+class PlaylistTrack(JsonSerializable):
 
     ATTRIBUTES = [ "filename", "title", "rating", "recording_id", "artist", "recording", "artwork" ]
 
@@ -13,12 +13,6 @@ class PlaylistTrack(object):
 
         if self.filename is None:
             raise Execption("Invalid track data")
-
-    def as_dict(self):
-        return self.__dict__.copy()
-
-    def __repr__(self):
-        return json.dumps(self, cls = JsonEncoder, indent = 2, separators = [ ", ", ": " ])
 
     @classmethod
     def from_filename(cls, cursor, filename):

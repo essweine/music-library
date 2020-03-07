@@ -4,6 +4,12 @@ from abc import ABC
 
 class JsonSerializable(ABC):
 
+    def as_dict(self):
+        return self.__dict__.copy()
+
+    def __repr__(self):
+        return json.dumps(self, cls = JsonEncoder, indent = 2, separators = [ ", ", ": " ])
+
     @classmethod
     def __subclasshook__(cls, subclass):
         return hasattr(subclass, 'as_dict') and callable(subclass.as_dict)

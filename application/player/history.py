@@ -1,4 +1,5 @@
 from ..db import Column, insert_statement
+from ..util import JsonSerializable
 
 HISTORY_COLUMNS = [
     Column("filename", "text", None, False),
@@ -6,15 +7,12 @@ HISTORY_COLUMNS = [
     Column("end_time", "timestamp", None, False),
 ]
 
-class History(object):
+class History(JsonSerializable):
 
     def __init__(self, entry = { }):
 
         for column in HISTORY_COLUMNS:
             self.__setattr__(column.name, entry.get(column.name, column.default))
-
-    def as_dict(self):
-        return self.__dict__.copy()
 
     @staticmethod
     def create(cursor, playlist_entry):

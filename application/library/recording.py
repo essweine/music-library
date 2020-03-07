@@ -3,7 +3,7 @@ import os.path
 from datetime import datetime
 
 from ..db import Column, insert_statement, update_statement
-from ..util import JsonEncoder
+from ..util import JsonSerializable
 
 RECORDING_COLUMNS = [
     Column("id", "text", None, False),
@@ -29,7 +29,7 @@ TRACK_COLUMNS = [
     Column("rating", "int", None, True),
 ]
 
-class Recording(object):
+class Recording(JsonSerializable):
 
     def __init__(self, recording = { }):
 
@@ -42,9 +42,6 @@ class Recording(object):
         recording = self.__dict__.copy()
         recording["tracks"] = [ track.as_dict() for track in recording["tracks"] ]
         return recording
-
-    def __repr__(self):
-        return json.dumps(self, cls = JsonEncoder, indent = 2, separators = [ ", ", ": " ])
 
     @classmethod
     def get(cls, cursor, recording_id):
@@ -118,15 +115,9 @@ class Recording(object):
         except:
             raise
 
-class Track(object):
+class Track(JsonSerializable):
 
     def __init__(self, track = { }):
         for column in TRACK_COLUMNS:
             self.__setattr__(column.name, track.get(column.name, column.default))
-
-    def as_dict(self):
-        return self.__dict__.copy()
-
-    def __repr__(self):
-        return json.dumps(self, cls = JsonEncoder, indent = 2, separators = [ ", ", ": " ])
 
