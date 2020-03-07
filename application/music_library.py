@@ -78,6 +78,5 @@ class MusicLibrary(Application):
                 self.player.update_state(self.player.conn.recv(), cursor)
                 cursor.close()
                 self.conn.commit()
-                print("state changed")
             except:
                 raise

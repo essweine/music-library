@@ -4,7 +4,7 @@ import re
 from datetime import datetime, timedelta
 
 from ..library import Track
-from .state import State, Task, PlaylistTrackData, PlaylistEntry
+from .state import State, Task, PlaylistEntry
 from .history import History
 
 CMD = [ "ffmpeg", "-hide_banner" ]
@@ -56,37 +56,36 @@ class Player(object):
 
             if self.state != initial_state:
                 conn.send(self.state)
+                # Never send the last entry more than once to prevent duplicate history items
+                self.state.last_entry = None
 
-            time.sleep(1)
+            time.sleep(0.5)
 
     def send_task(self, **kwargs):
 
         name = kwargs.pop("name")
         position = kwargs.pop("position", None)
-        track_data = kwargs.pop("track_data", None)
-        if track_data:
-            track_data = PlaylistTrackData(**track_data)
-        task = Task(name, track_data = track_data, position = position)
+        filename = kwargs.pop("filename", None)
+        task = Task(name, filename, position)
         self.conn.send(task)
 
     def update_state(self, state, cursor):
 
-        if self.state.last_entry is not None:
-            if (self.state.last_entry.end_time - self.state.last_entry.start_time).seconds > 10:
-                History.create(cursor, self.state.last_entry)
+        # Maintain recently played only in parent (the forked process doesn't need it)
+        state.recently_played = self.state.recently_played
+        if state.last_entry is not None:
+            if (state.last_entry.end_time - state.last_entry.start_time).seconds > 10:
+                History.create(cursor, state.last_entry)
+                state.recently_played.insert(0, state.last_entry)
             state.last_entry = None
         self.state = state
-        self.state.recently_played = History.get_playlist_entries(
-            cursor, 
-            datetime.utcnow() - timedelta(minutes = 30), 
-            datetime.utcnow()
-        )
 
     def _handle_play_entry(self, task):
 
+        entry = PlaylistEntry(task.filename, None)
         if self._subprocess_running():
             self._handle_stop()
-        self._play(task.track_data)
+        self._play(entry)
 
     def _handle_advance_playlist(self):
 
@@ -98,16 +97,17 @@ class Player(object):
 
     def _handle_add_to_playlist(self, task):
 
+        entry = PlaylistEntry(task.filename, None)
         if task.position is not None:
-            self.state.next_entries.insert(task.position, task.track_data)
+            self.state.next_entries.insert(task.position, entry)
         else:
-            self.state.next_entries.append(task.track_data)
+            self.state.next_entries.append(entry)
 
     def _handle_remove_from_playlist(self, task):
 
         if task.position is None:
-            while self.state.next_entries.count(task.track_data):
-                self.state.next_entries.remove(task.track_data)
+            for entry in [ entry for entry in self.state.next_entries if entry.filename == task.filename ]:
+                self.state.next_entries.remove(entry)
         elif task.position < len(self.state.next_entries):
             self.state.next_entries.pop(task.position)
 
@@ -121,17 +121,18 @@ class Player(object):
         except:
             raise
 
-    def _play(self, track_data):
+    def _play(self, entry):
 
         try:
-            filename = self._append_to_root(track_data.filename)
+            filename = self._append_to_root(entry.filename)
             self._subprocess = subprocess.Popen(
                 CMD + [ "-i", filename ] + OUTPUT_ARGS,
                 stderr = subprocess.PIPE,
             )
             fd = self._subprocess.stderr.fileno()
             os.set_blocking(fd, False)
-            self.state.current = PlaylistEntry(track_data, datetime.utcnow())
+            entry.start_time = datetime.utcnow()
+            self.state.current = entry
             self.state.stopped = False
         except:
             raise

@@ -4,52 +4,40 @@ from ..util import JsonEncoder
 
 class Task(object):
 
-    def __init__(self, name, **kwargs):
+    def __init__(self, name, filename = None, position = None):
 
         self.name = name
-        self.track_data = kwargs.get("track_data", None)
-        self.position = kwargs.get("position", None)
-
-    def as_dict(self):
-
-        return self.__dict__.copy()
-
-class PlaylistTrackData(object):
-
-    def __init__(self, filename, title, rating = None, recording_id = None, artist = None, recording = None, artwork = None):
-
         self.filename = filename
-        self.title = title
-        self.rating = rating
-        self.recording_id = recording_id
-        self.artist = artist
-        self.recording = recording
-        self.artwork = artwork
+        self.position = position
 
     def as_dict(self):
-
         return self.__dict__.copy()
+
+    def __repr__(self):
+        return json.dumps(self, cls = JsonEncoder, indent = 2, separators = [ ", ", ": " ])
 
 class PlaylistEntry(object):
 
-    def __init__(self, track_data, start_time):
+    def __init__(self, filename, start_time):
 
-        self.track_data = track_data
+        self.filename = filename
         self.start_time = start_time
         self.end_time = None
         self.error = False
         self.error_output = None
 
     def as_dict(self):
-
         return self.__dict__.copy()
+
+    def __repr__(self):
+        return json.dumps(self, cls = JsonEncoder, indent = 2, separators = [ ", ", ": " ])
 
     def __eq__(self, other):
 
         if other is None:
             return False
         else:
-            return self.track_data.filename == other.track_data.filename and self.start_time == other.start_time
+            return self.filename == other.filename and self.start_time == other.start_time
 
 class State(object):
 
@@ -60,10 +48,6 @@ class State(object):
         self.last_entry = last_entry
         self.next_entries = next_entries
         self.recently_played = recently_played
-
-    def as_dict(self):
-
-        return self.__dict__.copy()
 
     def copy(self):
 
@@ -84,6 +68,8 @@ class State(object):
             self.next_entries == other.next_entries,
         ])
 
-    def __repr__(self):
+    def as_dict(self):
+        return self.__dict__.copy()
 
+    def __repr__(self):
         return json.dumps(self, cls = JsonEncoder, indent = 2, separators = [ ", ", ": " ])

@@ -19,7 +19,7 @@ class PlayerContainer extends HTMLDivElement {
     }
 
     updateState(state) {
-        let current = state.current.track_data;
+        let current = state.current;
         this.currentTrack.setAttribute("filename", current.filename);
         this.currentTrack.setAttribute("track-title", current.title);
         (current.rating != null) ? this.currentTrack.setAttribute("rating", current.rating) : this.currentTrack.removeAttribute("rating");

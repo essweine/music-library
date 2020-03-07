@@ -1,4 +1,4 @@
-import sqlite3
+import sqlite3, re
 import os.path
 from datetime import datetime
 
@@ -129,5 +129,4 @@ class Track(object):
 
     def __repr__(self):
         return json.dumps(self, cls = JsonEncoder, indent = 2, separators = [ ", ", ": " ])
-
 

@@ -33,7 +33,7 @@ def main():
     http_server.listen(options.port)
     app.init_db(options.db)
     app.set_root_directory(options.root)
-    PeriodicCallback(app.update_state, 6000).start()
+    PeriodicCallback(app.update_state, 3000).start()
     IOLoop.current().start()
 
 if __name__ == "__main__":
