@@ -46,13 +46,11 @@ class Player(object):
                 elif task.name == "stop":
                     self._handle_stop()
 
-            if self.state.stopped:
-                pass
-            elif self._subprocess is None:
-                self._update_last_entry()
-                self._handle_advance_playlist()
-            else:
+            if self._subprocess is not None:
                 self._check_subprocess()
+
+            if not self.state.stopped and self._subprocess is None:
+                self._handle_advance_playlist()
 
             if self.state != initial_state:
                 conn.send(self.state)

@@ -20,16 +20,20 @@ class PlayerContainer extends HTMLDivElement {
 
     updateState(state) {
         let current = state.current;
-        this.currentTrack.setAttribute("filename", current.filename);
-        this.currentTrack.setAttribute("track-title", current.title);
-        (current.rating != null) ? this.currentTrack.setAttribute("rating", current.rating) : this.currentTrack.removeAttribute("rating");
-        this.currentTrack.setAttribute("rating", current.rating);
-        this.currentTrack.setAttribute("recording-id", current.recording_id);
-        this.currentTrack.setAttribute("recording-title", current.recording);
-        this.currentTrack.setAttribute("artist", current.artist);
-        (current.artwork != null) ? this.currentTrack.setAttribute("artwork", current.artwork) : this.currentTrack.removeAttribute("artwork");
-        this.currentTrack.update();
-
+        if (current != null) {
+            this.currentTrack.setAttribute("filename", current.filename);
+            this.currentTrack.setAttribute("track-title", current.title);
+            (current.rating != null) ? this.currentTrack.setAttribute("rating", current.rating) : this.currentTrack.removeAttribute("rating");
+            this.currentTrack.setAttribute("rating", current.rating);
+            this.currentTrack.setAttribute("recording-id", current.recording_id);
+            this.currentTrack.setAttribute("recording-title", current.recording);
+            this.currentTrack.setAttribute("artist", current.artist);
+            (current.artwork != null) ? this.currentTrack.setAttribute("artwork", current.artwork) : this.currentTrack.removeAttribute("artwork");
+            this.currentTrack.update();
+            this.insertBefore(this.currentTrack, this.nextTracks);
+        } else {
+            this.currentTrack.remove();
+        }
         this.nextTracks.update(state.next_entries);
         this.recentlyPlayed.update(state.recently_played);
     }

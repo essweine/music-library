@@ -11,5 +11,9 @@ customElements.define("recently-played", RecentlyPlayedContainer, { extends: "di
 window.onload = e => {
     let playerContainer = document.getElementById("player-container");
     playerContainer.initialize();
-    playerContainer.update();
+
+    let wsUrl = "ws://" + location.host + Player.wsUrl;
+    let ws = new WebSocket(wsUrl);
+    ws.addEventListener("open", e => ws.send("open"));
+    ws.addEventListener("message", e => playerContainer.update());
 }

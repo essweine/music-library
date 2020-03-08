@@ -28,10 +28,13 @@ class PlayerHandler(BaseApiHandler):
 
 class PlayerNotificationHandler(WebSocketHandler):
 
-    def on_message(self):
+    def open(self):
+        self.application.websockets.add(self)
+        self.write_message("open");
 
+    def on_close(self):
+        self.application.websockets.remove(self)
+
+    def on_message(self, message):
         pass
 
-    def write_message(self):
-
-        pass

@@ -7,7 +7,7 @@ class TracklistContainer extends HTMLDivElement {
     }
 
     update(tracklist) { 
-        let children = this.getElementsByClassName(this.childClass);
+        let children = Array.from(this.getElementsByClassName(this.childClass));
         for (let track of children)
             track.remove();
 

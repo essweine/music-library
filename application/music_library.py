@@ -6,7 +6,7 @@ from tornado.web import Application, StaticFileHandler, RequestHandler
 from .config import TABLE_DEFS
 from .importer import DirectoryListing, ImportHandler, ImportRootHandler, ImportDisplayHandler
 from .library import RecordingHandler, RecordingRootHandler, RecordingDisplayHandler
-from .player import Player, PlayerHandler, PlayerDisplayHandler
+from .player import Player, PlayerHandler, PlayerDisplayHandler, PlayerNotificationHandler
 
 handlers = [ 
     (r"/importer", ImportRootHandler),
@@ -17,6 +17,7 @@ handlers = [
     (r"/recording/(.*?)", RecordingDisplayHandler),
     (r"/api/recording/(.*?)/(.*?)", RecordingHandler),
     (r"/api/recording/(.*?)", RecordingHandler),
+    (r"/api/player/notifications", PlayerNotificationHandler),
     (r"/api/player", PlayerHandler),
     (r"/static", StaticFileHandler),
     (r"/", PlayerDisplayHandler),
@@ -31,6 +32,7 @@ class MusicLibrary(Application):
         self.conn = None
         self.unindexed_directory_list = { }
         self.player = None
+        self.websockets = set()
 
     def init_db(self, dbname):
 
@@ -76,6 +78,8 @@ class MusicLibrary(Application):
             try:
                 cursor = self.conn.cursor()
                 self.player.update_state(cursor, self.player.conn.recv())
+                for ws in self.websockets:
+                    ws.write_message("state changed")
                 cursor.close()
                 self.conn.commit()
             except:

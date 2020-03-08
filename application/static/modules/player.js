@@ -1,6 +1,7 @@
 let Player = {
 
     url: "/api/player",
+    wsUrl: "/api/player/notifications",
 
     startTask: { "name": "start" },
     stopTask: { "name": "stop" },

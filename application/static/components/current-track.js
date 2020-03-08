@@ -36,6 +36,7 @@ class CurrentTrack extends HTMLDivElement {
     }
 
     update() {
+
         this.trackTitle.innerText = this.getAttribute("track-title");
         this.recordingLink.href = "/recording/" + this.getAttribute("recording-id");
         this.recordingLink.innerText = this.getAttribute("recording-title")
