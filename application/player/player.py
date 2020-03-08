@@ -70,7 +70,8 @@ class Player(object):
     def update_state(self, cursor, state):
 
         # Maintain recently played only in parent (the forked process doesn't need it)
-        state.recently_played = self.state.recently_played
+        period_start = datetime.utcnow() - timedelta(minutes = 30)
+        state.recently_played = [ track for track in self.state.recently_played if track.end_time > period_start ]
         if state.last_entry is not None:
             if (state.last_entry.end_time - state.last_entry.start_time).seconds > 10:
                 History.create(cursor, state.last_entry)

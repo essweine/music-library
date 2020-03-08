@@ -52,8 +52,8 @@ class State(JsonSerializable):
 
         return {
             "current": PlaylistTrack.from_filename(cursor, self.current.filename) if self.current else None,
-            "next_entries": PlaylistTrack.from_filenames(cursor, [ e.filename for e in self.next_entries ]),
-            "recently_played": PlaylistTrack.from_filenames(cursor, [ e.filename for e in self.recently_played ]),
+            "next_entries": [ PlaylistTrack.from_filename(cursor, e.filename) for e in self.next_entries ],
+            "recently_played": [ PlaylistTrack.from_filename(cursor, e.filename) for e in self.recently_played ],
         }
 
     def __eq__(self, other):
