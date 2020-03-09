@@ -36,7 +36,7 @@ class TracklistContainer extends HTMLDivElement {
     removeTrack(position) {
         let children = this.getElementsByClassName(this.childClass);
         children.item(position).remove();
-        for (let i = position; i < tracklist.length; i++)
+        for (let i = position; i < children.length; i++)
             children.item(i).updatePosition(i, i == 0, i == children.length - 1);
     }
 }

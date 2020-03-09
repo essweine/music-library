@@ -20,8 +20,8 @@ class PlaylistTrackContainer extends TracklistContainer {
         this.listToggle = document.createElement("div");
         this.listToggle.classList.add("list-toggle");
         this.listToggle.onclick = e => {
-            this.updateToggle();
             this.tracklistHidden = !this.tracklistHidden;
+            this.updateToggle();
         };
     }
 
@@ -70,12 +70,20 @@ class NextTracksContainer extends PlaylistTrackContainer {
         super();
         this.id = "next-tracks";
         this.childClass = "next-tracks-entry";
-        this.childAttributes = [ "title", "recording", "artist" ];
+        this.childAttributes = [ "title", "recording", "artist", "filename" ];
     }
 
     initialize() { }
 
     update(tracklist) { super.update(tracklist); }
+
+    shiftTrackUp(position) {
+        super.shiftTrackUp(position);
+    }
+
+    removeTrack(position) {
+        super.removeTrack(position);
+    }
 }
 
 class RecentlyPlayedContainer extends PlaylistTrackContainer {

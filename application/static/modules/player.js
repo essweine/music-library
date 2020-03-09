@@ -19,15 +19,23 @@ let Player = {
         let tracks = recording.tracks;
         let tasks = [ ];
         for (let track of tracks)
-            tasks.unshift(this.addToPlaylistTask(track, 0));
+            tasks.unshift(this.addToPlaylistTask(track.filename, 0));
         tasks.push(this.startTask);
         this.sendTasks(tasks);
     },
 
-    addToPlaylistTask: function(track, position = null) {
+    addToPlaylistTask: function(filename, position) {
         return {
             "name": "add",
-            "filename": track.filename,
+            "filename": filename,
+            "position": position
+        }
+    },
+
+    removeFromPlaylistTask: function(filename, position) {
+        return {
+            "name": "remove",
+            "filename": filename,
             "position": position
         }
     },

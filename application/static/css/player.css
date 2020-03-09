@@ -12,6 +12,20 @@
     align-items: start;
 }
 
+#player-controls {
+    display: grid;
+    grid-auto-flow: column;
+    justify-content: center;
+}
+
+.control-container {
+    width: min-content;
+}
+
+.control-icon {
+    font-size: xx-large;
+}
+
 #bullshit-container-1 {
     grid-column: 1;
 }

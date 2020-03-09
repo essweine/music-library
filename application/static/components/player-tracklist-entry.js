@@ -45,15 +45,21 @@ class NextTracksEntry extends PlaylistEntry {
 
         this.addEventListener("move", e => {
             let position = parseInt(this.getAttribute("position"));
-            let detail = (e.detail == "up") ? position : position + 1;
-            let ev = new CustomEvent("move-track", { detail: detail, bubbles: true });
-            this.dispatchEvent(ev);
+            let update = {
+                action: (e.detail == "up") ? "move-track-up" : "move-track-down",
+                position: position,
+                filename: this.getAttribute("filename")
+            };
+            this.dispatchEvent(new CustomEvent("update-playlist", { detail: update, bubbles: true }));
+            let listPosition = (e.detail == "up") ? position : position + 1;
+            this.dispatchEvent(new CustomEvent("move-track", { detail: listPosition, bubbles: true }));
         });
 
         this.addEventListener("remove", e => {
             let position = parseInt(this.getAttribute("position"));
-            let ev = new CustomEvent("remove-track", { detail: position, bubbles: true });
-            this.dispatchEvent(ev);
+            let update = { action: "remove-track", position: position };
+            this.dispatchEvent(new CustomEvent("update-playlist", { detail: update, bubbles: true }));
+            this.dispatchEvent(new CustomEvent("remove-track", { detail: position, bubbles: true }));
         });
     }
 
