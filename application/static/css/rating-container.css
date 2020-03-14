@@ -5,3 +5,11 @@
 .unfilled {
     color: #d3d3d3;
 }
+
+.rating-label {
+    padding-right: 10px;
+}
+
+.star-icon, .clear-icon {
+    vertical-align: middle;
+}

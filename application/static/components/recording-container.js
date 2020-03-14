@@ -121,8 +121,6 @@ class RecordingContainer extends HTMLDivElement {
         data.artist = this.info.get("artist");
         data.recording_date = this.info.get("recording-date");
         data.venue = this.info.get("venue");
-        data.rating = this.info.get("rating");
-        data.sound_rating = this.info.get("sound-rating");
         data.artwork = this.image.get();
         data.tracks = this.tracklist.getTracklist();
         return data;

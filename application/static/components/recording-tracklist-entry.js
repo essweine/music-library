@@ -1,3 +1,5 @@
+import { createRatingContainer } from "/static/components/rating-container.js";
+
 class RecordingTrack extends HTMLDivElement {
 
     constructor() {
@@ -16,11 +18,10 @@ class RecordingTrack extends HTMLDivElement {
         this.trackTitle = document.createElement("span");
         this.trackTitle.classList.add("recording-tracklist-display");
 
-        this.ratingContainer = document.createElement("span", { is: "rating-container" });
-        this.ratingContainer.addEventListener("rating-change", e =>
-            this.ratingContainer.sendRating(this, this.recordingId, this.filename, e.detail));
-        this.ratingContainer.setRating(this.getAttribute("rating"));
+        this.ratingContainer = createRatingContainer();
+        this.ratingContainer.initialize(this.recordingId, this.getAttribute("filename"), this.getAttribute("rating"));
         this.ratingContainer.classList.add("recording-tracklist-rating");
+        this.removeAttribute("rating");
 
         // Edit elements
         this.label = document.createElement("label");
@@ -109,8 +110,6 @@ class RecordingTrack extends HTMLDivElement {
         for (let attr of this.getAttributeNames())
             if (! [ "is", "id", "class"].includes(attr))
                 data[attr.replace("-", "_")] = this.getAttribute(attr);
-        if (data.rating != null)
-            data.rating = parseInt(data.rating);
         data.track_num = parseInt(data.position) + 1;
         delete data.position;
         return data;

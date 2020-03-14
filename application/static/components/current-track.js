@@ -1,3 +1,5 @@
+import { createRatingContainer } from "/static/components/rating-container.js";
+
 class CurrentTrack extends HTMLDivElement {
 
     constructor() {
@@ -31,7 +33,9 @@ class CurrentTrack extends HTMLDivElement {
         this.artist.id = "artist";
         this.bullshitTextContainer.append(this.artist);
 
-        this.ratingContainer = this.createRatingContainer();
+        this.ratingContainer = createRatingContainer();
+        this.ratingContainer.id = "track-rating";
+
         this.bullshitTextContainer.append(this.ratingContainer);
     }
 
@@ -45,16 +49,7 @@ class CurrentTrack extends HTMLDivElement {
             this.img.src = "/file/" + this.getAttribute("artwork");
         else
             this.img.remove();
-        this.ratingContainer.setRating(this.getAttribute("rating"));
-    }
-
-    createRatingContainer() {
-        let ratingContainer = document.createElement("span", { is: "rating-container" });
-        ratingContainer.classList.add("tracklist-rating");
-        ratingContainer.setRating(this.getAttribute("rating"));
-        ratingContainer.addEventListener("rating-change", e => 
-            this.ratingContainer.sendRating(this, this.getAttribute("recording-id"), this.getAttribute("filename"), e.detail));
-        return ratingContainer;
+        this.ratingContainer.initialize(this.getAttribute("recording-id"), this.getAttribute("filename"), this.getAttribute("rating"));
     }
 }
 

@@ -66,11 +66,13 @@
 }
 
 #track-rating {
+    padding-top: 10px;
 }
 
 #next-tracks, #recently-played {
     display: grid;
     grid-row-gap: 5px;
+    align-items: center;
 }
 
 .tracklist-heading {

@@ -2,7 +2,6 @@ class PlayerContainer extends HTMLDivElement {
     constructor() {
         super();
         this.id = "player-container";
-        this.addEventListener("update-rating", e => this.updateRating(e.detail));
 
         this.addEventListener("player-control", e => {
             if (e.detail == "stop") {
@@ -62,11 +61,6 @@ class PlayerContainer extends HTMLDivElement {
         }
         this.nextTracks.update(state.next_entries);
         this.recentlyPlayed.update(state.recently_played);
-    }
-
-    //should also update player state here
-    updateRating(data) {
-        console.log("update rating", data);
     }
 }
 

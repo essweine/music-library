@@ -15,6 +15,19 @@ class RatingContainer extends HTMLSpanElement {
         this.append(clearIcon);
     }
 
+    setLabel(text) { 
+        this.label = document.createElement("span");
+        this.label.classList.add("rating-label");
+        this.label.innerText = text; 
+        this.prepend(this.label);
+    }
+
+    initialize(recordingId, ratedItem, rating) {
+        this.recordingId = recordingId;
+        this.ratedItem = ratedItem;
+        this.setRating(rating);
+    }
+
     setRating(rating) {
 
         let newRating = null;
@@ -44,14 +57,8 @@ class RatingContainer extends HTMLSpanElement {
 
     updateRating(rating) {
         let newRating = this.setRating(rating);
-        let ev = new CustomEvent("rating-change", { detail: newRating, bubbles: true });
-        this.dispatchEvent(ev);
-    }
-
-    sendRating(node, recordingId, item, rating) {
-        (rating != null) ? node.setAttribute("rating", rating) : node.removeAttribute("rating");
-        let recordingApi = new Recording(recordingId);
-        let data = { item: item, rating: rating };
+        let recordingApi = new Recording(this.recordingId);
+        let data = { item: this.ratedItem, rating: rating };
         recordingApi.updateRating(data);
     }
 
@@ -64,4 +71,10 @@ class RatingContainer extends HTMLSpanElement {
     }
 }
 
-export { RatingContainer };
+function createRatingContainer() {
+    let ratingContainer = document.createElement("span", { is: "rating-container" });
+    ratingContainer.classList.add("recording-rating");
+    return ratingContainer;
+}
+
+export { RatingContainer, createRatingContainer };

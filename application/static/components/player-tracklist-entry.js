@@ -1,3 +1,5 @@
+import { createRatingContainer } from "/static/components/rating-container.js";
+
 class PlaylistEntry extends HTMLDivElement {
 
     constructor() {
@@ -88,9 +90,8 @@ class RecentlyPlayedEntry extends PlaylistEntry {
 
     initialize() {
         super.initialize();
-        this.ratingContainer = document.createElement("span", { is: "rating-container" });
-        this.ratingContainer.addEventListener("rating-change", e => 
-            this.ratingContainer.sendRating(this, this.getAttribute("recording-id"), this.getAttribute("filename"), e.detail));
+        this.ratingContainer = createRatingContainer();
+        this.ratingContainer.initialize(this.getAttribute("recording-id"), this.getAttribute("filename"), this.getAttribute("rating"));
         this.append(this.ratingContainer);
     }
 

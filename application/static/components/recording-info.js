@@ -1,3 +1,5 @@
+import { createRatingContainer } from "/static/components/rating-container.js";
+
 class RecordingInfo extends HTMLDivElement {
     constructor() {
         super();
@@ -7,22 +9,18 @@ class RecordingInfo extends HTMLDivElement {
         this.artistDisplay   = document.createElement("span");
         this.dateDisplay     = document.createElement("span");
         this.venueDisplay    = document.createElement("span");
-        this.ratingDisplay   = document.createElement("span");
-        this.soundDisplay    = document.createElement("span");
-        this.recordingRating = this.createRatingContainer("rating");
-        this.soundRating     = this.createRatingContainer("sound-rating");
+        this.recordingRating = createRatingContainer();
+        this.soundRating     = createRatingContainer();
 
-        this.ratingDisplay.innerText = "Rating";
-        this.soundDisplay.innerText  = "Sound Rating";
+        this.recordingRating.setLabel("Rating");
+        this.soundRating.setLabel("Sound Rating");
 
         this.displayElements = [
             this.titleDisplay,
             this.artistDisplay,
             this.dateDisplay,
             this.venueDisplay,
-            this.ratingDisplay,
             this.recordingRating,
-            this.soundDisplay,
             this.soundRating
         ]
 
@@ -51,7 +49,8 @@ class RecordingInfo extends HTMLDivElement {
     }
 
     initialize(recordingId) {
-        this.recordingId = recordingId; 
+        this.recordingRating.initialize(recordingId, "rating", this.getAttribute("rating"));
+        this.soundRating.initialize(recordingId, "sound-rating", this.getAttribute("sound-rating"));
         this.reset();
     }
 
@@ -70,12 +69,7 @@ class RecordingInfo extends HTMLDivElement {
         this.reset();
     }
 
-    get(attribute) { 
-        if ([ "rating", "sound-rating" ].includes(attribute) && this.getAttribute(attribute) != null)
-            return parseInt(this.getAttribute(attribute));
-        else
-            return this.getAttribute(attribute); 
-    }
+    get(attribute) { return this.getAttribute(attribute); }
 
     set(title, artist, recordingDate, venue) {
         this.setAttribute("title", title);
@@ -93,7 +87,7 @@ class RecordingInfo extends HTMLDivElement {
         this.titleInput.value  = this.getAttribute("title");
         this.artistInput.value = this.getAttribute("artist");
         this.dateInput.value   = this.getAttribute("recording-date");
-        this.venueInput.value   = this.getAttribute("venue");
+        this.venueInput.value  = this.getAttribute("venue");
     }
 
     save() {
@@ -101,16 +95,6 @@ class RecordingInfo extends HTMLDivElement {
         this.setAttribute("artist", this.artistInput.value);
         this.setAttribute("recording-date", this.dateInput.value);
         this.setAttribute("venue", this.venueInput.value);
-    }
-
-    createRatingContainer(attribute) {
-        let ratingContainer = document.createElement("span", { is: "rating-container" });
-        ratingContainer.classList.add("recording-rating");
-        ratingContainer.setRating(this.getAttribute(attribute));
-        ratingContainer.addEventListener("rating-change", e => 
-            ratingContainer.sendRating(this, this.recordingId, attribute, e.detail)
-        );
-        return ratingContainer;
     }
 
     createLabel(name, display) {
@@ -122,9 +106,9 @@ class RecordingInfo extends HTMLDivElement {
     }
 
     createInput(name, size) {
-        let input = document.createElement("input");
+        let input  = document.createElement("input");
         input.type = "text";
-        input.id = name;
+        input.id   = name;
         input.size = size;
         input.classList.add("recording-input");
         return input;
