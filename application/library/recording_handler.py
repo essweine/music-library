@@ -8,30 +8,6 @@ from . import Recording
 from ..importer import DirectoryListing
 from ..util import BaseApiHandler
 
-class RecordingRootHandler(RequestHandler):
-
-    def get(self):
-
-        try:
-            cursor = self.application.conn.cursor()
-            cursor.row_factory = Row
-            cursor.execute("select id, title, artist from recording")
-        except:
-            raise
-
-        items = [ ]
-        for row in cursor:
-            items.append({
-                "title": row["title"],
-                "description": row["artist"],
-                "buttons": [
-                    { "id": "view-recording", "item": row["id"], "text": "View recording" },
-                    { "id": "play-recording", "item": row["id"], "text": "Play recording" },
-                ]
-            })
-
-        self.render("browse.html", page_title = "Recordings", items = items)
-
 class RecordingDisplayHandler(RequestHandler):
 
     def get(self, recording_id):

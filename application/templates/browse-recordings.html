@@ -1,0 +1,40 @@
+<html>
+  <head>
+    <title>Recordings</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/main.css">
+    <link rel="stylesheet" href="/static/css/listing.css">
+    <link rel="stylesheet" href="/static/css/rating-container.css">
+    <script src="/static/browse.js" type="module" defer></script>
+  </head>
+  <body>
+    <div id="root-container">
+      <div id="navigation">
+        <span class="navigation-item" id="now-playing"><a href="/">Now Playing</a></span>
+        <span class="navigation-item" id="browse-recordings"><a href="/recording">Recordings</a></span>
+        <span class="navigation-item" id="browse-directories"><a href="/importer">Unindexed Directory List</a></span>
+      </div>
+      <div id="content">
+        <div class="list-root">
+          <div class="recording-listing-heading">
+            <span class="list-artist">Artist</span>
+            <span class="list-title">Title</span>
+            <span class="list-date">Recording Date</span>
+            <span class="list-rating">Rating</span>
+            <span class="list-sound-rating">Sound Rating</span>
+            <span class="list-actions"/>
+          </div>
+          {% for summary in summaries %}
+          <div is="recording-listing"
+            recording-id="{{summary.id}}"
+            artist="{{summary.artist}}"
+            title="{{summary.title}}"
+            recording-date="{{summary.recording_date}}"
+            {% if summary.rating %}rating="{{summary.rating}}"{% end %}
+            {% if summary.sound_rating %}sound-rating="{{summary.sound_rating}}"{% end %}>
+          </div>
+          {% end %}
+        </div>
+      </div>
+    </body>
+</html>

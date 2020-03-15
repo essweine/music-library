@@ -58,6 +58,16 @@ class Recording(JsonSerializable):
 
         return cls(recording)
 
+    @classmethod
+    def get_summaries(cls, cursor):
+
+        try:
+            cursor.row_factory = sqlite3.Row
+            cursor.execute("select * from recording")
+            return [ cls(dict(row)) for row in cursor ]
+        except:
+            raise
+
     @staticmethod
     def create(cursor, recording):
 
