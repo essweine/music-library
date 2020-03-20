@@ -1,5 +1,6 @@
 import sqlite3, os, re
 from uuid import uuid4
+import logging
 
 from tornado.web import Application, StaticFileHandler, RequestHandler
 
@@ -35,6 +36,7 @@ class MusicLibrary(Application):
         self.unindexed_directory_list = { }
         self.player = None
         self.websockets = set()
+        self.logger = logging.getLogger('tornado.application')
 
     def init_db(self, dbname):
 
@@ -45,16 +47,19 @@ class MusicLibrary(Application):
                 cursor.execute(stmt)
             self.conn.commit()
             cursor.close()
-        except:
-            raise
+        except Exception as exc:
+            self.logger.error("Could not initialize database", exc_info = True)
 
     def set_root_directory(self, root):
 
         if self.conn is None:
-            raise Exception("The database must be initialized before the directory list")
+            self.logger.error("The database must be initialized before the directory list")
 
         self.root = os.path.abspath(root)
-        self.player = Player(self.root)
+        try:
+            self.player = Player(self.root)
+        except Exception as exc:
+            self.logger.error("An error occurred whie initializing the player", exc_info = True)
 
         self.add_handlers(r".*", [ (r"/file/(.*)", StaticFileHandler, { "path": self.root }) ])
 
@@ -71,8 +76,8 @@ class MusicLibrary(Application):
                 if DirectoryListing.contains_audio(files) and relative_name not in indexed_directories:
                     entry = DirectoryListing(relative_name, root)
                     self.unindexed_directory_list[entry.id] = entry
-        except:
-            raise
+        except Exception as exc:
+            self.logger.error("An exception occured while creating the directory list", exc_info = True)
 
     def update_state(self):
 
@@ -85,4 +90,4 @@ class MusicLibrary(Application):
                 cursor.close()
                 self.conn.commit()
             except:
-                raise
+                self.logger.error("An exception occurred while updating the state", exc_info = True)

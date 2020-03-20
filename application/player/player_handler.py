@@ -2,6 +2,7 @@ import json
 
 from tornado.web import RequestHandler
 from tornado.websocket import WebSocketHandler
+from tornado import log as logger
 
 from ..util import BaseApiHandler
 
@@ -24,7 +25,7 @@ class PlayerHandler(BaseApiHandler):
             for task in self.json_body["tasks"]:
                 self.application.player.send_task(**task)
         else:
-            raise Exception("Expected json")
+            self.logger.error(f"POST request {request.url}: expected json")
 
 class PlayerNotificationHandler(WebSocketHandler):
 

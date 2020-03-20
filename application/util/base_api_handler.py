@@ -7,6 +7,7 @@ class BaseApiHandler(RequestHandler):
 
     def initialize(self):
         self.JsonEncoder = JsonEncoder
+        self.logger = self.application.logger
 
     def prepare(self):
         if "application/json" in self.request.headers.get("Content-Type", ""):

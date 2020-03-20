@@ -16,8 +16,8 @@ class RecordingRootDisplayHandler(RequestHandler):
             cursor = self.application.conn.cursor()
             summaries = Recording.get_summaries(cursor)
             cursor.close()
-        except:
-            raise
+        except Exception as exc:
+            self.application.logger.error("Could not get recording list", exc_info = True)
 
         sort_order = lambda r: (r.artist, r.recording_date if r.recording_date is not None else date(1900, 1, 1))
         self.render("browse-recordings.html", summaries = sorted(summaries, key = sort_order))

@@ -16,8 +16,8 @@ class RecordingDisplayHandler(RequestHandler):
             cursor = self.application.conn.cursor()
             recording = Recording.get(cursor, recording_id)
             cursor.close()
-        except:
-            raise
+        except Exception as exc:
+            self.application.logger.error(f"Could not get recording {recording_id}", exc_info = True)
 
         self.render("recording.html",
             context = "display",
@@ -33,8 +33,8 @@ class RecordingHandler(BaseApiHandler):
 
         try:
             recording = self.db_action(Recording.get, recording_id)
-        except:
-            raise
+        except Exception as exc:
+            self.logger.error(f"Could not get recording {recording_id}", exc_info = True)
 
         if item == "entry":
             entry = DirectoryListing(recording.directory, self.application.root)
@@ -58,7 +58,7 @@ class RecordingHandler(BaseApiHandler):
                 elif item == "rating":
                     self.db_action(Recording.set_rating, recording_id, self.json_body)
             except:
-                raise
+                self.logger.error(f"PUT {request.url}: Expected json")
 
     def post(self, recording_id):
 
@@ -67,7 +67,7 @@ class RecordingHandler(BaseApiHandler):
             try:
                 self.db_action(Recording.create, self.json_body)
             except:
-                raise
+                self.logger.error(f"POST {request.url}: Expected json")
 
         if entry.children:
             to_remove = [ ]

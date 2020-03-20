@@ -60,14 +60,16 @@ class DirectoryListing(object):
 
     def as_recording(self, textfile = None):
 
-        if textfile:
-            recording = self._parse(textfile)
-            recording.notes = textfile
-        else:
-            data = Recording()
-            data.tracks = [ ]
-
+        recording = Recording()
         recording.id, recording.directory = self.id, self.name
+
+        if textfile:
+            try:
+                self._parse(textfile, recording)
+            except:
+                pass
+            recording.notes = textfile
+
         for idx, filename in enumerate(self.audio):
             if idx < len(recording.tracks):
                 track = recording.tracks[idx]
@@ -80,14 +82,12 @@ class DirectoryListing(object):
 
         return recording
 
-    def _parse(self, filename):
+    def _parse(self, filename, recording):
 
         try:
             text = open(os.path.join(self.root, filename), 'rb')
         except:
             raise
-
-        recording = Recording()
 
         in_first_section, in_setlist = True, False
 
@@ -146,8 +146,6 @@ class DirectoryListing(object):
 
                 if track.title:
                     recording.tracks.append(track)
-
-        return recording
 
     def _get_date_from_line(self, line):
 

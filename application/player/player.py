@@ -1,6 +1,7 @@
 from multiprocessing import Process, Pipe
 import subprocess, signal, time, os
 import re
+import logging
 from datetime import datetime, timedelta
 
 from ..library import Track
@@ -17,6 +18,7 @@ class Player(object):
         self.root = root
         self.state = State(True, None, None, [ ], [ ])
         self._subprocess = None
+        self.logger = logging.getLogger('tornado.application')
 
         try:
             self.conn, child_conn = Pipe()
@@ -74,8 +76,13 @@ class Player(object):
         state.recently_played = [ track for track in self.state.recently_played if track.end_time > period_start ]
         if state.last_entry is not None:
             if (state.last_entry.end_time - state.last_entry.start_time).seconds > 10:
-                History.create(cursor, state.last_entry)
+                try:
+                    History.create(cursor, state.last_entry)
+                except Exception as exc:
+                    self.logger.error("Could not create history entry for {state.last_entry.filename}", exc_info = True)
                 state.recently_played.insert(0, state.last_entry)
+            if state.last_entry.error:
+                self.logger.error(f"Error for {state.last_entry.filename}: {state.last_entry.error_output}")
             state.last_entry = None
         self.state = state
 
@@ -117,8 +124,8 @@ class Player(object):
                 self._subprocess.send_signal(signal.SIGTERM)
                 self._reset_subprocess()
             self.state.stopped = True
-        except:
-            raise
+        except Exception as exc:
+            self.logger.error("An exception occurred during stop", exc_info = True)
 
     def _play(self, entry):
 
@@ -133,8 +140,8 @@ class Player(object):
             entry.start_time = datetime.utcnow()
             self.state.current = entry
             self.state.stopped = False
-        except:
-            raise
+        except Exception as exc:
+            self.logger.error("An exception occurred during play", exc_info = True)
 
     def _subprocess_running(self):
 

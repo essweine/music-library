@@ -50,11 +50,15 @@ class State(JsonSerializable):
 
     def add_track_info(self, cursor):
 
-        return {
-            "current": PlaylistTrack.from_filename(cursor, self.current.filename) if self.current else None,
-            "next_entries": [ PlaylistTrack.from_filename(cursor, e.filename) for e in self.next_entries ],
-            "recently_played": [ PlaylistTrack.from_filename(cursor, e.filename) for e in self.recently_played ],
-        }
+        try:
+            return {
+                "current": PlaylistTrack.from_filename(cursor, self.current.filename) if self.current else None,
+                "next_entries": [ PlaylistTrack.from_filename(cursor, e.filename) for e in self.next_entries ],
+                "recently_played": [ PlaylistTrack.from_filename(cursor, e.filename) for e in self.recently_played ],
+            }
+        except Exception as exc:
+            self.logger.error("Could not get track info", exc_info = True)
+            return { "current": [ ], "next_entries": [ ], "recently_played": [ ] }
 
     def __eq__(self, other):
 
