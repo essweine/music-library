@@ -9,6 +9,7 @@ from .importer import DirectoryListing, ImportHandler, ImportRootHandler, Import
 from .library import RecordingHandler, RecordingDisplayHandler
 from .library import RecordingRootHandler, RecordingRootDisplayHandler
 from .player import Player, PlayerHandler, PlayerDisplayHandler, PlayerNotificationHandler
+from .log import LogNotificationHandler, LogDisplayHandler
 
 handlers = [ 
     (r"/importer", ImportRootHandler),
@@ -17,11 +18,13 @@ handlers = [
     (r"/api/importer/(.*)", ImportHandler),
     (r"/recording/(.*?)", RecordingDisplayHandler),
     (r"/recording", RecordingRootDisplayHandler),
+    (r"/log", LogDisplayHandler),
     (r"/api/recording/(.*?)/(.*?)", RecordingHandler),
     (r"/api/recording/(.*?)", RecordingHandler),
     (r"/api/recording", RecordingRootHandler),
     (r"/api/player/notifications", PlayerNotificationHandler),
     (r"/api/player", PlayerHandler),
+    (r"/api/log/notifications", LogNotificationHandler),
     (r"/static", StaticFileHandler),
     (r"/", PlayerDisplayHandler),
 ]
@@ -35,8 +38,8 @@ class MusicLibrary(Application):
         self.conn = None
         self.unindexed_directory_list = { }
         self.player = None
-        self.websockets = set()
-        self.logger = logging.getLogger('tornado.application')
+        self.logger = logging.getLogger("tornado.application")
+        self.console = None
 
     def init_db(self, dbname):
 
@@ -79,15 +82,28 @@ class MusicLibrary(Application):
         except Exception as exc:
             self.logger.error("An exception occured while creating the directory list", exc_info = True)
 
+    def init_console(self, queue_handler):
+
+        self.console = queue_handler
+
     def update_state(self):
 
         while self.player.conn.poll():
             try:
                 cursor = self.conn.cursor()
                 self.player.update_state(cursor, self.player.conn.recv())
-                for ws in self.websockets:
+                for ws in self.player.websockets:
                     ws.write_message("state changed")
                 cursor.close()
                 self.conn.commit()
             except:
                 self.logger.error("An exception occurred while updating the state", exc_info = True)
+
+        while not self.console.queue.empty():
+            try:
+                message = self.console.queue.get()
+                for ws in self.console.websockets:
+                    ws.write_message(message)
+            except:
+                self.logger.error("An exception occurred while sending the log messages", exc_info = True)
+                break

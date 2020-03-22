@@ -1,0 +1,22 @@
+#log-display {
+    background-color: #000;
+    color: #eee;
+    white-space: pre-wrap;
+    font-family: monospace;
+    font-size: large;
+    padding: 10px;
+    max-height: 80em;
+    overflow: auto;
+}
+
+.log-error {
+    color: red;
+}
+
+.log-warning {
+    color: orange;
+}
+
+.log-info {
+    color: green;
+}

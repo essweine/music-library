@@ -19,6 +19,7 @@ class Player(object):
         self.state = State(True, None, None, [ ], [ ])
         self._subprocess = None
         self.logger = logging.getLogger('tornado.application')
+        self.websockets = set()
 
         try:
             self.conn, child_conn = Pipe()
@@ -59,7 +60,7 @@ class Player(object):
                 # Never send the last entry more than once to prevent duplicate history items
                 self.state.last_entry = None
 
-            time.sleep(0.5)
+            time.sleep(0.25)
 
     def send_task(self, **kwargs):
 
@@ -82,7 +83,7 @@ class Player(object):
                     self.logger.error("Could not create history entry for {state.last_entry.filename}", exc_info = True)
                 state.recently_played.insert(0, state.last_entry)
             if state.last_entry.error:
-                self.logger.error(f"Error for {state.last_entry.filename}: {state.last_entry.error_output}")
+                self.logger.error(f"Error for {state.last_entry.filename}:\n{state.last_entry.error_output}")
             state.last_entry = None
         self.state = state
 

@@ -1,11 +1,14 @@
 #!/usr/bin/env python
 import os
+import logging
+from queue import Queue
 
 from tornado.httpserver import HTTPServer
 from tornado.options import define, options
 from tornado.ioloop import IOLoop, PeriodicCallback
 
 from application import create_app
+from application.log import LogViewQueue
 
 define("port", default = 80, help = "listen port")
 define("root", default = "data", help = "root directory containing audio files")
@@ -22,6 +25,20 @@ def print_options(options):
     print("Root directory is {root}".format(root = options.root))
     print("Database is {db}".format(db = options.db))
 
+def init_logging():
+
+    access = logging.getLogger("tornado.access")
+    application = logging.getLogger("tornado.application")
+    general = logging.getLogger("tornado.general")
+
+    queue = Queue(100)
+    handler = LogViewQueue(queue)
+    access.addHandler(handler)
+    application.addHandler(handler)
+    general.addHandler(handler)
+
+    return handler
+
 def main():
 
     "Webserver for music application"
@@ -33,7 +50,9 @@ def main():
     http_server.listen(options.port)
     app.init_db(options.db)
     app.set_root_directory(options.root)
-    PeriodicCallback(app.update_state, 3000).start()
+    console = init_logging()
+    app.init_console(console)
+    PeriodicCallback(app.update_state, 1500).start()
     IOLoop.current().start()
 
 if __name__ == "__main__":
