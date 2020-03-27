@@ -1,37 +1,29 @@
-
-/* Directory listing only */
-
 .list-root {
     display: grid;
     grid-auto-flow: row;
     justify-content: center;
 }
 
-.listing, .recording-listing {
+.directory-listing, .recording-listing {
     display: contents;
-    grid-auto-flow: column;
     color: #000;
 }
 
-.listing:nth-child(even), .recording-listing:nth-child(even) {
+.directory-listing:nth-child(even), .recording-listing:nth-child(even) {
     background-color: #eee;
 }
 
-.recording-listing-heading {
+.directory-listing-heading, .recording-listing-heading {
     font-size: large;
     font-weight: bold;
     display: contents;
 }
 
-.options {
-    align-self: center;
-    justify-self: end;
-    padding-left: 20px;
-}
-
 span[class^='list-'] {
     font-size: large;
     background-color: inherit;
+    display: flex;
+    align-items: center;
 }
 
 .list-artist {

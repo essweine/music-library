@@ -25,3 +25,7 @@ a:hover {
 #content {
     justify-content: start;
 }
+
+.material-icons {
+    vertical-align: bottom;
+}
