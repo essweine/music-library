@@ -11,6 +11,10 @@ class JsonSerializable(ABC):
         return json.dumps(self, cls = JsonEncoder, indent = 2, separators = [ ", ", ": " ])
 
     @classmethod
+    def row_factory(cls, cursor, row):
+        return cls(dict([ (col[0], row[idx]) for idx, col in enumerate(cursor.description) ]))
+
+    @classmethod
     def __subclasshook__(cls, subclass):
         return hasattr(subclass, 'as_dict') and callable(subclass.as_dict)
 

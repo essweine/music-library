@@ -8,6 +8,7 @@ from .config import TABLE_DEFS
 from .importer import DirectoryListing, ImportHandler, ImportRootHandler, ImportDisplayHandler
 from .library import RecordingHandler, RecordingDisplayHandler
 from .library import RecordingRootHandler, RecordingRootDisplayHandler
+from .library import SearchHandler
 from .player import Player, PlayerHandler, PlayerDisplayHandler, PlayerNotificationHandler
 from .log import LogNotificationHandler, LogDisplayHandler
 
@@ -22,6 +23,7 @@ handlers = [
     (r"/api/recording/(.*?)/(.*?)", RecordingHandler),
     (r"/api/recording/(.*?)", RecordingHandler),
     (r"/api/recording", RecordingRootHandler),
+    (r"/api/search", SearchHandler),
     (r"/api/player/notifications", PlayerNotificationHandler),
     (r"/api/player", PlayerHandler),
     (r"/api/log/notifications", LogNotificationHandler),

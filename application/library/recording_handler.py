@@ -1,21 +1,17 @@
-import os, re, json
-from sqlite3 import Row
+import json
 
 from tornado.web import RequestHandler
-from tornado.options import options
 
 from . import Recording
 from ..importer import DirectoryListing
-from ..util import BaseApiHandler
+from ..util import BaseRequestHandler, BaseApiHandler
 
-class RecordingDisplayHandler(RequestHandler):
+class RecordingDisplayHandler(BaseRequestHandler):
 
     def get(self, recording_id):
 
         try:
-            cursor = self.application.conn.cursor()
-            recording = Recording.get(cursor, recording_id)
-            cursor.close()
+            recording = self.db_action(Recording.get, recording_id)
         except Exception as exc:
             self.application.logger.error(f"Could not get recording {recording_id}", exc_info = True)
 

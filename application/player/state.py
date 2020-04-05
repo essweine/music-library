@@ -1,6 +1,5 @@
 import json
 
-from .playlist_track import PlaylistTrack
 from ..util import JsonSerializable
 
 class Task(JsonSerializable):
@@ -47,18 +46,6 @@ class State(JsonSerializable):
             self.next_entries.copy(),
             self.recently_played.copy()
         )
-
-    def add_track_info(self, cursor):
-
-        try:
-            return {
-                "current": PlaylistTrack.from_filename(cursor, self.current.filename) if self.current else None,
-                "next_entries": [ PlaylistTrack.from_filename(cursor, e.filename) for e in self.next_entries ],
-                "recently_played": [ PlaylistTrack.from_filename(cursor, e.filename) for e in self.recently_played ],
-            }
-        except Exception as exc:
-            self.logger.error("Could not get track info", exc_info = True)
-            return { "current": [ ], "next_entries": [ ], "recently_played": [ ] }
 
     def __eq__(self, other):
 

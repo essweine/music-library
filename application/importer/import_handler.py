@@ -2,18 +2,18 @@ import os, re, json
 from uuid import uuid4
 
 from tornado.web import RequestHandler
-from ..util import BaseApiHandler
+from ..util import BaseRequestHandler, BaseApiHandler
 
 from . import DirectoryListing
 
-class ImportRootHandler(RequestHandler):
+class ImportRootHandler(BaseRequestHandler):
 
     def get(self):
 
         entries = sorted(self.application.unindexed_directory_list.values(), key = lambda e: e.name)
         self.render("browse-directories.html", entries = entries)
 
-class ImportDisplayHandler(RequestHandler):
+class ImportDisplayHandler(BaseRequestHandler):
 
     def get(self, directory_id):
         entry = self.application.unindexed_directory_list[directory_id]

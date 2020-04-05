@@ -1,21 +1,15 @@
-import os, re, json
-from sqlite3 import Row
+import json
 from datetime import date
 
-from tornado.web import RequestHandler
-from tornado.options import options
-
 from . import Recording
-from ..util import BaseApiHandler
+from ..util import BaseRequestHandler, BaseApiHandler
 
-class RecordingRootDisplayHandler(RequestHandler):
+class RecordingRootDisplayHandler(BaseRequestHandler):
 
     def get(self):
 
         try:
-            cursor = self.application.conn.cursor()
-            summaries = Recording.get_summaries(cursor)
-            cursor.close()
+            summaries = self.db_query(Recording.get_summaries)
         except Exception as exc:
             self.application.logger.error("Could not get recording list", exc_info = True)
 
@@ -24,6 +18,11 @@ class RecordingRootDisplayHandler(RequestHandler):
 
 class RecordingRootHandler(BaseApiHandler):
 
-    def get(self):
-        pass
+    def post(self):
 
+        if self.json_body:
+            results = self.db_query(Recording.search, self.json_body)
+        else:
+            self.logger.error(f"POST request {request.url}: expected json")
+
+        self.write(json.dumps(results, cls = self.JsonEncoder))

@@ -46,27 +46,12 @@ class Recording(JsonSerializable):
     @classmethod
     def get(cls, cursor, recording_id):
 
-        try:
-            cursor.row_factory = sqlite3.Row
-            cursor.execute("select * from recording where id=?", (recording_id, ))
-            recording = dict(cursor.fetchone())
-
-            cursor.execute("select * from track where recording_id=? order by track_num", (recording_id, ))
-            recording["tracks"] = [ dict(track) for track in cursor.fetchall() ]
-        except:
-            raise
-
+        cursor.row_factory = sqlite3.Row
+        cursor.execute("select * from recording where id=?", (recording_id, ))
+        recording = dict(cursor.fetchone())
+        cursor.execute("select * from track where recording_id=? order by track_num", (recording_id, ))
+        recording["tracks"] = [ dict(track) for track in cursor.fetchall() ]
         return cls(recording)
-
-    @classmethod
-    def get_summaries(cls, cursor):
-
-        try:
-            cursor.row_factory = sqlite3.Row
-            cursor.execute("select * from recording")
-            return [ cls(dict(row)) for row in cursor ]
-        except:
-            raise
 
     @staticmethod
     def create(cursor, recording):
@@ -82,11 +67,8 @@ class Recording(JsonSerializable):
         get_track = lambda track: [ track.get(col.name, col.default) for col in TRACK_COLUMNS ]
         tracks_values = [ get_track(track) for track in recording.get("tracks", [ ]) ]
 
-        try:
-            cursor.execute(insert_recording, recording_values)
-            cursor.executemany(insert_track, tracks_values)
-        except Exception as exc:
-            raise
+        cursor.execute(insert_recording, recording_values)
+        cursor.executemany(insert_track, tracks_values)
 
     @staticmethod
     def update(cursor, recording):
@@ -98,11 +80,8 @@ class Recording(JsonSerializable):
         track_vals = [ get_track(track) for track in recording.get("tracks", [ ]) ]
         update_track = update_statement("track", "filename", TRACK_COLUMNS)
 
-        try:
-            cursor.execute(update_recording, recording_vals)
-            cursor.executemany(update_track, track_vals)
-        except:
-            raise
+        cursor.execute(update_recording, recording_vals)
+        cursor.executemany(update_track, track_vals)
 
     @staticmethod
     def set_rating(cursor, recording_id, data):
@@ -120,10 +99,26 @@ class Recording(JsonSerializable):
             update = "update track set rating=? where filename=?"
             values = (rating, item)
 
-        try:
-            cursor.execute(update, values)
-        except:
-            raise
+        cursor.execute(update, values)
+
+    @classmethod
+    def get_summaries(cls, cursor):
+
+        cursor.row_factory = cls.row_factory
+        cursor.execute("select * from recording")
+
+    @classmethod
+    def search(cls, cursor, criteria):
+
+        columns = [ "artist", "rating", "sound_rating" ]
+        values = [ criteria[val] for val in columns if val in criteria ]
+        recording_conditions = [ "{0}=?".format(col) for col in columns if col in criteria ] 
+        query = "select * from recording"
+        if recording_conditions:
+            query += " where " + " and ".join(recording_conditions)
+
+        cursor.row_factory = cls.row_factory
+        cursor.execute(query, values)
 
 class Track(JsonSerializable):
 

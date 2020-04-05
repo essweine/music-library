@@ -3,9 +3,9 @@ import os, re, json
 from tornado.web import RequestHandler
 from tornado.websocket import WebSocketHandler
 
-from ..util import BaseApiHandler
+from ..util import BaseRequestHandler, BaseApiHandler
 
-class LogDisplayHandler(RequestHandler):
+class LogDisplayHandler(BaseRequestHandler):
 
     def get(self):
 
