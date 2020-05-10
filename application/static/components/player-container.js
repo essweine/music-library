@@ -2,12 +2,22 @@ class PlayerContainer extends HTMLDivElement {
     constructor() {
         super();
         this.id = "player-container";
+        this.current = null;
 
         this.addEventListener("player-control", e => {
             if (e.detail == "stop") {
                 this.player.sendTasks([ this.player.stopTask ]);
+            } else if (e.detail == "pause") {
+                this.player.sendTasks([ this.player.pauseTask ]);
             } else if (e.detail == "start") {
                 this.player.sendTasks([ this.player.startTask ]);
+            } else if (e.detail == "back") {
+                // This will go back to the beginning of the track, but not through the playlist.
+                // I might have to rethink how the playlist would work.
+                let addTask = this.player.addToPlaylistTask(this.current.filename, 0);
+                this.player.sendTasks([ addTask, this.player.stopTask, this.player.startTask ]);
+            } else if (e.detail == "next") {
+                this.player.sendTasks([ this.player.stopTask, this.player.startTask ]);
             }
         });
 
@@ -44,12 +54,14 @@ class PlayerContainer extends HTMLDivElement {
     }
 
     updateState(state) {
+        this.elapsed = state.elapsed;
+        this.current = state.current;
+        this.previous = state.recently_played[0];
         let current = state.current;
         if (current != null) {
             this.currentTrack.setAttribute("filename", current.filename);
             this.currentTrack.setAttribute("track-title", current.title);
             (current.rating != null) ? this.currentTrack.setAttribute("rating", current.rating) : this.currentTrack.removeAttribute("rating");
-            this.currentTrack.setAttribute("rating", current.rating);
             this.currentTrack.setAttribute("recording-id", current.recording_id);
             this.currentTrack.setAttribute("recording-title", current.recording);
             this.currentTrack.setAttribute("artist", current.artist);

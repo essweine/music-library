@@ -4,10 +4,16 @@ class PlayerControls extends HTMLDivElement {
         super();
         this.id = "player-controls";
         this.stop = this.createButton("stop", "stop");
+        this.pause = this.createButton("pause", "pause");
         this.play = this.createButton("play_arrow", "start");
+        this.previous = this.createButton("skip_previous", "back");
+        this.next = this.createButton("skip_next", "next");
 
+        this.append(this.previous);
         this.append(this.stop);
+        this.append(this.pause);
         this.append(this.play);
+        this.append(this.next);
     }
 
     createButton(iconName, action) {

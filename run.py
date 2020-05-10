@@ -52,7 +52,7 @@ def main():
     app.set_root_directory(options.root)
     console = init_logging()
     app.init_console(console)
-    PeriodicCallback(app.update_state, 1500).start()
+    PeriodicCallback(app.update_state, 1200).start()
     IOLoop.current().start()
 
 if __name__ == "__main__":

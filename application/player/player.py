@@ -5,7 +5,7 @@ import logging
 from datetime import datetime, timedelta
 
 from ..library import Track
-from .state import State, Task, PlaylistEntry
+from .state import State, Task, PlaylistEntry, ProcState
 from .history import History
 
 CMD = [ "ffmpeg", "-hide_banner" ]
@@ -15,8 +15,9 @@ class Player(object):
 
     def __init__(self, root):
 
+        self.logger = logging.getLogger(__name__)
         self.root = root
-        self.state = State(True, None, None, [ ], [ ])
+        self.state = State(ProcState.Stopped, None, None, [ ], [ ])
         self._subprocess = None
         self.logger = logging.getLogger('tornado.application')
         self.websockets = set()
@@ -37,11 +38,11 @@ class Player(object):
             while conn.poll():
                 task = conn.recv()
                 if task.name == "start":
-                    self.state.stopped = False
+                    self._handle_start()
                 elif task.name == "play":
                     self._handle_play_entry(task)
-                elif task.name == "advance":
-                    self._handle_advance_playlist()
+                elif task.name == "pause":
+                    self._handle_pause()
                 elif task.name == "add":
                     self._handle_add_to_playlist(task)
                 elif task.name == "remove":
@@ -52,7 +53,7 @@ class Player(object):
             if self._subprocess is not None:
                 self._check_subprocess()
 
-            if not self.state.stopped and self._subprocess is None:
+            if self.state.proc_state == ProcState.Playing and self._subprocess is None:
                 self._handle_advance_playlist()
 
             if self.state != initial_state:
@@ -60,7 +61,7 @@ class Player(object):
                 # Never send the last entry more than once to prevent duplicate history items
                 self.state.last_entry = None
 
-            time.sleep(0.25)
+            time.sleep(0.20)
 
     def send_task(self, **kwargs):
 
@@ -118,13 +119,30 @@ class Player(object):
         elif task.position < len(self.state.next_entries):
             self.state.next_entries.pop(task.position)
 
+    def _handle_pause(self):
+
+        if self._subprocess_running():
+            self._subprocess.send_signal(signal.SIGSTOP)
+            self.state.proc_state = ProcState.Paused
+
+    def _handle_start(self):
+
+        try:
+            if self.state.proc_state == ProcState.Paused and self._subprocess_running():
+                self._subprocess.send_signal(signal.SIGCONT)
+            self.state.proc_state = ProcState.Playing
+        except Exception as exc:
+            self.logger.error("An exception occurred during start", exc_info = True)
+
     def _handle_stop(self):
 
         try:
-            if self._subprocess is not None:
+            if self._subprocess_running():
+                if self.state.proc_state == ProcState.Paused:
+                    self._subprocess.send_signal(signal.SIGCONT)
                 self._subprocess.send_signal(signal.SIGTERM)
                 self._reset_subprocess()
-            self.state.stopped = True
+            self.state.proc_state = ProcState.Stopped
         except Exception as exc:
             self.logger.error("An exception occurred during stop", exc_info = True)
 
@@ -136,11 +154,11 @@ class Player(object):
                 CMD + [ "-i", filename ] + OUTPUT_ARGS,
                 stderr = subprocess.PIPE,
             )
-            fd = self._subprocess.stderr.fileno()
-            os.set_blocking(fd, False)
+            stderr = self._subprocess.stderr.fileno()
+            os.set_blocking(stderr, False)
             entry.start_time = datetime.utcnow()
             self.state.current = entry
-            self.state.stopped = False
+            self.state.proc_state = ProcState.Playing
         except Exception as exc:
             self.logger.error("An exception occurred during play", exc_info = True)
 
@@ -150,19 +168,25 @@ class Player(object):
 
     def _check_subprocess(self): 
 
-        data = self._subprocess.stderr.read()
+        stderr = self._subprocess.stderr.read()
         retval = self._subprocess.poll()
         if retval is not None:
             if retval > 0:
                 self.state.current.error = True
-                self.state.current.error_output = data.decode("utf-8")
+                self.state.current.error_output = stderr.decode("utf-8")
             self._reset_subprocess()
+        elif stderr is not None:
+            for line in stderr.decode("utf-8").split():
+                elapsed = re.match("time=(.*?)\.", line)
+                if elapsed:
+                    hours, minutes, seconds = elapsed.group(1).split(":")
+                    self.state.elapsed = { "hours": int(hours), "minutes": int(minutes), "seconds": int(seconds) }
 
     def _reset_subprocess(self):
 
         self._subprocess.wait()
-        fd = self._subprocess.stderr.fileno()
-        os.set_blocking(fd, True)
+        stderr = self._subprocess.stderr.fileno()
+        os.set_blocking(stderr, True)
         self._update_last_entry()
         self._subprocess = None
 

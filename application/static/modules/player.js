@@ -5,6 +5,7 @@ let Player = {
 
     startTask: { "name": "start" },
     stopTask: { "name": "stop" },
+    pauseTask: { "name": "pause" },
 
     clearAll: function(nextEntries) {
         let tasks = [ ];
