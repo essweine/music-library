@@ -25,41 +25,40 @@ class Api {
 
 class Recording extends Api {
 
-    constructor(recordingId) {
+    constructor() {
         super();
-        this.id = recordingId;
-        this.base = "/api/recording/" + recordingId;
+        this.base = "/api/recording";
     }
+
+    listAll(callback) { this.doRequest("GET", "", null, callback); }
+
+    getRecording(recordingId, callback) { this.doRequest("GET", "/" + recordingId, null, callback); }
 
     getDirectoryListing(callback = r => { }) { this.doRequest("GET", "/entry", null, callback); }
 
     getFromNotes(callback = r => { }) { this.doRequest("GET", "/notes", null, callback); }
 
     addToLibrary(data) { 
-        let callback = response => window.location = "/recording/" + this.id;
-        this.post(data, callback);
+        let callback = response => window.location = "/recording/" + data.id;
+        this.doRequest("POST", "/" + data.id, data, callback);
     }
 
-    saveRecording(data, callback = r => { }) { this.doRequest("PUT", "", data, callback); }
+    saveRecording(data) { this.doRequest("PUT", "/" + data.id, data, r => { }); }
 
-    updateRating(data, callback = r => { }) { this.doRequest("PUT", "/rating", data, callback); }
+    updateRating(recordingId, data, callback = r => { }) { this.doRequest("PUT", "/" + recordingId + "/rating", data, callback); }
 
 }
 
 class Importer extends Api {
 
-    constructor(directoryId) {
+    constructor() {
         super();
-        this.id = directoryId;
-        this.base = "/api/importer/" + directoryId;
+        this.base = "/api/importer";
     }
 
-    getRecording(source, callback) {
-        let path = "?as=recording";
-        if (source != null)
-            path += "&source=" + encodeURIComponent(source);
-        this.doRequest("GET", path, null, callback);
-    }
+    listAll(callback) { this.doRequest("GET", "", null, callback); }
+
+    getDirectoryListing(directory, callback) { this.doRequest("GET", "/" + directory, null, callback); }
 }
 
 export { Recording, Importer };

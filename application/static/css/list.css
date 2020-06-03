@@ -1,0 +1,41 @@
+.list-root {
+    display: grid;
+    grid-auto-flow: row;
+    justify-content: center;
+}
+
+.list-row {
+    display: contents;
+    color: #000;
+}
+
+.list-row:nth-child(even) {
+    background-color: #eee;
+}
+
+.list-heading {
+    font-size: large;
+    font-weight: bold;
+    display: contents;
+}
+
+.list-cell {
+    font-size: large;
+    background-color: inherit;
+    display: flex;
+    align-items: center;
+}
+
+.directory-list-directory { grid-column: 1; }
+.directory-list-audio { grid-column: 2; }
+.directory-list-images { grid-column: 3; }
+.directory-list-text { grid-column: 4; }
+.directory-list-add { grid-column: 5; }
+
+.recording-list-artist { grid-column: 1; }
+.recording-list-title { grid-column: 2; }
+.recording-list-date { grid-column: 3; }
+.recording-list-rating { grid-column: 4; }
+.recording-list-sound-rating { grid-column: 5; }
+.recording-list-view { grid-column: 6; }
+.recording-list-play { grid-column: 7; }

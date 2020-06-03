@@ -19,33 +19,36 @@
     display: contents;
 }
 
-span[class^='list-'] {
+span[class^='xlist-'] {
     font-size: large;
     background-color: inherit;
     display: flex;
     align-items: center;
 }
 
-.list-artist {
-    grid-column: 1;
-}
-
-.list-title {
-    grid-column: 2;
-}
-
-.list-date {
-    grid-column: 3;
-}
-
-.list-rating {
-    grid-column: 4;
-}
-
-.list-sound-rating {
-    grid-column: 5;
-}
 
 .list-actions {
     grid-column: 6;
+}
+
+.list-row {
+    display: contents;
+    color: #000;
+}
+
+.list-row:nth-child(even) {
+    background-color: #eee;
+}
+
+.list-heading {
+    font-size: large;
+    font-weight: bold;
+    display: contents;
+}
+
+.list-cell {
+    font-size: large;
+    background-color: inherit;
+    display: flex;
+    align-items: center;
 }

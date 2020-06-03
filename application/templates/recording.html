@@ -1,11 +1,11 @@
 <html>
   <head>
-    <title>{{page_title}}</title>
+    <title></title>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/main.css">
     <link rel="stylesheet" href="/static/css/recording.css">
     <link rel="stylesheet" href="/static/css/rating-container.css">
-    <script src="/static/recording.js" type="module" defer></script>
+    <script src="/static/{{script}}" type="module" defer></script>
   </head>
   <body>
     <div id="root-container">
@@ -16,45 +16,6 @@
         <span class="navigation-item" id="log-view"><a href="/log">Logs</a></span>
       </div>
       <div id="content">
-
-          <div is="recording-container" directory="{{recording.directory}}" context="{{context}}">
-
-          <div id="recording-overview">
-            <span>{{page_title}}</span>
-          </div>
-
-          <div is="recording-image" {% raw images %}>
-            <p>No images available</p>
-          </div>
-
-          <div is="recording-info"
-               title="{{recording.title}}"
-               artist="{{recording.artist}}"
-               recording-date="{{recording.recording_date}}"
-               venue="{{recording.venue}}"
-               {% if recording.rating %}rating="{{recording.rating}}"{% end %}
-               {% if recording.sound_rating %}sound-rating="{{recording.sound_rating}}"{% end %}>
-          </div>
-
-          <div is="recording-tracklist">
-
-            {% for track in recording.tracks %}
-            <div is="recording-track"
-                 title="{{track.title}}" 
-                 filename="{{track.filename}}" 
-                 {% if track.rating %}rating="{{track.rating}}"{% end %}
-                 recording-id="{{recording.id}}"
-                 position={{track.track_num - 1}}>
-            </div>
-            {% end %}
-
-            <div is="recording-raw-info" {% raw text %}>
-              <p>No notes available.</p>
-            </div>
-
-          </div>
-
-        </div>
       </div>
     </div>
   </body>

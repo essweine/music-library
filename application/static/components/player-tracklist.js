@@ -1,8 +1,7 @@
 import { TracklistContainer } from "/static/components/tracklist-container.js";
-import { UpArrow, DownArrow } from "/static/components/move-button.js";
-import { RemoveButton } from "/static/components/remove-button.js";
+import { UpArrow, DownArrow, RemoveButton } from "/static/components/tracklist-actions.js";
 import { RatingContainer } from "/static/components/rating-container.js";
-import { NextTracksEntry, RecentlyPlayedEntry } from "/static/components/player-tracklist-entry.js";
+import { NextTracksEntry, RecentlyPlayedEntry, createPlaylistTrack } from "/static/components/player-tracklist-entry.js";
 
 customElements.define("up-arrow", UpArrow, { extends: "span" });
 customElements.define("down-arrow", DownArrow, { extends: "span" });
@@ -25,8 +24,10 @@ class PlaylistTrackContainer extends TracklistContainer {
         };
     }
 
-    update(tracklist) {
-        super.update(tracklist);
+    update(tracks) {
+        super.clear();
+        for (let track of tracks)
+            this.append(track);
         this.addToggle();
         this.updateToggle();
     }
@@ -70,20 +71,20 @@ class NextTracksContainer extends PlaylistTrackContainer {
         super();
         this.id = "next-tracks";
         this.childClass = "next-tracks-entry";
-        this.childAttributes = [ "title", "recording", "artist", "filename" ];
     }
 
-    initialize() { }
-
-    update(tracklist) { super.update(tracklist); }
-
-    shiftTrackUp(position) {
-        super.shiftTrackUp(position);
+    update(tracklist) {
+        let tracks = tracklist.map(track => createPlaylistTrack(track, "next-tracks-entry"));
+        for (let i = 0; i < tracks.length; i++) {
+            let track = tracks[i];
+            track.updatePosition(i, i == 0, i == tracks.length - 1);
+        }
+        super.update(tracks);
     }
 
-    removeTrack(position) {
-        super.removeTrack(position);
-    }
+    shiftTrackUp(position) { super.shiftTrackUp(position); }
+
+    removeTrack(position) { super.removeTrack(position); }
 }
 
 class RecentlyPlayedContainer extends PlaylistTrackContainer {
@@ -91,12 +92,12 @@ class RecentlyPlayedContainer extends PlaylistTrackContainer {
         super();
         this.id = "recently-played";
         this.childClass = "recently-played-entry";
-        this.childAttributes = [ "title", "recording", "artist", "recording-id", "filename", "rating" ];
     }
 
-    initialize() { }
-
-    update(tracklist) { super.update(tracklist); }
+    update(tracklist) {
+        let tracks = tracklist.map(track => createPlaylistTrack(track, "recently-played-entry"));
+        super.update(tracks);
+    }
 }
 
 export { NextTracksContainer, RecentlyPlayedContainer };

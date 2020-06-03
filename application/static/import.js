@@ -1,7 +1,6 @@
-import { Recording } from "/static/modules/api.js";
+import { Importer } from "/static/modules/api.js";
 
-import { RecordingContainer, viewRecording } from "/static/components/recording-container.js";
-
+import { RecordingContainer, importRecording } from "/static/components/recording-container.js";
 import { RecordingImage } from "/static/components/recording-image.js";
 import { EditableInfo } from "/static/components/editable-info.js";
 
@@ -26,9 +25,9 @@ customElements.define("recording-tracklist", RecordingTracksContainer, { extends
 customElements.define("recording-raw-info", RecordingRawInfo, { extends: "div" });
 
 window.onload = e => {
-
-    let recordingId  = window.location.href.split("/").pop();
-    let recordingApi = new Recording();
-    recordingApi.getRecording(recordingId, viewRecording);
+    let dirname = decodeURI(window.location.href.split("/").pop());
+    document.title = dirname;
+    let importerApi = new Importer();
+    importerApi.getDirectoryListing(dirname, importRecording);
 }
 

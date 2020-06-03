@@ -2,25 +2,9 @@ class TracklistContainer extends HTMLDivElement {
 
     constructor() {
         super();
+        this.childClass;
         this.addEventListener("move-track", e => this.shiftTrackUp(e.detail));
         this.addEventListener("remove-track", e => this.removeTrack(e.detail));
-    }
-
-    update(tracklist) { 
-        let children = Array.from(this.getElementsByClassName(this.childClass));
-        for (let track of children)
-            track.remove();
-
-        for (let position in tracklist) {
-            let track = tracklist[position];
-            let entry = document.createElement("div", { is: this.childClass });
-            for (let attribute of this.childAttributes)
-                if (track[attribute] != null)
-                    entry.setAttribute(attribute, track[attribute])
-            entry.initialize();
-            entry.updatePosition(position, position == 0, position == tracklist.length - 1);
-            this.append(entry);
-        }
     }
 
     shiftTrackUp(position) {
@@ -38,6 +22,11 @@ class TracklistContainer extends HTMLDivElement {
         children.item(position).remove();
         for (let i = position; i < children.length; i++)
             children.item(i).updatePosition(i, i == 0, i == children.length - 1);
+    }
+
+    clear(tracklist) { 
+        for (let track of Array.from(this.getElementsByClassName(this.childClass)))
+            track.remove();
     }
 }
 

@@ -57,9 +57,9 @@ class RatingContainer extends HTMLSpanElement {
 
     updateRating(rating) {
         let newRating = this.setRating(rating);
-        let recordingApi = new Recording(this.recordingId);
+        let recordingApi = new Recording();
         let data = { item: this.ratedItem, rating: rating };
-        recordingApi.updateRating(data);
+        recordingApi.updateRating(this.recordingId, data);
     }
 
     createIcon(iconName, iconClass) {

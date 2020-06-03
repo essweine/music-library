@@ -4,6 +4,9 @@ class Arrow extends HTMLSpanElement {
         super();
     }
 
+    show() { this.style.display = "inline"; }
+    hide() { this.style.display = "none"; }
+
     createMoveEvent(direction) {
         let ev = new CustomEvent("move", { detail: direction,  bubbles: true });
         this.dispatchEvent(ev);
@@ -22,6 +25,7 @@ class UpArrow extends Arrow {
     constructor() {
         super();
         this.append(this.createIcon("arrow_upward", "up"));
+        this.classList.add("move-up");
     }
 }
 
@@ -29,7 +33,24 @@ class DownArrow extends Arrow {
     constructor() {
         super();
         this.append(this.createIcon("arrow_downward", "down"));
+        this.classList.add("move-down");
     }
 }
 
-export { UpArrow, DownArrow };
+class RemoveButton extends HTMLSpanElement {
+
+    constructor() {
+        super();
+        this.icon = document.createElement("i");
+        this.icon.innerText = "clear";
+        this.icon.classList.add("material-icons");
+        this.icon.onclick = e => {
+            let ev = new CustomEvent("remove", { bubbles: true });
+            this.dispatchEvent(ev);
+        };
+        this.classList.add("remove");
+        this.append(this.icon);
+    }
+}
+
+export { UpArrow, DownArrow, RemoveButton };

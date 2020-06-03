@@ -4,6 +4,7 @@ class PlaylistEntry extends HTMLDivElement {
 
     constructor() {
         super();
+        this.track;
 
         this.trackTitle = document.createElement("span");
         this.trackTitle.classList.add("playlist-title");
@@ -18,12 +19,6 @@ class PlaylistEntry extends HTMLDivElement {
         this.append(this.artist);
     }
 
-    initialize() {
-        this.trackTitle.innerText = this.getAttribute("title");
-        this.recording.innerText = this.getAttribute("recording");
-        this.artist.innerText = this.getAttribute("artist");
-    }
-
     updatePosition() { };
 }
 
@@ -32,52 +27,46 @@ class NextTracksEntry extends PlaylistEntry {
     constructor() {
         super();
         this.classList.add("next-tracks-entry");
+        this.position;
 
         this.moveUp = document.createElement("span", { is: "up-arrow" });
-        this.moveUp.classList.add("move-up");
         this.append(this.moveUp);
 
         this.moveDown = document.createElement("span", { is: "down-arrow" });
-        this.moveDown.classList.add("move-down");
         this.append(this.moveDown);
 
         this.removeTrack = document.createElement("span", { is: "remove-button" });
-        this.removeTrack.classList.add("remove-track");
         this.append(this.removeTrack);
 
         this.addEventListener("move", e => {
-            let position = parseInt(this.getAttribute("position"));
             let update = {
                 action: (e.detail == "up") ? "move-track-up" : "move-track-down",
-                position: position,
-                filename: this.getAttribute("filename")
+                position: this.position,
+                filename: this.track.filename
             };
             this.dispatchEvent(new CustomEvent("update-playlist", { detail: update, bubbles: true }));
-            let listPosition = (e.detail == "up") ? position : position + 1;
+            let listPosition = (e.detail == "up") ? this.position : this.position + 1;
             this.dispatchEvent(new CustomEvent("move-track", { detail: listPosition, bubbles: true }));
         });
 
         this.addEventListener("remove", e => {
-            let position = parseInt(this.getAttribute("position"));
-            let update = { action: "remove-track", position: position };
+            let update = { action: "remove-track", position: this.position };
             this.dispatchEvent(new CustomEvent("update-playlist", { detail: update, bubbles: true }));
-            this.dispatchEvent(new CustomEvent("remove-track", { detail: position, bubbles: true }));
+            this.dispatchEvent(new CustomEvent("remove-track", { detail: this.position, bubbles: true }));
         });
     }
 
-    initialize() { super.initialize(); }
-
     updatePosition (position, firstTrack, lastTrack) {
-        this.setAttribute("position", position);
+        this.position = position;
         if (firstTrack) {
-            this.querySelector("[class~='move-up']").style.display = "none";
-            this.querySelector("[class~='move-down']").style.display = "inline";
+            this.moveUp.hide();
+            this.moveDown.show();
         } else if (lastTrack) {
-            this.querySelector("[class~='move-up']").style.display = "inline";
-            this.querySelector("[class~='move-down']").style.display = "none";
+            this.moveUp.show();
+            this.moveDown.hide();
         } else {
-            this.querySelector("[class~='move-up']").style.display = "inline";
-            this.querySelector("[class~='move-down']").style.display = "inline";
+            this.moveUp.show();
+            this.moveDown.show();
         }
     }
 }
@@ -86,16 +75,23 @@ class RecentlyPlayedEntry extends PlaylistEntry {
     constructor() {
         super();
         this.classList.add("recently-played-entry");
-    }
 
-    initialize() {
-        super.initialize();
         this.ratingContainer = createRatingContainer();
-        this.ratingContainer.initialize(this.getAttribute("recording-id"), this.getAttribute("filename"), this.getAttribute("rating"));
         this.append(this.ratingContainer);
     }
 
     updatePosition() { }
 }
 
-export { NextTracksEntry, RecentlyPlayedEntry };
+function createPlaylistTrack(track, trackType) {
+    let playlistTrack = document.createElement("div", { is: trackType });
+    playlistTrack.track = track;
+    playlistTrack.trackTitle.innerText = track.title;
+    playlistTrack.recording.innerText = track.recording;
+    playlistTrack.artist.innerText = track.artist;
+    if (trackType == "recently-played-entry")
+        playlistTrack.ratingContainer.initialize(track.recording_id, track.filename, track.rating);
+    return playlistTrack;
+}
+
+export { NextTracksEntry, RecentlyPlayedEntry, createPlaylistTrack };

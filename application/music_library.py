@@ -5,7 +5,7 @@ import logging
 from tornado.web import Application, StaticFileHandler, RequestHandler
 
 from .config import TABLE_DEFS
-from .importer import DirectoryListing, ImportHandler, ImportRootHandler, ImportDisplayHandler
+from .importer import DirectoryService, ImportHandler, ImportRootHandler, ImportDisplayHandler, ImportRootDisplayHandler
 from .library import RecordingHandler, RecordingDisplayHandler
 from .library import RecordingRootHandler, RecordingRootDisplayHandler
 from .library import SearchHandler
@@ -13,10 +13,10 @@ from .player import Player, PlayerHandler, PlayerDisplayHandler, PlayerNotificat
 from .log import LogNotificationHandler, LogDisplayHandler
 
 handlers = [ 
-    (r"/importer", ImportRootHandler),
-    (r"/importer/(.*)", ImportDisplayHandler),
-    (r"/api/importer/(.*)/(.*?)", ImportHandler),
+    (r"/importer/(.*?)", ImportDisplayHandler),
+    (r"/importer", ImportRootDisplayHandler),
     (r"/api/importer/(.*)", ImportHandler),
+    (r"/api/importer", ImportRootHandler),
     (r"/recording/(.*?)", RecordingDisplayHandler),
     (r"/recording", RecordingRootDisplayHandler),
     (r"/log", LogDisplayHandler),
@@ -38,7 +38,7 @@ class MusicLibrary(Application):
         super().__init__(*args, **kwargs)
         self.root = None
         self.conn = None
-        self.unindexed_directory_list = { }
+        self.directory_service = None
         self.player = None
         self.logger = logging.getLogger("tornado.application")
         self.console = None
@@ -73,14 +73,7 @@ class MusicLibrary(Application):
             cursor.execute("select directory from recording")
             indexed_directories = [ dirname for (dirname, ) in cursor.fetchall() ]
             cursor.close()
-
-            for dirpath, dirs, files in os.walk(self.root):
-                relative_name = re.sub("^{0}/?".format(self.root), "", dirpath)
-                if relative_name in indexed_directories:
-                    dirs.clear()
-                if DirectoryListing.contains_audio(files) and relative_name not in indexed_directories:
-                    entry = DirectoryListing(relative_name, root)
-                    self.unindexed_directory_list[entry.id] = entry
+            self.directory_service = DirectoryService(root, indexed_directories)
         except Exception as exc:
             self.logger.error("An exception occured while creating the directory list", exc_info = True)
 
