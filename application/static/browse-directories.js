@@ -5,6 +5,8 @@ customElements.define("list-row", ListRow, { extends: "div" });
 
 window.onload = e => {
 
+    document.title = "Unindexed Directory List";
+
     let container = document.getElementById("content");
     let directoryList = document.createElement("div");
     directoryList.classList.add("list-root");

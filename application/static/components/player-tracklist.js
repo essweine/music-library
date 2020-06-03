@@ -1,19 +1,14 @@
 import { TracklistContainer } from "/static/components/tracklist-container.js";
-import { UpArrow, DownArrow, RemoveButton } from "/static/components/tracklist-actions.js";
-import { RatingContainer } from "/static/components/rating-container.js";
-import { NextTracksEntry, RecentlyPlayedEntry, createPlaylistTrack } from "/static/components/player-tracklist-entry.js";
-
-customElements.define("up-arrow", UpArrow, { extends: "span" });
-customElements.define("down-arrow", DownArrow, { extends: "span" });
-customElements.define("remove-button", RemoveButton, { extends: "span" });
-customElements.define("rating-container", RatingContainer, { extends: "span" });
-customElements.define("next-tracks-entry", NextTracksEntry, { extends: "div" });
-customElements.define("recently-played-entry", RecentlyPlayedEntry, { extends: "div" });
+import { createPlaylistTrack } from "/static/components/player-tracklist-entry.js";
 
 class PlaylistTrackContainer extends TracklistContainer {
 
     constructor() {
         super();
+
+        this.heading = document.createElement("div");
+        this.heading.classList.add("tracklist-heading");
+        this.append(this.heading);
 
         this.tracklistHidden = true;
         this.listToggle = document.createElement("div");
@@ -71,6 +66,7 @@ class NextTracksContainer extends PlaylistTrackContainer {
         super();
         this.id = "next-tracks";
         this.childClass = "next-tracks-entry";
+        this.heading.innerText = "Next Tracks"
     }
 
     update(tracklist) {
@@ -92,6 +88,7 @@ class RecentlyPlayedContainer extends PlaylistTrackContainer {
         super();
         this.id = "recently-played";
         this.childClass = "recently-played-entry";
+        this.heading.innerText = "Recently Played"
     }
 
     update(tracklist) {

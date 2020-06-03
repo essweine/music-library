@@ -5,8 +5,14 @@ class CurrentTrack extends HTMLDivElement {
     constructor() {
         super();
         this.id = "current-track";
-        this.bullshitArtworkContainer = document.getElementById("bullshit-container-1");
-        this.bullshitTextContainer = document.getElementById("bullshit-container-2");
+
+        this.bullshitArtworkContainer = document.createElement("div");
+        this.bullshitArtworkContainer.classList.add("bullshit-container-1");
+        this.append(this.bullshitArtworkContainer);
+
+        this.bullshitTextContainer = document.createElement("div");
+        this.bullshitTextContainer.classList.add("bullshit-container-2");
+        this.append(this.bullshitTextContainer);
 
         this.img = document.createElement("img");
         this.img.id = "artwork";
@@ -30,7 +36,7 @@ class CurrentTrack extends HTMLDivElement {
         this.bullshitTextContainer.append(this.recordingTitle);
 
         this.artist = document.createElement("div");
-        this.artist.id = "artist";
+        this.artist.id = "track-artist";
         this.bullshitTextContainer.append(this.artist);
 
         this.ratingContainer = createRatingContainer();
@@ -39,17 +45,17 @@ class CurrentTrack extends HTMLDivElement {
         this.bullshitTextContainer.append(this.ratingContainer);
     }
 
-    update() {
+    update(track) {
 
-        this.trackTitle.innerText = this.getAttribute("track-title");
-        this.recordingLink.href = "/recording/" + this.getAttribute("recording-id");
-        this.recordingLink.innerText = this.getAttribute("recording-title")
-        this.artist.innerText = this.getAttribute("artist");
-        if (this.getAttribute("artwork") != null)
-            this.img.src = "/file/" + this.getAttribute("artwork");
+        this.trackTitle.innerText = track.title;
+        this.recordingLink.href = "/recording/" + track.recording_id;
+        this.recordingLink.innerText = track.recording;
+        this.artist.innerText = track.artist;
+        if (track.artwork != null)
+            this.img.src = "/file/" + track.artwork;
         else
             this.img.remove();
-        this.ratingContainer.initialize(this.getAttribute("recording-id"), this.getAttribute("filename"), this.getAttribute("rating"));
+        this.ratingContainer.initialize(track.recording_id, track.filename, track.rating);
     }
 }
 

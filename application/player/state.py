@@ -47,7 +47,7 @@ class State(JsonSerializable):
     def copy(self):
 
         return State(
-            self.proc_state.value,
+            self.proc_state,
             self.current,
             self.last_entry,
             self.next_entries.copy(),

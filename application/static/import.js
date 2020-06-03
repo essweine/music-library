@@ -26,7 +26,6 @@ customElements.define("recording-raw-info", RecordingRawInfo, { extends: "div" }
 
 window.onload = e => {
     let dirname = decodeURI(window.location.href.split("/").pop());
-    document.title = dirname;
     let importerApi = new Importer();
     importerApi.getDirectoryListing(dirname, importRecording);
 }

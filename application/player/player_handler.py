@@ -11,7 +11,7 @@ class PlayerDisplayHandler(BaseRequestHandler):
 
     def get(self):
 
-        self.render("player.html")
+        self.render("player.html", script = "player.js")
 
 class PlayerHandler(BaseApiHandler):
 

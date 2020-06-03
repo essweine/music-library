@@ -26,7 +26,6 @@ customElements.define("recording-tracklist", RecordingTracksContainer, { extends
 customElements.define("recording-raw-info", RecordingRawInfo, { extends: "div" });
 
 window.onload = e => {
-
     let recordingId  = window.location.href.split("/").pop();
     let recordingApi = new Recording();
     recordingApi.getRecording(recordingId, viewRecording);

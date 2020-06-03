@@ -1,5 +1,4 @@
-import { Recording } from "/static/modules/api.js";
-import { Player } from "/static/modules/player.js";
+import { Recording, Player } from "/static/modules/api.js";
 import { ListRow, createListRow } from "/static/components/list-row.js";
 import { RatingContainer } from "/static/components/rating-container.js";
 
@@ -8,7 +7,9 @@ customElements.define("rating-container", RatingContainer, { extends: "span" });
 
 window.onload = e => {
 
+    document.title = "Browse Recordings";
     let recordingApi = new Recording();
+    let playerApi = new Player();
 
     let container = document.getElementById("content");
     let directoryList = document.createElement("div");
@@ -22,7 +23,7 @@ window.onload = e => {
 
     function viewRecording(recordingId) { return e => window.location.href = "/recording/" + recordingId; }
 
-    function playAll(recordingId) { return e => recordingApi.getRecording(recordingId, Player.playAll.bind(Player)); }
+    function playAll(recordingId) { return e => recordingApi.getRecording(recordingId, playerApi.playRecording.bind(playerApi)); }
 
     function addEntry(response) {
         for (let entry of response) {

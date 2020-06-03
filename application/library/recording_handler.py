@@ -10,7 +10,7 @@ class RecordingDisplayHandler(BaseRequestHandler):
 
     def get(self, recording_id):
 
-        self.render("recording.html", script = "recording.js")
+        self.render("player.html", script = "recording.js")
 
 class RecordingHandler(BaseApiHandler):
 

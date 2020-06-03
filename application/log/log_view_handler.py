@@ -9,7 +9,7 @@ class LogDisplayHandler(BaseRequestHandler):
 
     def get(self):
 
-        self.render("log.html")
+        self.render("player.html", script = "log.js")
 
 class LogNotificationHandler(WebSocketHandler):
 

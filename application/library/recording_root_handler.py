@@ -8,7 +8,7 @@ class RecordingRootDisplayHandler(BaseRequestHandler):
 
     def get(self):
 
-        self.render("browse-recordings.html")
+        self.render("player.html", script = "browse-recordings.js")
 
 class RecordingRootHandler(BaseApiHandler):
 

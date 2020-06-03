@@ -133,6 +133,7 @@ class RecordingContainer extends HTMLDivElement {
         this.recordingDate.initialize(this.source.recording_date, "recording-date", "Date");
         this.recordingVenue.initialize(this.source.venue, "venue", "Venue");
         this.tracklist.setTracklist(this.source.tracks);
+        this.toggleEdit(true);
     }
 
     addSection(divId) {
@@ -160,6 +161,7 @@ class RecordingContainer extends HTMLDivElement {
 
 function importRecording(directory) {
 
+    document.title = directory.relative_path;
     let container = document.createElement("div", { is: "recording-container" });
     container.data = directory;
     container.context = "import";
@@ -193,6 +195,7 @@ function importRecording(directory) {
 
 function viewRecording(recording) {
 
+    document.title = recording.title;
     let container = document.createElement("div", { is: "recording-container" });
     container.context = "recording";
 

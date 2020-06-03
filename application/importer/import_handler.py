@@ -10,13 +10,13 @@ class ImportRootDisplayHandler(BaseRequestHandler):
 
     def get(self):
 
-        self.render("browse-directories.html")
+        self.render("player.html", script = "browse-directories.js")
 
 class ImportDisplayHandler(BaseRequestHandler):
 
     def get(self, dirname):
 
-        self.render("recording.html", script = "import.js")
+        self.render("player.html", script = "import.js")
 
 class ImportRootHandler(BaseApiHandler):
 

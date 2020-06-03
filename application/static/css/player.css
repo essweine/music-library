@@ -60,7 +60,7 @@
     font-style: italic;
 }
 
-#artist {
+#track-artist {
     grid-row: 3;
     font-size: large;
 }
