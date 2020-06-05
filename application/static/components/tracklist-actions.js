@@ -40,4 +40,22 @@ class RemoveButton extends TracklistAction {
     }
 }
 
-export { UpArrow, DownArrow, RemoveButton };
+class PlayButton extends TracklistAction {
+    constructor() {
+        super();
+        this.innerText = "play_arrow";
+        this.detail    = "play-track";
+        this.classList.add("play-track");
+    }
+}
+
+class QueueButton extends TracklistAction {
+    constructor() {
+        super();
+        this.innerText = "playlist_add";
+        this.detail    = "queue-track";
+        this.classList.add("queue-track");
+    }
+}
+
+export { UpArrow, DownArrow, RemoveButton, PlayButton, QueueButton };

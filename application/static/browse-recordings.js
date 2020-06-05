@@ -25,6 +25,8 @@ window.onload = e => {
 
     function playAll(recordingId) { return e => recordingApi.getRecording(recordingId, playerApi.playRecording.bind(playerApi)); }
 
+    function queueAll(recordingId) { return e => recordingApi.getRecording(recordingId, playerApi.queueRecording.bind(playerApi)); }
+
     function addEntry(response) {
         for (let entry of response) {
             let row = createListRow("recording-list-row");
@@ -35,6 +37,7 @@ window.onload = e => {
             row.addRatingContainer(entry.id, "sound-rating", entry.sound_rating, "recording-list-sound-rating");
             row.addIcon("info", viewRecording(entry.id), "recording-list-view");
             row.addIcon("playlist_play", playAll(entry.id), "recording-list-play");
+            row.addIcon("playlist_add", queueAll(entry.id), "recording-list-queue");
             directoryList.append(row);
         }
     }

@@ -98,6 +98,25 @@ class Player extends Api {
         this.sendTasks(tasks);
     }
 
+    play(track) { 
+        this.sendTasks([ 
+            this.createTask("add", track.filename, 0),
+            this.stopTask,
+            this.startTask
+        ]);
+    }
+
+    queueRecording(recording) { this.queueAll(recording.tracks); }
+
+    queueAll(tracks) {
+        let tasks = [ ];
+        for (let track of tracks)
+            tasks.push(this.createTask("add", track.filename));
+        this.sendTasks(tasks);
+    }
+
+    queue(track) { this.sendTasks([ this.createTask("add", track.filename) ]); }
+
     clearAll(tracks) {
         let tasks = [ ];
         for (let i = 0; i < tracks.length; i++)

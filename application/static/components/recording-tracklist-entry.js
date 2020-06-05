@@ -20,11 +20,10 @@ class RecordingTrack extends HTMLDivElement {
         this.append(this.ratingContainer);
         this.ratingContainer.classList.add("recording-track-rating");
 
-        this.moveUp = document.createElement("span", { is: "up-arrow" });
-        this.moveUp.classList.add("move-up");
-
-        this.moveDown = document.createElement("span", { is: "down-arrow" });
-        this.moveDown.classList.add("move-down");
+        this.moveUp     = document.createElement("span", { is: "up-arrow" });
+        this.moveDown   = document.createElement("span", { is: "down-arrow" });
+        this.playTrack  = document.createElement("span", { is: "play-button" });
+        this.queueTrack = document.createElement("span", { is: "queue-button" });
 
         this.addEventListener("tracklist-action", e => {
             if (e.detail == "move-track-up")
@@ -33,6 +32,8 @@ class RecordingTrack extends HTMLDivElement {
                 this.dispatchEvent(new CustomEvent("move-track", { detail: this.currentPosition + 1, bubbles: true }));
             else if (e.detail == "remove-track")
                 this.dispatchEvent(new CustomEvent("remove-track", { detail: this.currentPosition, bubbles: true }));
+            else
+                this.dispatchEvent(new CustomEvent(e.detail, { detail: this.track, bubbles: true }));
         });
     }
 
@@ -40,12 +41,16 @@ class RecordingTrack extends HTMLDivElement {
         this.trackTitle.toggleEdit(editable);
         if (editable) {
             this.ratingContainer.remove();
+            this.playTrack.remove();
+            this.queueTrack.remove();
             this.append(this.moveUp);
             this.append(this.moveDown);
         } else {
             this.moveUp.remove();
             this.moveDown.remove();
             this.append(this.ratingContainer);
+            this.append(this.playTrack);
+            this.append(this.queueTrack);
         }
     }
 

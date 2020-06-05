@@ -1,4 +1,4 @@
-import { Recording, Importer } from "/static/modules/api.js";
+import { Recording, Importer, Player } from "/static/modules/api.js";
 import { createRecordingImage } from "/static/components/recording-image.js";
 import { createEditableInfo } from "/static/components/editable-info.js";
 import { createRatingContainer } from "/static/components/rating-container.js";
@@ -12,6 +12,7 @@ class RecordingContainer extends HTMLDivElement {
 
         this.id = "recording-container";
         this.recordingApi = new Recording();
+        this.playerApi = new Player();
         this.data = null;
         this.source = null;
         this.context = null;
@@ -40,6 +41,8 @@ class RecordingContainer extends HTMLDivElement {
             this.infoContainer.append(elem);
 
         this.editIcon   = this.createIcon("create", e => this.toggleEdit(true));
+        this.playIcon   = this.createIcon("play_arrow", e => this.playerApi.playAll(this.source.tracks));
+        this.queueIcon  = this.createIcon("playlist_play", e => this.playerApi.queueAll(this.source.tracks));
         this.saveIcon   = this.createIcon("save", e => this.save());
         this.cancelIcon = this.createIcon("clear", e => this.cancel());
         this.addIcon    = this.createIcon("add", e => this.addToLibrary());
@@ -54,6 +57,9 @@ class RecordingContainer extends HTMLDivElement {
             let original = this.source.tracks.map(item => item.title);
             this.tracklist.setTrackTitles(original);
         });
+
+        this.addEventListener("play-track", e => { console.log(e); this.playerApi.play(e.detail); });
+        this.addEventListener("queue-track", e => this.playerApi.queue(e.detail));
     }
 
     toggleEdit(editable) {
@@ -65,6 +71,8 @@ class RecordingContainer extends HTMLDivElement {
 
         if (this.context == "recording" && editable) {
             this.editIcon.remove();
+            this.playIcon.remove();
+            this.queueIcon.remove();
             this.recordingRating.remove();
             this.soundRating.remove();
             this.overview.append(this.saveIcon);
@@ -73,6 +81,8 @@ class RecordingContainer extends HTMLDivElement {
             this.saveIcon.remove();
             this.cancelIcon.remove();
             this.overview.append(this.editIcon);
+            this.overview.append(this.playIcon);
+            this.overview.append(this.queueIcon);
             this.infoContainer.append(this.recordingRating);
             this.infoContainer.append(this.soundRating);
         } else if (this.context == "import" && editable) {

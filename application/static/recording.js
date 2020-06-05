@@ -9,12 +9,14 @@ customElements.define("recording-container", RecordingContainer, { extends: "div
 customElements.define("recording-image", RecordingImage, { extends: "div" });
 customElements.define("editable-info", EditableInfo, { extends: "div" });
 
-import { UpArrow, DownArrow, RemoveButton } from "/static/components/tracklist-actions.js";
+import { UpArrow, DownArrow, RemoveButton, PlayButton, QueueButton } from "/static/components/tracklist-actions.js";
 import { RatingContainer } from "/static/components/rating-container.js";
 
 customElements.define("up-arrow", UpArrow, { extends: "span" });
 customElements.define("down-arrow", DownArrow, { extends: "span" });
 customElements.define("remove-button", RemoveButton, { extends: "span" });
+customElements.define("play-button", PlayButton, { extends: "span" });
+customElements.define("queue-button", QueueButton, { extends: "span" });
 customElements.define("rating-container", RatingContainer, { extends: "span" });
 
 import { RecordingTrack } from "/static/components/recording-tracklist-entry.js";

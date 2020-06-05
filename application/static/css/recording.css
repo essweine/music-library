@@ -105,7 +105,14 @@
 
 .recording-track-rating {
     grid-column: 3;
-    align-self: center;
+}
+
+.play-track {
+    grid-column: 4;
+}
+
+.queue-track {
+    grid-column: 5;
 }
 
 .move-up {
