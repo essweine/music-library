@@ -5,21 +5,16 @@ import logging
 from tornado.web import Application, StaticFileHandler, RequestHandler
 
 from .config import TABLE_DEFS
-from .importer import DirectoryService, ImportHandler, ImportRootHandler, ImportDisplayHandler, ImportRootDisplayHandler
-from .library import RecordingHandler, RecordingDisplayHandler
-from .library import RecordingRootHandler, RecordingRootDisplayHandler
+from .importer import DirectoryService, ImportHandler, ImportRootHandler
+from .library import RecordingHandler
+from .library import RecordingRootHandler
 from .library import SearchHandler
 from .player import Player, PlayerHandler, PlayerDisplayHandler, PlayerNotificationHandler
-from .log import LogNotificationHandler, LogDisplayHandler
+from .log import LogNotificationHandler
 
 handlers = [ 
-    (r"/importer/(.*?)", ImportDisplayHandler),
-    (r"/importer", ImportRootDisplayHandler),
     (r"/api/importer/(.*)", ImportHandler),
     (r"/api/importer", ImportRootHandler),
-    (r"/recording/(.*?)", RecordingDisplayHandler),
-    (r"/recording", RecordingRootDisplayHandler),
-    (r"/log", LogDisplayHandler),
     (r"/api/recording/(.*?)/(.*?)", RecordingHandler),
     (r"/api/recording/(.*?)", RecordingHandler),
     (r"/api/recording", RecordingRootHandler),
@@ -28,7 +23,7 @@ handlers = [
     (r"/api/player", PlayerHandler),
     (r"/api/log/notifications", LogNotificationHandler),
     (r"/static", StaticFileHandler),
-    (r"/", PlayerDisplayHandler),
+    (r".*", PlayerDisplayHandler),
 ]
 
 class MusicLibrary(Application):

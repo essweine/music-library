@@ -6,18 +6,6 @@ from ..util import BaseRequestHandler, BaseApiHandler
 
 from . import DirectoryService
 
-class ImportRootDisplayHandler(BaseRequestHandler):
-
-    def get(self):
-
-        self.render("player.html", script = "browse-directories.js")
-
-class ImportDisplayHandler(BaseRequestHandler):
-
-    def get(self, dirname):
-
-        self.render("player.html", script = "import.js")
-
 class ImportRootHandler(BaseApiHandler):
 
     def get(self):

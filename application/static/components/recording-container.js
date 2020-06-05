@@ -58,7 +58,7 @@ class RecordingContainer extends HTMLDivElement {
             this.tracklist.setTrackTitles(original);
         });
 
-        this.addEventListener("play-track", e => { console.log(e); this.playerApi.play(e.detail); });
+        this.addEventListener("play-track", e => { this.playerApi.play(e.detail); });
         this.addEventListener("queue-track", e => this.playerApi.queue(e.detail));
     }
 

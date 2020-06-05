@@ -5,12 +5,6 @@ from tornado.websocket import WebSocketHandler
 
 from ..util import BaseRequestHandler, BaseApiHandler
 
-class LogDisplayHandler(BaseRequestHandler):
-
-    def get(self):
-
-        self.render("player.html", script = "log.js")
-
 class LogNotificationHandler(WebSocketHandler):
 
     def open(self):
