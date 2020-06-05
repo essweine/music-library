@@ -26,15 +26,13 @@ class RecordingTrack extends HTMLDivElement {
         this.moveDown = document.createElement("span", { is: "down-arrow" });
         this.moveDown.classList.add("move-down");
 
-        this.addEventListener("move", e => {
-            let detail = (e.detail == "up") ? this.currentPosition : this.currentPosition + 1;
-            let ev = new CustomEvent("move-track", { detail: detail, bubbles: true });
-            this.dispatchEvent(ev);
-        });
-
-        this.addEventListener("remove", e => {
-            let ev = new CustomEvent("remove-track", { detail: this.currentPosition, bubbles: true });
-            this.dispatchEvent(ev);
+        this.addEventListener("tracklist-action", e => {
+            if (e.detail == "move-track-up")
+                this.dispatchEvent(new CustomEvent("move-track", { detail: this.currentPosition, bubbles: true }));
+            else if (e.detail == "move-track-down")
+                this.dispatchEvent(new CustomEvent("move-track", { detail: this.currentPosition + 1, bubbles: true }));
+            else if (e.detail == "remove-track")
+                this.dispatchEvent(new CustomEvent("remove-track", { detail: this.currentPosition, bubbles: true }));
         });
     }
 

@@ -14,20 +14,19 @@ class ListRow extends HTMLDivElement {
     }
 
     addIcon(iconName, action, className) {
-        let cell = document.createElement("span");
-        cell.classList.add(className);
-        let icon = document.createElement("i");
+        let icon = document.createElement("span");
         icon.innerText = iconName;
         icon.classList.add("material-icons");
+        icon.classList.add(className);
         icon.onclick = action;
-        cell.append(icon);
-        this.append(cell);
+        this.append(icon);
     }
 
     addRatingContainer(recordingId, ratedItem, rating, className) {
         let ratingContainer = createRatingContainer();
         ratingContainer.initialize(recordingId, ratedItem, rating);
         ratingContainer.classList.add(className);
+        ratingContainer.classList.add("list-cell");
         this.append(ratingContainer);
     }
 }

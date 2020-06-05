@@ -1,7 +1,7 @@
 #recording-container {
     display: grid;
-    grid-template-columns: fit-content(20%) auto;
-    grid-gap: 1%;
+    grid-template-columns: fit-content(25%) fit-content(75%);
+    grid-gap: 10px;
     justify-content: center;
 }
 
@@ -11,25 +11,27 @@
     justify-self: center;
     font-weight: bold;
     font-size: x-large;
+    margin: 10px 0;
 }
 
-#recording-action {
-    margin-left: 15px;
+#recording-heading {
+    padding-right: 15px;
 }
 
 #recording-image {
     grid-column: 1;
     grid-row: 2 / 4;
-    display: grid;
-    justify-items: center;
-    align-self: start;
+    display: flex;
+    flex-wrap: wrap;
+    align-content: start;
+    justify-content: center;
 }
 
 #recording-artwork {
     width: 100%;
+    height: auto;
+    padding-bottom: 10px;
     object-fit: cover;
-    padding: 10px;
-    justify-content: end;
 }
 
 #recording-info {
@@ -40,6 +42,7 @@
     grid-column-gap: 10px;
     padding: 15px;
     justify-content: start;
+    width: max-content;
     font-size: large;
 }
 
@@ -68,8 +71,8 @@
     column-gap: 10px;
     row-gap: 2px;
     padding: 5px;
+    justify-self: stretch;
     justify-content: start;
-    width: max-content;
     background-color: #eee;
 }
 
@@ -79,6 +82,7 @@
     grid-column: 1;
     justify-self: end;
     align-self: center;
+    width: max-content;
 }
 
 .recording-track-title > .editable-label {
@@ -102,7 +106,6 @@
 .recording-track-rating {
     grid-column: 3;
     align-self: center;
-    width: max-content;
 }
 
 .move-up {
@@ -126,6 +129,7 @@
     grid-column: 2;
     grid-row: 4;
     justify-self: stretch;
+    justify-content: start;
 }
 
 pre {

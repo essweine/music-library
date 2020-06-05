@@ -1,6 +1,11 @@
+body {
+    font-family: 'Public Sans';
+}
+
 #root-container {
     display: grid;
     justify-content: center;
+    margin: 0 80px;
 }
 
 a {
@@ -10,12 +15,13 @@ a {
 }
 
 a:hover {
-    background-color: #eee;
+    font-weight: bold;
 }
 
 #navigation {
-    justify-content: start;
-    padding: 20px;
+    background-color: #ddd;
+    padding: 5px;
+    margin: 10px 0;
 }
 
 .navigation-item {
@@ -28,4 +34,9 @@ a:hover {
 
 .material-icons {
     vertical-align: bottom;
+    background-color: inherit;
+}
+
+.material-icons:hover {
+    background-color: #eee;
 }

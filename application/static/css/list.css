@@ -13,6 +13,8 @@
     background-color: #eee;
 }
 
+.list-row:hover { background-color: #ccf; }
+
 .list-heading {
     font-size: large;
     font-weight: bold;
@@ -22,8 +24,7 @@
 .list-cell {
     font-size: large;
     background-color: inherit;
-    display: flex;
-    align-items: center;
+    padding-right: 20px;
 }
 
 .directory-list-directory { grid-column: 1; }

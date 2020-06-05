@@ -33,7 +33,7 @@ window.onload = e => {
             row.addText(entry.recording_date, "recording-list-date");
             row.addRatingContainer(entry.id, "rating", entry.rating, "recording-list-rating");
             row.addRatingContainer(entry.id, "sound-rating", entry.sound_rating, "recording-list-sound-rating");
-            row.addIcon("library_music", viewRecording(entry.id), "recording-list-view");
+            row.addIcon("info", viewRecording(entry.id), "recording-list-view");
             row.addIcon("playlist_play", playAll(entry.id), "recording-list-play");
             directoryList.append(row);
         }

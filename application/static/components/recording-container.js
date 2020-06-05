@@ -39,10 +39,10 @@ class RecordingContainer extends HTMLDivElement {
         for (let elem of [ this.recordingTitle, this.recordingArtist, this.recordingDate, this.recordingVenue ])
             this.infoContainer.append(elem);
 
-        this.editButton   = this.createButton("Edit", e => this.toggleEdit(true));
-        this.saveButton   = this.createButton("Save", e => this.save());
-        this.cancelButton = this.createButton("Cancel", e => this.cancel());
-        this.addButton    = this.createButton("Add to Library", e => this.addToLibrary());
+        this.editIcon   = this.createIcon("create", e => this.toggleEdit(true));
+        this.saveIcon   = this.createIcon("save", e => this.save());
+        this.cancelIcon = this.createIcon("clear", e => this.cancel());
+        this.addIcon    = this.createIcon("add", e => this.addToLibrary());
 
         this.addEventListener("select-file", e => {
             let filename = e.detail;
@@ -64,20 +64,20 @@ class RecordingContainer extends HTMLDivElement {
         }
 
         if (this.context == "recording" && editable) {
-            this.editButton.remove();
+            this.editIcon.remove();
             this.recordingRating.remove();
             this.soundRating.remove();
-            this.overview.append(this.saveButton);
-            this.overview.append(this.cancelButton);
+            this.overview.append(this.saveIcon);
+            this.overview.append(this.cancelIcon);
         } else if (this.context == "recording") {
-            this.saveButton.remove();
-            this.cancelButton.remove();
-            this.overview.append(this.editButton);
+            this.saveIcon.remove();
+            this.cancelIcon.remove();
+            this.overview.append(this.editIcon);
             this.infoContainer.append(this.recordingRating);
             this.infoContainer.append(this.soundRating);
         } else if (this.context == "import" && editable) {
-            this.overview.append(this.addButton);
-            this.overview.append(this.cancelButton);
+            this.overview.append(this.addIcon);
+            this.overview.append(this.cancelIcon);
         }
 
         this.recordingTitle.toggleEdit(editable);
@@ -143,11 +143,12 @@ class RecordingContainer extends HTMLDivElement {
         return elem;
     }
 
-    createButton(text, action) {
-        let button = document.createElement("button");
-        button.innerText = text;
-        button.onclick = action;
-        return button;
+    createIcon(iconName, action) {
+        let icon = document.createElement("span");
+        icon.innerText = iconName;
+        icon.onclick = action;
+        icon.classList.add("material-icons");
+        return icon;
     }
 
     updateFiles(directory) {
@@ -167,6 +168,7 @@ function importRecording(directory) {
     container.context = "import";
 
     let heading = document.createElement("span");
+    heading.id = "recording-heading";
     heading.innerText = directory.relative_path;
     container.overview.append(heading);
 
@@ -200,7 +202,9 @@ function viewRecording(recording) {
     container.context = "recording";
 
     let heading = document.createElement("span");
+    heading.id = "recording-heading";
     heading.innerText = recording.title;
+    heading.style["padding-right"] = "20px";
     container.overview.append(heading);
 
     if (recording.artwork != null) {

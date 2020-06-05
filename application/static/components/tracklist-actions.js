@@ -1,55 +1,42 @@
-class Arrow extends HTMLSpanElement {
+class TracklistAction extends HTMLSpanElement {
 
     constructor() {
         super();
+        this.classList.add("material-icons");
+        this.onclick = e => this.createEvent();
     }
 
     show() { this.style.display = "inline"; }
     hide() { this.style.display = "none"; }
 
-    createMoveEvent(direction) {
-        let ev = new CustomEvent("move", { detail: direction,  bubbles: true });
-        this.dispatchEvent(ev);
-    }
-
-    createIcon(iconName, eventName) {
-        let icon = document.createElement("i");
-        icon.innerText = iconName;
-        icon.classList.add("material-icons");
-        icon.onclick = e => this.createMoveEvent(eventName);
-        return icon;
-    }
+    createEvent() { this.dispatchEvent(new CustomEvent("tracklist-action", { detail: this.detail, bubbles: true })); }
 }
 
-class UpArrow extends Arrow {
+class UpArrow extends TracklistAction {
     constructor() {
         super();
-        this.append(this.createIcon("arrow_upward", "up"));
+        this.innerText = "arrow_upward";
+        this.detail     = "move-track-up";
         this.classList.add("move-up");
     }
 }
 
-class DownArrow extends Arrow {
+class DownArrow extends TracklistAction {
     constructor() {
         super();
-        this.append(this.createIcon("arrow_downward", "down"));
+        this.innerText = "arrow_downward";
+        this.detail    = "move-track-down";
         this.classList.add("move-down");
     }
 }
 
-class RemoveButton extends HTMLSpanElement {
+class RemoveButton extends TracklistAction {
 
     constructor() {
         super();
-        this.icon = document.createElement("i");
-        this.icon.innerText = "clear";
-        this.icon.classList.add("material-icons");
-        this.icon.onclick = e => {
-            let ev = new CustomEvent("remove", { bubbles: true });
-            this.dispatchEvent(ev);
-        };
+        this.innerText = "clear";
+        this.detail    = "remove-track";
         this.classList.add("remove");
-        this.append(this.icon);
     }
 }
 

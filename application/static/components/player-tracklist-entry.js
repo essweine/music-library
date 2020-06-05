@@ -38,21 +38,22 @@ class NextTracksEntry extends PlaylistEntry {
         this.removeTrack = document.createElement("span", { is: "remove-button" });
         this.append(this.removeTrack);
 
-        this.addEventListener("move", e => {
-            let update = {
-                action: (e.detail == "up") ? "move-track-up" : "move-track-down",
+        this.addEventListener("tracklist-action", e => {
+
+            let detail = {
+                action: e.detail,
                 position: this.position,
                 filename: this.track.filename
             };
-            this.dispatchEvent(new CustomEvent("update-playlist", { detail: update, bubbles: true }));
-            let listPosition = (e.detail == "up") ? this.position : this.position + 1;
-            this.dispatchEvent(new CustomEvent("move-track", { detail: listPosition, bubbles: true }));
-        });
+            this.dispatchEvent(new CustomEvent("update-playlist", { detail: detail, bubbles: true }));
 
-        this.addEventListener("remove", e => {
-            let update = { action: "remove-track", position: this.position };
-            this.dispatchEvent(new CustomEvent("update-playlist", { detail: update, bubbles: true }));
-            this.dispatchEvent(new CustomEvent("remove-track", { detail: this.position, bubbles: true }));
+            if (e.detail == "move-track-up")
+                this.dispatchEvent(new CustomEvent("move-track", { detail: this.position, bubbles: true }));
+            else if (e.detail == "move-track-down")
+                this.dispatchEvent(new CustomEvent("move-track", { detail: this.position + 1, bubbles: true }));
+            else if (e.detail == "remove-track")
+                this.dispatchEvent(new CustomEvent("remove-track", { detail: this.position, bubbles: true }));
+
         });
     }
 

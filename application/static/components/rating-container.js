@@ -53,7 +53,7 @@ class RatingContainer extends HTMLSpanElement {
     }
 
     createIcon(iconName, iconClass) {
-        let icon = document.createElement("i");
+        let icon = document.createElement("span");
         icon.innerText = iconName;
         icon.classList.add("material-icons");
         icon.classList.add(iconClass);

@@ -109,11 +109,13 @@
     grid-column: 2;
     font-style: italic;
     width: max-content;
+    padding: 0 15px;
 }
 
 .playlist-artist {
     grid-column: 3;
     width: max-content;
+    padding-right: 15px;
 }
 
 .move-up { grid-column: 4; }

@@ -22,12 +22,16 @@ class RecordingRawInfo extends HTMLDivElement {
             this.insertBefore(this.select, this.notes);
             this.notes.style.display = "block";
             this.notesVisible = true;
+            this.style.padding = "10px";
+            this.style["background-color"] = "#eee";
         } else {
             this.select.remove();
             this.insertBefore(this.toggle, this.notes);
             this.toggle.innerText = "Show Notes";
             this.notes.style.display = "none";
             this.notesVisible = false;
+            this.style.padding = "0";
+            this.style["background-color"] = "#fff";
         }
     }
 
@@ -55,6 +59,8 @@ class RecordingRawInfo extends HTMLDivElement {
         this.notesVisible        = !this.notesVisible;
         this.toggle.innerText    = (this.notesVisible) ? "Hide notes" : "Show notes";
         this.notes.style.display = (this.notesVisible) ? "block" : "none";
+        this.style.padding       = (this.notesVisible) ? "10px": "";
+        this.style["background-color"] = (this.notesVisible) ? "#eee" : "#fff";
     }
 }
 
