@@ -1,31 +1,23 @@
-import { Recording } from "/static/modules/api.js";
+import { addIcon } from "/static/modules/util.js";
 
 class RatingContainer extends HTMLSpanElement {
     constructor() {
         super();
-
-        for (let i = 0; i < 5; i++) {
-            let icon = this.createIcon("grade", "star-icon");
-            icon.onclick = e => this.updateRating(i + 1);
-            this.append(icon);
-        }
-
-        let clearIcon = this.createIcon("clear", "clear-icon");
-        clearIcon.onclick = e => this.updateRating(null);
-        this.append(clearIcon);
+        for (let i = 0; i < 5; i++)
+            this.addIcon("grade", e => this.updateRating(i + 1), "star-icon");
+        this.addIcon("clear", e => this.updateRating(null), "clear-icon");
     }
 
-    setLabel(text) { 
-        this.label = document.createElement("span");
-        this.label.classList.add("rating-label");
-        this.label.innerText = text; 
-        this.prepend(this.label);
-    }
-
-    initialize(recordingId, ratedItem, rating) {
+    initialize(recordingId, ratedItem, rating, label = null) {
         this.recordingId = recordingId;
         this.ratedItem = ratedItem;
         this.setRating(rating);
+        if (label != null) {
+            this.label = document.createElement("span");
+            this.label.classList.add("rating-label");
+            this.label.innerText = label; 
+            this.prepend(this.label);
+        }
     }
 
     setRating(rating) {
@@ -47,18 +39,12 @@ class RatingContainer extends HTMLSpanElement {
 
     updateRating(rating) {
         this.setRating(rating);
-        let recordingApi = new Recording();
         let data = { item: this.ratedItem, rating: rating };
-        recordingApi.updateRating(this.recordingId, data);
+        let detail = { recordingId: this.recordingId, data: data };
+        this.dispatchEvent(new CustomEvent("update-rating", { detail: detail, bubbles: true }));
     }
 
-    createIcon(iconName, iconClass) {
-        let icon = document.createElement("span");
-        icon.innerText = iconName;
-        icon.classList.add("material-icons");
-        icon.classList.add(iconClass);
-        return icon;
-    }
+    addIcon = addIcon.bind(this);
 }
 
 function createRatingContainer() {
@@ -67,4 +53,12 @@ function createRatingContainer() {
     return ratingContainer;
 }
 
-export { RatingContainer, createRatingContainer };
+function addRatingContainer(recordingId, ratedItem, rating, classNames) {
+    let ratingContainer = createRatingContainer();
+    ratingContainer.initialize(recordingId, ratedItem, rating);
+    for (let name of classNames)
+        ratingContainer.classList.add(name);
+    this.append(ratingContainer);
+}
+
+export { RatingContainer, createRatingContainer, addRatingContainer };

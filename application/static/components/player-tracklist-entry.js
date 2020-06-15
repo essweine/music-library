@@ -35,7 +35,7 @@ class NextTracksEntry extends PlaylistEntry {
         this.moveDown = document.createElement("span", { is: "down-arrow" });
         this.append(this.moveDown);
 
-        this.removeTrack = document.createElement("span", { is: "remove-button" });
+        this.removeTrack = document.createElement("span", { is: "remove-track-icon" });
         this.append(this.removeTrack);
 
         this.addEventListener("tracklist-action", e => {

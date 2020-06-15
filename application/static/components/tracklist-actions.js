@@ -30,7 +30,7 @@ class DownArrow extends TracklistAction {
     }
 }
 
-class RemoveButton extends TracklistAction {
+class RemoveTrackIcon extends TracklistAction {
 
     constructor() {
         super();
@@ -40,7 +40,7 @@ class RemoveButton extends TracklistAction {
     }
 }
 
-class PlayButton extends TracklistAction {
+class PlayTrackIcon extends TracklistAction {
     constructor() {
         super();
         this.innerText = "play_arrow";
@@ -49,7 +49,7 @@ class PlayButton extends TracklistAction {
     }
 }
 
-class QueueButton extends TracklistAction {
+class QueueTrackIcon extends TracklistAction {
     constructor() {
         super();
         this.innerText = "playlist_add";
@@ -58,4 +58,4 @@ class QueueButton extends TracklistAction {
     }
 }
 
-export { UpArrow, DownArrow, RemoveButton, PlayButton, QueueButton };
+export { UpArrow, DownArrow, RemoveTrackIcon, PlayTrackIcon, QueueTrackIcon };

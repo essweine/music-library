@@ -42,11 +42,4 @@ class LogManager extends HTMLDivElement {
     }
 }
 
-function createLogManager() {
-    document.title = "Player Logs";
-    let manager = document.createElement("div", { is: "log-manager" });
-    let content = document.getElementById("content");
-    content.append(manager);
-}
-
-export { LogManager, createLogManager };
+export { LogManager };

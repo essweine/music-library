@@ -22,8 +22,8 @@ class RecordingTrack extends HTMLDivElement {
 
         this.moveUp     = document.createElement("span", { is: "up-arrow" });
         this.moveDown   = document.createElement("span", { is: "down-arrow" });
-        this.playTrack  = document.createElement("span", { is: "play-button" });
-        this.queueTrack = document.createElement("span", { is: "queue-button" });
+        this.playTrack  = document.createElement("span", { is: "play-track-icon" });
+        this.queueTrack = document.createElement("span", { is: "queue-track-icon" });
 
         this.addEventListener("tracklist-action", e => {
             if (e.detail == "move-track-up")

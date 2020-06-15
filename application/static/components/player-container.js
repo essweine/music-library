@@ -73,10 +73,4 @@ class PlayerContainer extends HTMLDivElement {
     }
 }
 
-function createPlayerContainer() {
-    let container = document.createElement("div", { is: "player-container" });
-    let content = document.getElementById("content");
-    content.append(container);
-}
-
-export { PlayerContainer, createPlayerContainer };
+export { PlayerContainer };

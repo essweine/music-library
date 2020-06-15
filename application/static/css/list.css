@@ -4,16 +4,16 @@
     justify-content: center;
 }
 
-.list-row {
+.list-row, .list-row-child {
     display: contents;
     color: #000;
 }
 
-.list-row:nth-child(even) {
+.list-row:nth-of-type(even) {
     background-color: #eee;
 }
 
-.list-row:hover { background-color: #ccf; }
+.list-row:hover, .list-row-child:hover { background-color: #ccf; }
 
 .list-heading {
     font-size: large;
