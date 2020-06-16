@@ -1,47 +1,9 @@
 import { Importer, Recording, Player } from "/static/modules/api.js";
 
 import { createDirectoryList, createRecordingList } from "/static/components/item-list.js";
-
-import { RatingContainer } from "/static/components/rating-container.js";
-import { UpArrow, DownArrow, RemoveTrackIcon, PlayTrackIcon, QueueTrackIcon } from "/static/components/tracklist-actions.js";
-
 import { createImportContainer, createRecordingContainer } from "/static/components/recording-container.js";
-import { RecordingImage } from "/static/components/recording-image.js";
-import { EditableInfo } from "/static/components/editable-info.js";
-import { RecordingTrack } from "/static/components/recording-tracklist-entry.js";
-import { RecordingTracksContainer } from "/static/components/recording-tracklist.js";
-import { RecordingRawInfo } from "/static/components/recording-raw-info.js";
-
-import { PlayerContainer } from "/static/components/player-container.js";
-import { CurrentTrack } from "/static/components/current-track.js";
-import { NextTracksContainer, RecentlyPlayedContainer } from "/static/components/player-tracklist.js";
-import { NextTracksEntry, RecentlyPlayedEntry } from "/static/components/player-tracklist-entry.js";
-import { PlayerControls } from "/static/components/player-controls.js";
-
-import { LogManager } from "/static/components/log-manager.js";
-
-customElements.define("rating-container", RatingContainer, { extends: "span" });
-customElements.define("up-arrow", UpArrow, { extends: "span" });
-customElements.define("down-arrow", DownArrow, { extends: "span" });
-customElements.define("remove-track-icon", RemoveTrackIcon, { extends: "span" });
-customElements.define("play-track-icon", PlayTrackIcon, { extends: "span" });
-customElements.define("queue-track-icon", QueueTrackIcon, { extends: "span" });
-
-customElements.define("recording-image", RecordingImage, { extends: "div" });
-customElements.define("editable-info", EditableInfo, { extends: "div" });
-customElements.define("recording-track", RecordingTrack, { extends: "div" });
-customElements.define("recording-tracklist", RecordingTracksContainer, { extends: "div" });
-customElements.define("recording-raw-info", RecordingRawInfo, { extends: "div" });
-
-customElements.define("player-container", PlayerContainer, { extends: "div" });
-customElements.define("current-track", CurrentTrack, { extends: "div" });
-customElements.define("player-controls", PlayerControls, { extends: "div" });
-customElements.define("next-tracks", NextTracksContainer, { extends: "div" });
-customElements.define("recently-played", RecentlyPlayedContainer, { extends: "div" });
-customElements.define("next-tracks-entry", NextTracksEntry, { extends: "div" });
-customElements.define("recently-played-entry", RecentlyPlayedEntry, { extends: "div" });
-
-customElements.define("log-manager", LogManager, { extends: "div" });
+import { createPlayerContainer } from "/static/components/player-container.js";
+import { createLogManager } from "/static/components/log-manager.js";
 
 class Application {
 
@@ -51,8 +13,8 @@ class Application {
         this.recordingApi = new Recording();
         this.playerApi = new Player();
 
-        this.container = this.selectContainer(action, arg);
         this.content = document.getElementById("content");
+        this.container = this.selectContainer(action, arg);
         this.content.append(this.container);
 
         this.content.addEventListener("play-track", e => this.playerApi.play(e.detail));
@@ -84,7 +46,6 @@ class Application {
             this.importerApi.getDirectoryListing(arg, container.initialize);
             return container;
         } else if (action == "importer") {
-            document.title = "Unindexed Directory List";
             let container = createDirectoryList("directory-list-root");
             this.importerApi.listAll(container.addRows);
             return container;
@@ -93,17 +54,66 @@ class Application {
             this.recordingApi.getRecording(arg, container.initialize);
             return container;
         } else if (action == "recording") {
-            document.title = "Browse Recordings";
             let container = createRecordingList("recording-list-root");
             this.recordingApi.listAll(container.addRows);
             return container;
         } else if (action == "log") {
-            document.title = "Player Logs";
-            return document.createElement("div", { is: "log-manager" });
+            let container = createLogManager();
+            this.createLogNotificationService(container);
+            return container;
         } else {
-            document.title = "Now Playing";
-            return document.createElement("div", { is: "player-container" });
+            let container = createPlayerContainer();
+            this.createPlayerNotificationService(container);
+            return container;
         }
+    }
+
+    createPlayerNotificationService(playerContainer) {
+
+        let wsUrl = "ws://" + location.host + this.playerApi.wsUrl;
+        let ws = new WebSocket(wsUrl);
+        ws.addEventListener("open", e => ws.send("open"));
+        ws.addEventListener("message", e => this.playerApi.getCurrentState(playerContainer.update));
+
+        this.content.addEventListener("player-control", e => {
+            if (e.detail == "stop") {
+                this.playerApi.stop();
+            } else if (e.detail == "pause") {
+                this.playerApi.pause();
+            } else if (e.detail == "start") {
+                this.playerApi.start();
+            } else if (e.detail == "back") {
+                // This will go back to the beginning of the track, but not through the playlist.
+                // I might have to rethink how the playlist would work.
+                let addTask = this.playerApi.createTask("add", playerContainer.current.filename, 0);
+                this.playerApi.sendTasks([ addTask, this.playerApi.stopTask, this.playerApi.startTask ]);
+            } else if (e.detail == "next") {
+                this.playerApi.advance();
+            }
+        });
+
+        this.content.addEventListener("update-playlist", e => {
+            if (e.detail.action == "move-track-up") {
+                this.playerApi.sendTasks([
+                    this.playerApi.createTask("remove", null, e.detail.position),
+                    this.playerApi.createTask("add", e.detail.filename, e.detail.position - 1)
+                ]);
+            } else if (e.detail.action == "move-track-down") {
+                this.playerApi.sendTasks([
+                    this.playerApi.createTask("remove", null, e.detail.position),
+                    this.playerApi.createTask("add", e.detail.filename, e.detail.position + 1)
+                ]);
+            } else if (e.detail.action == "remove-track") {
+                this.playerApi.sendTasks([ this.playerApi.createTask("remove", null, e.detail.position) ]);
+            }
+        });
+    }
+
+    createLogNotificationService(logManager) {
+        let wsUrl = "ws://" + location.host + "/api/log/notifications";
+        let ws = new WebSocket(wsUrl);
+        ws.addEventListener("open", e => ws.send(""));
+        ws.addEventListener("message", e => logManager.update(JSON.parse(e.data)));
     }
 }
 

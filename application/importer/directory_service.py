@@ -23,7 +23,11 @@ class DirectoryService(object):
 
         self.indexed_directories = set(indexed_directories)
         self.root_path = root_path
-        self.root = self.get_directory_info(root_path)
+        self.root = self.index()
+
+    def index(self):
+
+        return self.get_directory_info(self.root_path)
 
     def get_directory(self, directory):
 

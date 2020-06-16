@@ -1,100 +1,102 @@
-import { TracklistContainer } from "/static/components/tracklist-container.js";
-import { createPlaylistTrack } from "/static/components/player-tracklist-entry.js";
+import { createTracklistContainer } from "/static/components/tracklist-container.js";
+import { createNextTracksEntry, createRecentlyPlayedEntry } from "/static/components/player-tracklist-entry.js";
 
-class PlaylistTrackContainer extends TracklistContainer {
+function createPlayerTracklist(childClass) {
 
-    constructor() {
-        super();
+    let tracklist = createTracklistContainer(childClass);
 
-        this.heading = document.createElement("div");
-        this.heading.classList.add("tracklist-heading");
-        this.append(this.heading);
+    tracklist.heading = document.createElement("div");
+    tracklist.heading.classList.add("tracklist-heading");
+    tracklist.append(tracklist.heading);
 
-        this.tracklistHidden = true;
-        this.listToggle = document.createElement("div");
-        this.listToggle.classList.add("list-toggle");
-        this.listToggle.onclick = e => {
-            this.tracklistHidden = !this.tracklistHidden;
-            this.updateToggle();
-        };
-    }
+    tracklist.tracklistHidden = true;
+    tracklist.listToggle = document.createElement("div");
+    tracklist.listToggle.classList.add("list-toggle");
+    tracklist.listToggle.onclick = e => {
+        tracklist.tracklistHidden = !tracklist.tracklistHidden;
+        tracklist.updateToggle();
+    };
 
-    update(tracks) {
-        super.clear();
+    tracklist._update = (tracks) => {
+        tracklist.clear();
         for (let track of tracks)
-            this.append(track);
-        this.addToggle();
-        this.updateToggle();
+            tracklist.append(track);
+        tracklist.addToggle();
+        tracklist.updateToggle();
     }
 
-    shiftTrackUp(position) {
-        super.shiftTrackUp(position);
-        this.addToggle();
+    tracklist.update = tracklist._update;
+
+    tracklist.shiftTrackUp = (position) => {
+        tracklist._shiftTrackUp(position);
+        tracklist.addToggle();
     }
 
-    removeTrack(position) {
-        super.removeTrack(position);
-        this.addToggle();
+    tracklist.removeTrack = (position) => {
+        tracklist._removeTrack(position);
+        tracklist.addToggle();
     }
 
-    addToggle() {
-        this.listToggle.remove();
-        let children = this.getElementsByClassName(this.childClass);
+    tracklist.addToggle = () => {
+        tracklist.listToggle.remove();
+        let children = tracklist.getElementsByClassName(tracklist.childClass);
         if (children.length > 1)
-            this.insertBefore(this.listToggle, children.item(1));
+            tracklist.insertBefore(tracklist.listToggle, children.item(1));
     }
 
-    updateToggle() {
-        let tracklist = this.getElementsByClassName(this.childClass);
-        let action = (this.tracklistHidden) ? "Expand" : "Collapse";
-        let more = tracklist.length - 1
+    tracklist.updateToggle = () => {
+        let entries = tracklist.getElementsByClassName(tracklist.childClass);
+        let action = (tracklist.tracklistHidden) ? "Expand" : "Collapse";
+        let more = entries.length - 1
         if (more > 1)
-            this.listToggle.innerText = action + " (" + more + " more tracks)";
+            tracklist.listToggle.innerText = action + " (" + more + " more tracks)";
         else if (more == 1)
-            this.listToggle.innerText = action + " (" + more + " more track)";
+            tracklist.listToggle.innerText = action + " (" + more + " more track)";
         else
-            this.listToggle.remove();
+            tracklist.listToggle.remove();
         
-        if (tracklist.length > 1)
-            for (let i = 1; i < tracklist.length; i++)
-                tracklist.item(i).style.display = (this.tracklistHidden) ? "none" : "contents";
+        if (entries.length > 1)
+            for (let i = 1; i < entries.length; i++)
+                entries.item(i).style.display = (tracklist.tracklistHidden) ? "none" : "contents";
     }
+
+    return tracklist;
 }
 
-class NextTracksContainer extends PlaylistTrackContainer {
-    constructor() {
-        super();
-        this.id = "next-tracks";
-        this.childClass = "next-tracks-entry";
-        this.heading.innerText = "Next Tracks"
-    }
+function createNextTracksContainer() {
 
-    update(tracklist) {
-        let tracks = tracklist.map(track => createPlaylistTrack(track, "next-tracks-entry"));
-        for (let i = 0; i < tracks.length; i++) {
-            let track = tracks[i];
-            track.updatePosition(i, i == 0, i == tracks.length - 1);
+    let tracklist = createPlayerTracklist("next-tracks-entry");
+
+    tracklist.id = "next-tracks";
+    tracklist.heading.innerText = "Next Tracks";
+
+    tracklist.update = (tracks) => {
+        let entries = tracks.map(track => createNextTracksEntry(track));
+        for (let i = 0; i < entries.length; i++) {
+            let entry = entries[i];
+            entry.updatePosition(i, i == 0, i == entries.length - 1);
         }
-        super.update(tracks);
+        tracklist._update(entries);
     }
 
-    shiftTrackUp(position) { super.shiftTrackUp(position); }
-
-    removeTrack(position) { super.removeTrack(position); }
+    return tracklist;
 }
 
-class RecentlyPlayedContainer extends PlaylistTrackContainer {
-    constructor() {
-        super();
-        this.id = "recently-played";
-        this.childClass = "recently-played-entry";
-        this.heading.innerText = "Recently Played"
+function createRecentlyPlayedContainer() {
+
+    let tracklist = createPlayerTracklist("recently-played-entry");
+
+    tracklist.id = "recently-played";
+    tracklist.heading.innerText = "Recently Played"
+
+    tracklist._update = tracklist.update;
+
+    tracklist.update = (tracks) => {
+        let entries = tracks.map(track => createRecentlyPlayedEntry(track));
+        tracklist._update(entries);
     }
 
-    update(tracklist) {
-        let tracks = tracklist.map(track => createPlaylistTrack(track, "recently-played-entry"));
-        super.update(tracks);
-    }
+    return tracklist;
 }
 
-export { NextTracksContainer, RecentlyPlayedContainer };
+export { createNextTracksContainer, createRecentlyPlayedContainer };

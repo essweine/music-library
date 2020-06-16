@@ -1,5 +1,5 @@
-import { addRatingContainer } from "/static/components/rating-container.js";
-import { addIcon } from "/static/modules/util.js";
+import { createRatingContainer } from "/static/components/rating-container.js";
+import { createIcon, createRecordingEvent, createTrackEvent } from "/static/components/icons.js";
 
 function createListRow(className, parent = true) {
 
@@ -18,9 +18,17 @@ function createListRow(className, parent = true) {
         row.append(cell);
     }
 
-    row.addIcon = addIcon.bind(row);
+    row.addIcon = (name, action, classNames) => {
+        let icon = createIcon(name, action, classNames);
+        row.append(icon);
+    }
 
-    row.addRatingContainer = addRatingContainer.bind(row);
+    row.addRatingContainer = (recordingId, ratedItem, rating, className) => {
+        let ratingContainer = createRatingContainer("list-cell");
+        ratingContainer.configure(recordingId, ratedItem, rating);
+        ratingContainer.classList.add(className);
+        row.append(ratingContainer);
+    }
 
     row.setExpandable = (expand, collapse) => {
         for (let elem of row.textCells)
@@ -31,14 +39,6 @@ function createListRow(className, parent = true) {
     }
 
     return row;
-}
-
-function createRecordingEvent(eventName, recordingId) {
-    return new CustomEvent(eventName, { detail: recordingId, bubbles: true });
-}
-
-function createTrackEvent(eventName, track) {
-    return new CustomEvent(eventName, { detail: track, bubbles: true });
 }
 
 function createListRoot(className) {
@@ -76,6 +76,7 @@ function createDirectoryList(className) {
         return row;
     }
 
+    document.title = "Unindexed Directory List";
     return root;
 }
 
@@ -94,7 +95,7 @@ function createRecordingList(className) {
         row.addText("", "recording-list-artist");
         row.addText(track.title, "recording-list-title");
         row.addText("", "recording-list-date");
-        row.addRatingContainer(recordingId, track.filename, track.rating, [ "list-cell", "recording-list-rating" ]);
+        row.addRatingContainer(recordingId, track.filename, track.rating, "recording-list-rating");
         row.addText("", "recording-list-sound-rating");
         row.addText("", "recording-list-view");
         row.addIcon("play_arrow", e => root.dispatchEvent(createTrackEvent("play-track", track)), "recording-list-play");
@@ -123,8 +124,8 @@ function createRecordingList(className) {
         row.addText(entry.artist, "recording-list-artist");
         row.addText(entry.title, "recording-list-title");
         row.addText(entry.recording_date, "recording-list-date");
-        row.addRatingContainer(entry.id, "rating", entry.rating, [ "list-cell", "recording-list-rating" ]);
-        row.addRatingContainer(entry.id, "sound-rating", entry.sound_rating, [ "list-cell", "recording-list-sound-rating" ]);
+        row.addRatingContainer(entry.id, "rating", entry.rating, "recording-list-rating");
+        row.addRatingContainer(entry.id, "sound-rating", entry.sound_rating, "recording-list-sound-rating");
         row.addIcon("info", e => window.location.href = "/recording/" + entry.id, "recording-list-view");
         row.addIcon("playlist_play", e => root.dispatchEvent(createRecordingEvent("play-recording", entry.id)), "recording-list-play");
         row.addIcon("playlist_add", e => root.dispatchEvent(createRecordingEvent("queue-recording", entry.id)), "recording-list-queue");
@@ -135,6 +136,7 @@ function createRecordingList(className) {
         return row;
     }
 
+    document.title = "Browse Recordings";
     return root;
 }
 

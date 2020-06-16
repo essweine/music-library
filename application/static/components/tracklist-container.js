@@ -1,33 +1,40 @@
-class TracklistContainer extends HTMLDivElement {
+function createTracklistContainer(childClass) {
 
-    constructor() {
-        super();
-        this.childClass;
-        this.addEventListener("move-track", e => this.shiftTrackUp(e.detail));
-        this.addEventListener("remove-track", e => this.removeTrack(e.detail));
-    }
+    let container = document.createElement("div");
+    container.childClass = childClass;
 
-    shiftTrackUp(position) {
-        let children = this.getElementsByClassName(this.childClass);
+    container.addEventListener("move-track", e => container.shiftTrackUp(e.detail));
+    container.addEventListener("remove-track", e => container.removeTrack(e.detail));
+
+    container._shiftTrackUp = (position) => {
+        let children = container.getElementsByClassName(container.childClass);
         let item = children.item(position);
         let prev = children.item(position - 1);
-        this.removeChild(item);
-        this.insertBefore(item, prev);
+        container.removeChild(item);
+        container.insertBefore(item, prev);
         item.updatePosition(position - 1, position - 1 == 0, position - 1 == children.length - 1);
         prev.updatePosition(position, position == 0, position == children.length - 1);
     }
 
-    removeTrack(position) {
-        let children = this.getElementsByClassName(this.childClass);
+    container._removeTrack = (position) => {
+        let children = container.getElementsByClassName(container.childClass);
         children.item(position).remove();
         for (let i = position; i < children.length; i++)
             children.item(i).updatePosition(i, i == 0, i == children.length - 1);
     }
 
-    clear(tracklist) { 
-        for (let track of Array.from(this.getElementsByClassName(this.childClass)))
+    // I can't figure out how to effectively inherit from html elements so I'm giving up and
+    // just creating an element and assigning methods to it because I generally don't need a
+    // class hierarchy.  Except in this case, where I need to call and override these methods.
+    container.shiftTrackUp = container._shiftTrackUp;
+    container.removeTrack = container._removeTrack;
+
+    container.clear = (tracklist) => { 
+        for (let track of Array.from(container.getElementsByClassName(container.childClass)))
             track.remove();
     }
+
+    return container;
 }
 
-export { TracklistContainer };
+export { createTracklistContainer };

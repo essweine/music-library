@@ -3,10 +3,12 @@ from tornado.web import RequestHandler
 
 from .json_encoder import JsonEncoder
 
-class BaseRequestHandler(RequestHandler):
+class BaseApiHandler(RequestHandler):
 
     def initialize(self):
+
         self.logger = self.application.logger
+        self.JsonEncoder = JsonEncoder
 
     def db_action(self, func, *args, **kwargs):
 
@@ -24,11 +26,6 @@ class BaseRequestHandler(RequestHandler):
         results = [ row for row in cursor ]
         cursor.close()
         return results
-
-class BaseApiHandler(BaseRequestHandler):
-
-    def initialize(self):
-        self.JsonEncoder = JsonEncoder
 
     def prepare(self):
         if "application/json" in self.request.headers.get("Content-Type", ""):

@@ -1,55 +1,51 @@
-class EditableInfo extends HTMLDivElement {
-    constructor() {
-        super();
-        this.classList.add("editable-info");
+function createEditableInfo(className) {
 
-        this.display = document.createElement("span");
-        this.display.classList.add("editable-display");
+    let container = document.createElement("div");
+    container.classList.add("editable-info");
+    container.classList.add(className);
 
-        this.label = document.createElement("label");
-        this.label.classList.add("editable-label");
+    container.display = document.createElement("span");
+    container.display.classList.add("editable-display");
 
-        this.input      = document.createElement("input");
-        this.input.type = "text";
-        this.input.size = 40;
-        this.input.classList.add("editable-input");
+    container.label = document.createElement("label");
+    container.label.classList.add("editable-label");
+
+    container.input      = document.createElement("input");
+    container.input.type = "text";
+    container.input.size = 40;
+    container.input.classList.add("editable-input");
+
+    container.initialize = (text, inputId, inputLabel) => {
+        container.label.innerText   = inputLabel;
+        container.label.htmlFor     = inputId;
+        container.input.id          = inputId;
+        container.set(text);
     }
 
-    initialize(text, inputId, inputLabel) {
-        this.label.innerText   = inputLabel;
-        this.label.htmlFor     = inputId;
-        this.input.id          = inputId;
-        this.set(text);
+    container.get = () => { return container.display.innerText; }
+
+    container.set = (title) => {
+        container.display.innerText = title;
+        container.input.value = title;
     }
 
-    get() { return this.display.innerText; }
+    container.save = () => { container.display.innerText = container.input.value; }
 
-    set(title) {
-        this.display.innerText = title;
-        this.input.value = title;
-    }
+    container.reset = () => { container.input.value = container.display.innerText; }
 
-    save() { this.display.innerText = this.input.value; }
-
-    reset() { this.input.value = this.display.innerText; }
-
-    toggleEdit(editable) {
+    container.toggleEdit = (editable) => {
         if (editable) {
-            this.display.remove();
-            this.append(this.label);
-            this.append(this.input);
+            container.display.remove();
+            container.append(container.label);
+            container.append(container.input);
         } else {
-            this.label.remove();
-            this.input.remove();
-            this.append(this.display);
+            container.label.remove();
+            container.input.remove();
+            container.append(container.display);
         }
     }
+
+    return container;
 }
 
-function createEditableInfo(className) {
-    let elem = document.createElement("div", { is: "editable-info" });
-    elem.classList.add(className);
-    return elem;
-}
-
-export { EditableInfo, createEditableInfo };
+export { createEditableInfo };

@@ -1,39 +1,36 @@
-class RecordingImage extends HTMLDivElement {
-    constructor() {
-        super();
-        this.id = "recording-image";
+function createRecordingImage(images, directory, selected = null) {
 
-        this.img = document.createElement("img");
-        this.img.id = "recording-artwork";
-        this.append(this.img);
+    let container = document.createElement("div");
+    container.id = "recording-image";
 
-        this.select = document.createElement("select");
-        this.select.oninput = e => this.img.src = "/file/" + e.target.value;
-    }
+    container.img = document.createElement("img");
+    container.img.id = "recording-artwork";
+    container.append(container.img);
 
-    addImage(image, directory) {
+    container.select = document.createElement("select");
+    container.select.oninput = e => container.img.src = "/file/" + e.target.value;
+
+    container.addImage = (image, directory) =>  {
         let option = document.createElement("option");
         option.value = image;
         option.innerText = image.replace(directory + "/", "");
-        this.select.append(option);
+        container.select.append(option);
     }
 
-    selectImage(image) {
-        this.img.src = "/file/" + image;
-        for (let option of this.select.options)
+    container.selectImage = (image) => {
+        container.img.src = "/file/" + image;
+        for (let option of container.select.options)
             if (option.value == image)
                 option.selected = true;
     }
 
-    toggleEdit(editable) { (editable) ? this.append(this.select) : this.select.remove(); }
-}
+    container.toggleEdit = (editable) => { (editable) ? container.append(container.select) : container.select.remove(); }
 
-function createRecordingImage(images, directory, selected = null) {
-    let recordingImage = document.createElement("div", { is: "recording-image" });
     for (let image of images)
-        recordingImage.addImage(image, directory);
-    (selected != null) ? recordingImage.selectImage(selected) : recordingImage.selectImage(images[0]);
-    return recordingImage;
+        container.addImage(image, directory);
+    (selected != null) ? container.selectImage(selected) : container.selectImage(images[0]);
+
+    return container;
 }
 
-export { RecordingImage, createRecordingImage };
+export { createRecordingImage };

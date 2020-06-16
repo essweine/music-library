@@ -1,25 +1,20 @@
-class LogManager extends HTMLDivElement {
-    constructor() {
-        super();
-        this.id = "log-manager";
-        this.view = document.createElement("div");
-        this.view.id = "log-display";
-        this.append(this.view);
-        this.records = this.getElementsByClassName("log-record");
+function createLogManager() {
 
-        let wsUrl = "ws://" + location.host + "/api/log/notifications";
-        let ws = new WebSocket(wsUrl);
-        ws.addEventListener("open", e => ws.send(""));
-        ws.addEventListener("message", e => this.update(JSON.parse(e.data)));
+    let container = document.createElement("div");
+
+    container.id = "log-manager";
+    container.view = document.createElement("div");
+    container.view.id = "log-display";
+    container.append(container.view);
+    container.records = container.getElementsByClassName("log-record");
+
+    container.update = (record) => {
+        if (container.records.length > 150)
+            container.records.item(0).remove();
+        container.view.append(container.format(record));
     }
 
-    update(record) {
-        if (this.records.length > 150)
-            this.records.item(0).remove();
-        this.view.append(this.format(record));
-    }
-
-    format(record) {
+    container.format = (record) => {
         let display = document.createElement("div");
         display.classList.add("log-record");
 
@@ -40,6 +35,9 @@ class LogManager extends HTMLDivElement {
         
         return display;
     }
+
+    document.title = "Player Logs";
+    return container;
 }
 
-export { LogManager };
+export { createLogManager };

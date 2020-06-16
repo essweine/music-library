@@ -1,8 +1,7 @@
 import os, re, json
 from uuid import uuid4
 
-from tornado.web import RequestHandler
-from ..util import BaseRequestHandler, BaseApiHandler
+from ..util import BaseApiHandler
 
 from . import DirectoryService
 

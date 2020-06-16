@@ -1,76 +1,117 @@
-import { Player } from "/static/modules/api.js";
+import { createNextTracksContainer, createRecentlyPlayedContainer } from "/static/components/player-tracklist.js";
+import { createRatingContainer } from "/static/components/rating-container.js";
+import { createIcon, createPlayerEvent } from "/static/components/icons.js";
 
-class PlayerContainer extends HTMLDivElement {
-    constructor() {
-        super();
-        this.id = "player-container";
-        this.playerApi = new Player();
+function addPlayerControls() {
 
-        let wsUrl = "ws://" + location.host + this.playerApi.wsUrl;
-        let ws = new WebSocket(wsUrl);
-        ws.addEventListener("open", e => ws.send("open"));
-        ws.addEventListener("message", e => this.update());
+    let controls = document.createElement("div");
+    controls.id = "player-controls";
 
-        this.currentTrack = document.createElement("div", { is: "current-track" });
-        this.playerControls = document.createElement("div", { is: "player-controls" });
-        this.nextTracks = document.createElement("div", { is: "next-tracks" });
-        this.recentlyPlayed = document.createElement("div", { is: "recently-played" });
-
-        for (let elem of [ this.currentTrack, this.playerControls, this.nextTracks, this.recentlyPlayed ])
-            this.append(elem);
-
-        this.current = null;
-
-        this.addEventListener("player-control", e => {
-            if (e.detail == "stop") {
-                this.playerApi.stop();
-            } else if (e.detail == "pause") {
-                this.playerApi.pause();
-            } else if (e.detail == "start") {
-                this.playerApi.start();
-            } else if (e.detail == "back") {
-                // This will go back to the beginning of the track, but not through the playlist.
-                // I might have to rethink how the playlist would work.
-                let addTask = this.playerApi.createTask("add", this.current.filename, 0);
-                this.playerApi.sendTasks([ addTask, this.playerApi.stopTask, this.playerApi.startTask ]);
-            } else if (e.detail == "next") {
-                this.playerApi.advance();
-            }
-        });
-
-        this.addEventListener("update-playlist", e => {
-            if (e.detail.action == "move-track-up") {
-                this.player.sendTasks([
-                    this.playerApi.createTask("remove", null, e.detail.position),
-                    this.playerApi.createTask("add", e.detail.filename, e.detail.position - 1)
-                ]);
-            } else if (e.detail.action == "move-track-down") {
-                this.player.sendTasks([
-                    this.playerApi.createTask("remove", null, e.detail.position),
-                    this.playerApi.createTask("add", e.detail.filename, e.detail.position + 1)
-                ]);
-            } else if (e.detail.action == "remove-track") {
-                this.playerApi.sendTasks([ this.playerApi.createTask("remove", null, e.detail.position) ]);
-            }
-        });
+    controls.addIcon = (name, action) => {
+        let icon = createIcon(name, e => controls.dispatchEvent(createPlayerEvent(action)), "control-icon");
+        controls.append(icon);
+        return icon;
     }
 
-    update() { this.playerApi.getCurrentState(this.updateState.bind(this)); }
+    controls.previous = controls.addIcon("skip_previous", "back");
+    controls.stop = controls.addIcon("stop", "stop");
+    controls.pause = controls.addIcon("pause", "pause");
+    controls.play = controls.addIcon("play_arrow", "start");
+    controls.next = controls.addIcon("skip_next", "next");
 
-    updateState(state) {
-        this.elapsed = state.elapsed;
-        this.current = state.current;
-        this.previous = state.recently_played[0];
-        let current = state.current;
-        if (current != null) {
-            this.currentTrack.update(current);
-            this.insertBefore(this.currentTrack, this.playerControls);
-        } else {
-            this.currentTrack.remove();
-        }
-        this.nextTracks.update(state.next_entries);
-        this.recentlyPlayed.update(state.recently_played);
-    }
+    return controls;
 }
 
-export { PlayerContainer };
+function addCurrentTrack() {
+
+    let container = document.createElement("div");
+    container.id = "current-track";
+
+    container.bullshitArtworkContainer = document.createElement("div");
+    container.bullshitArtworkContainer.classList.add("bullshit-container-1");
+    container.append(container.bullshitArtworkContainer);
+
+    container.bullshitTextContainer = document.createElement("div");
+    container.bullshitTextContainer.classList.add("bullshit-container-2");
+    container.append(container.bullshitTextContainer);
+
+    container.img = document.createElement("img");
+    container.img.id = "artwork";
+    // Ideally I would not have to set container, but none of the css-based solutions I've tried
+    // have worked.  When I get around to making container truly responsive (if I ever do given what a 
+    // fucking gigantic pile of shit css is) I suppose I'll revisit it.  Who would have thought 
+    // making a resizable square container would be so fucking difficult?
+    container.img.width = 250;
+    container.img.height = 250;
+    container.bullshitArtworkContainer.append(container.img);
+
+    container.trackTitle = document.createElement("div");
+    container.trackTitle.id = "track-title";
+    container.bullshitTextContainer.append(container.trackTitle);
+
+    container.recordingTitle = document.createElement("div");
+    container.recordingTitle.id = "recording-title";
+    container.recordingLink = document.createElement("a");
+    container.recordingLink.id = "recording-link";
+    container.recordingTitle.append(container.recordingLink);
+    container.bullshitTextContainer.append(container.recordingTitle);
+
+    container.artist = document.createElement("div");
+    container.artist.id = "track-artist";
+    container.bullshitTextContainer.append(container.artist);
+
+    container.ratingContainer = createRatingContainer();
+    container.ratingContainer.id = "track-rating";
+
+    container.bullshitTextContainer.append(container.ratingContainer);
+
+    container.update = (track) => {
+
+        container.trackTitle.innerText = track.title;
+        container.recordingLink.href = "/recording/" + track.recording_id;
+        container.recordingLink.innerText = track.recording;
+        container.artist.innerText = track.artist;
+        if (track.artwork != null)
+            container.img.src = "/file/" + track.artwork;
+        else
+            container.img.remove();
+        container.ratingContainer.configure(track.recording_id, track.filename, track.rating);
+    }
+
+    document.title = "Now Playing";
+    return container;
+}
+
+function createPlayerContainer() {
+
+    let container = document.createElement("div");
+    container.id = "player-container";
+    container.current = null;
+
+    container.currentTrack = addCurrentTrack();
+    container.playerControls = addPlayerControls();
+    container.nextTracks = createNextTracksContainer();
+    container.recentlyPlayed = createRecentlyPlayedContainer();
+
+    for (let elem of [ container.currentTrack, container.playerControls, container.nextTracks, container.recentlyPlayed ])
+        container.append(elem);
+
+    container.update = (state) => {
+        container.elapsed = state.elapsed;
+        container.current = state.current;
+        container.previous = state.recently_played[0];
+        let current = state.current;
+        if (current != null) {
+            container.currentTrack.update(current);
+            container.insertBefore(container.currentTrack, container.playerControls);
+        } else {
+            container.currentTrack.remove();
+        }
+        container.nextTracks.update(state.next_entries);
+        container.recentlyPlayed.update(state.recently_played);
+    }
+
+    return container;
+}
+
+export { createPlayerContainer };

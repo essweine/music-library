@@ -1,8 +1,6 @@
 import json
 from datetime import date
 
-from tornado.web import RequestHandler
-
 from . import Recording
 from ..importer import DirectoryService
 from ..util import BaseApiHandler

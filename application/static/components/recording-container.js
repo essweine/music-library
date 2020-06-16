@@ -4,29 +4,28 @@ import { createEditableInfo } from "/static/components/editable-info.js";
 import { createRatingContainer } from "/static/components/rating-container.js";
 import { createRecordingTracklist } from "/static/components/recording-tracklist.js";
 import { createRecordingRawInfo } from "/static/components/recording-raw-info.js";
-import { createIcon } from "/static/modules/util.js";
-
-
-function addSection(sectionId, container) {
-    let section = document.createElement("div");
-    section.id = sectionId;
-    container.append(section);
-    return section;
-}
+import { createIcon } from "/static/components/icons.js";
 
 function createRecordingDisplay() {
 
     let container = document.createElement("div");
     container.id = "recording-container";
 
-    container.overview       = addSection("recording-overview", container);
-    container.imageContainer = addSection("recording-image", container);
-    container.infoContainer  = addSection("recording-info", container);
+    let addSection = (sectionId) => {
+        let section = document.createElement("div");
+        section.id = sectionId;
+        container.append(section);
+        return section;
+    }
+
+    container.overview       = addSection("recording-overview");
+    container.imageContainer = addSection("recording-image");
+    container.infoContainer  = addSection("recording-info");
 
     container.tracklist = createRecordingTracklist();
     container.append(container.tracklist);
 
-    container.rawInfo = addSection("recording-raw-info", container);
+    container.rawInfo = addSection("recording-raw-info");
 
     container.recordingTitle  = createEditableInfo("recording-data");
     container.recordingArtist = createEditableInfo("recording-data");
@@ -113,7 +112,6 @@ function createRecordingDisplay() {
         container.recordingDate.initialize(container.source.recording_date, "recording-date", "Date");
         container.recordingVenue.initialize(container.source.venue, "venue", "Venue");
         container.tracklist.setTracklist(container.source.tracks);
-        container.toggleEdit(true);
     }
 
     container.updateFiles = (directory) => {
@@ -178,13 +176,11 @@ function createRecordingContainer() {
         container.addFiles(files, recording.directory);
         container.addInfoFromSource();
 
-        container.recordingRating = createRatingContainer();
-        container.recordingRating.classList.add("recording-rating");
-        container.recordingRating.initialize(recording.id, "rating", recording.rating, "Rating");
+        container.recordingRating = createRatingContainer("recording-rating", "Rating");
+        container.recordingRating.configure(recording.id, "rating", recording.rating, "Rating");
 
-        container.soundRating = createRatingContainer();
-        container.soundRating.classList.add("recording-rating");
-        container.soundRating.initialize(recording.id, "sound-rating", recording.sound_rating, "Sound Rating");
+        container.soundRating = createRatingContainer("recording-rating");
+        container.soundRating.configure(recording.id, "sound-rating", recording.sound_rating, "Sound Rating");
 
         container.editIcon = container.createIcon("create", e => container.selectContext(true));
         container.saveIcon = container.createIcon("save", e => container.save());

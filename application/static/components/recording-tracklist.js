@@ -1,72 +1,64 @@
-import { TracklistContainer } from "/static/components/tracklist-container.js";
+import { createTracklistContainer } from "/static/components/tracklist-container.js";
 import { createRecordingTrack } from "/static/components/recording-tracklist-entry.js";
 
-class RecordingTracksContainer extends TracklistContainer {
+function createRecordingTracklist() {
 
-    constructor() {
-        super();
+    let tracklist = createTracklistContainer("recording-track");
+    tracklist.id = "recording-tracklist";
 
-        this.id = "recording-tracklist";
-        this.childClass = "recording-track";
+    tracklist.options    = document.createElement("div");
+    tracklist.options.id = "recording-tracklist-options";
 
-        this.options    = document.createElement("div");
-        this.options.id = "recording-tracklist-options";
+    tracklist.shift           = document.createElement("button");
+    tracklist.shift.innerText = "Shift names up";
+    tracklist.shift.onclick   = e => tracklist.shiftTitlesUp();
+    tracklist.options.append(tracklist.shift);
 
-        this.shift           = document.createElement("button");
-        this.shift.innerText = "Shift names up";
-        this.shift.onclick   = e => this.shiftTitlesUp();
-        this.options.append(this.shift);
+    tracklist.reapply           = document.createElement("button");
+    tracklist.reapply.innerText = "Reapply names";
+    tracklist.reapply.onclick   = e => tracklist.dispatchEvent(new CustomEvent("reapply-titles", { bubbles: true }));
+    tracklist.options.append(tracklist.reapply);
 
-        this.reapply           = document.createElement("button");
-        this.reapply.innerText = "Reapply names";
-        this.reapply.onclick   = e => this.dispatchEvent(new CustomEvent("reapply-titles", { bubbles: true }));
-        this.options.append(this.reapply);
+    tracklist.append(tracklist.options);
 
-        this.append(this.options);
-    }
-
-    toggleEdit(editable) {
-        for (let track of this.getElementsByClassName(this.childClass))
+    tracklist.toggleEdit = (editable) => {
+        for (let track of tracklist.getElementsByClassName(tracklist.childClass))
             track.toggleEdit(editable);
-        (editable) ?  this.insertBefore(this.options, this.rawInfo) : this.options.remove();
+        (editable) ?  tracklist.insertBefore(tracklist.options, tracklist.rawInfo) : tracklist.options.remove();
     }
 
-    setTracklist(tracks) {
-        super.clear();
+    tracklist.setTracklist = (tracks) => {
+        tracklist.clear();
         for (let track of tracks) {
             let entry = createRecordingTrack(track);
             let position = track.track_num - 1;
             entry.updatePosition(position, position == 0, position == tracks.length - 1);
-            this.insertBefore(entry, this.options);
+            tracklist.insertBefore(entry, tracklist.options);
         }
     }
 
-    getTracklist() {
-        return Array.from(this.getElementsByClassName(this.childClass)).map(item => item.track);
-    }
+    tracklist.getTracklist = () => { return Array.from(tracklist.getElementsByClassName(tracklist.childClass)).map(item => item.track); }
 
-    shiftTrackUp(position) { super.shiftTrackUp(position); }
-
-    shiftTitlesUp() {
-        let original = Array.from(this.getElementsByClassName(this.childClass)).map(item => item.trackTitle.get());
+    tracklist.shiftTitlesUp = () => {
+        let original = Array.from(tracklist.getElementsByClassName(tracklist.childClass)).map(item => item.trackTitle.get());
         let newTitles = original.slice(1, original.length).concat("");
-        this.setTrackTitles(newTitles);
+        tracklist.setTrackTitles(newTitles);
     }
 
-    setTrackTitles(titles) {
-        let tracks = this.getElementsByClassName(this.childClass);
+    tracklist.setTrackTitles = (titles) => {
+        let tracks = tracklist.getElementsByClassName(tracklist.childClass);
         for (let i = 0; i < tracks.length; i++) {
             let title = (i < titles.length) ? titles[i] : "";
             tracks.item(i).trackTitle.set(title);
         }
     }
 
-    save() {
-        for (let track of this.getElementsByClassName(this.childClass))
+    tracklist.save = () => {
+        for (let track of tracklist.getElementsByClassName(tracklist.childClass))
             track.save();
     }
+
+    return tracklist;
 }
 
-function createRecordingTracklist() { return document.createElement("div", { is: "recording-tracklist" }); }
-
-export { RecordingTracksContainer, createRecordingTracklist };
+export { createRecordingTracklist };

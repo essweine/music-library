@@ -1,14 +1,11 @@
-import sqlite3, os, re
-from uuid import uuid4
+import sqlite3, os
 import logging
 
-from tornado.web import Application, StaticFileHandler, RequestHandler
+from tornado.web import Application, StaticFileHandler
 
 from .config import TABLE_DEFS
 from .importer import DirectoryService, ImportHandler, ImportRootHandler
-from .library import RecordingHandler
-from .library import RecordingRootHandler
-from .library import SearchHandler
+from .library import RecordingHandler, RecordingRootHandler, SearchHandler
 from .player import Player, PlayerHandler, PlayerDisplayHandler, PlayerNotificationHandler
 from .log import LogNotificationHandler
 

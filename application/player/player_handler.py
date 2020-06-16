@@ -4,10 +4,10 @@ from tornado.web import RequestHandler
 from tornado.websocket import WebSocketHandler
 from tornado import log as logger
 
-from ..util import BaseRequestHandler, BaseApiHandler
+from ..util import BaseApiHandler
 from ..library import PlaylistTrack
 
-class PlayerDisplayHandler(BaseRequestHandler):
+class PlayerDisplayHandler(RequestHandler):
 
     def get(self):
 
