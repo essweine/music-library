@@ -1,14 +1,14 @@
 import json
 
 from ..util import BaseApiHandler
-from . import PlaylistTrack
+from . import Recording
 
-class SearchHandler(BaseApiHandler):
+class RecordingSearchHandler(BaseApiHandler):
 
     def post(self):
 
         if self.json_body:
-            results = self.db_query(PlaylistTrack.search, self.json_body)
+            results = self.db_query(Recording.search, self.json_body)
         else:
             self.logger.error(f"POST request {request.url}: expected json")
 

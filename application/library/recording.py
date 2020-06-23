@@ -105,20 +105,49 @@ class Recording(JsonSerializable):
     def get_summaries(cls, cursor):
 
         cursor.row_factory = cls.row_factory
-        cursor.execute("select * from recording")
+        cursor.execute("select * from recording order by artist, recording_date")
 
     @classmethod
     def search(cls, cursor, criteria):
 
-        columns = [ "artist", "rating", "sound_rating" ]
-        values = [ criteria[val] for val in columns if val in criteria ]
-        recording_conditions = [ "{0}=?".format(col) for col in columns if col in criteria ] 
+        ops = {
+            "artist": { "match": "like", "exclude": "not like" },
+            "rating": { "match": ">=", "exclude": "<" },
+            "sound_rating": { "match": ">=", "exclude": ">" },
+            "recording_date": { "match": "=", "exclude": "!=" },
+        }
+
+        recording_conditions, recording_values = [ ], [ ]
+        match_subqueries, exclude_subqueries = [ ], [ ]
+        match_tracks, exclude_tracks = [ ], [ ]
+        for cond_type in [ "match", "exclude" ]:
+            for item in criteria[cond_type]:
+                col, val = item.popitem()
+                if col == "track_title":
+                    q = "select recording_id from track where title like ?"
+                    if cond_type == "match":
+                        match_subqueries.append(q)
+                        match_tracks.append(val)
+                    else:
+                        exclude_subqueries.append(q)
+                        exclude_tracks.append(val)
+                else:
+                    recording_conditions.append("{0} {1} ?".format(col, ops[col][cond_type]))
+                    recording_values.append(val)
+
         query = "select * from recording"
+        if match_tracks:
+            subquery = " intersect ".join(match_subqueries)
+            recording_conditions.append(f"id in ({subquery})")
+        if exclude_tracks:
+            subquery = " intersect ".join(exclude_subqueries)
+            recording_conditions.append(f"id not in ({subquery})")
         if recording_conditions:
             query += " where " + " and ".join(recording_conditions)
+        query += " order by artist, recording_date"
 
         cursor.row_factory = cls.row_factory
-        cursor.execute(query, values)
+        cursor.execute(query, recording_values + match_tracks + exclude_tracks)
 
 class Track(JsonSerializable):
 

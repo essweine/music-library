@@ -67,10 +67,10 @@ class PlaylistTrack(JsonSerializable):
             cursor.execute(query)
 
     @staticmethod
-    def create_clause(criterion):
+    def create_clause(column, value, op):
 
         op = criterion.get("operator", "=")
-        if op not in [ "=", "!=", "<", ">", "<=", ">=" ]:
+        if op not in [ "=", "!=", "<", ">", "<=", ">=", "like" ]:
             raise Exception("Unsupported operator")
 
         

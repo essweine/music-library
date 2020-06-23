@@ -1,4 +1,4 @@
-import { Importer, Recording, Player } from "/static/modules/api.js";
+import { Importer, Recording, Player, Search } from "/static/modules/api.js";
 
 import { createDirectoryList, createRecordingList } from "/static/components/item-list.js";
 import { createImportContainer, createRecordingContainer } from "/static/components/recording-container.js";
@@ -9,11 +9,12 @@ class Application {
 
     constructor(action, arg) {
 
-        this.importerApi = new Importer();
+        this.importerApi  = new Importer();
         this.recordingApi = new Recording();
-        this.playerApi = new Player();
+        this.playerApi    = new Player();
+        this.searchApi    = new Search();
 
-        this.content = document.getElementById("content");
+        this.content   = document.getElementById("content");
         this.container = this.selectContainer(action, arg);
         this.content.append(this.container);
 
@@ -38,6 +39,7 @@ class Application {
 
         this.content.addEventListener("expand-tracks", e => this.recordingApi.getRecording(e.detail, this.container.expandRow));
         this.content.addEventListener("collapse-tracks", e => this.container.collapseRow(e.detail));
+        this.content.addEventListener("update-recordings", e => this.searchApi.searchRecordings(e.detail, this.container.update));
     }
 
     selectContainer(action, arg) {

@@ -129,4 +129,14 @@ class Player extends Api {
     sendTasks(tasks) { this.post("", { "tasks": tasks }, NoOp); }
 }
 
-export { Recording, Importer, Player };
+class Search extends Api {
+
+    constructor() {
+        super();
+        this.base = "/api/search";
+    }
+
+    searchRecordings(query, callback) { this.post("/recording", query, callback); }
+}
+
+export { Recording, Importer, Player, Search };

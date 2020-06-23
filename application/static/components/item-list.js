@@ -1,5 +1,6 @@
 import { createRatingContainer } from "/static/components/rating-container.js";
 import { createIcon, createRecordingEvent, createTrackEvent } from "/static/components/icons.js";
+import { createSearchBar } from "/static/components/search-bar.js";
 
 function createListRow(className, parent = true) {
 
@@ -54,6 +55,19 @@ function createListRoot(className) {
         }
     }
 
+    root.clear = () => {
+        for (let row of Array.from(document.getElementsByClassName("list-row")))
+            if (!row.classList.contains("list-heading"))
+                row.remove();
+        for (let row of Array.from(document.getElementsByClassName("list-row-child")))
+            row.remove();
+    }
+
+    root.update = (items) => {
+        root.clear();
+        root.addRows(items);
+    }
+
     return root;
 }
 
@@ -83,6 +97,9 @@ function createDirectoryList(className) {
 function createRecordingList(className) { 
 
     let root = createListRoot(className);
+
+    let search = createSearchBar();
+    root.append(search);
 
     let listHeader = createListRow("list-heading");
     for (let colName of [ "Artist", "Title", "Date", "Rating", "Sound Rating" ])

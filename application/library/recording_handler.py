@@ -14,8 +14,7 @@ class RecordingRootHandler(BaseApiHandler):
         except Exception as exc:
             self.application.logger.error("Could not get recording list", exc_info = True)
 
-        sort_order = lambda r: (r.artist, r.recording_date if r.recording_date is not None else date(1900, 1, 1))
-        self.write(json.dumps(sorted(summaries, key = sort_order), cls = self.JsonEncoder))
+        self.write(json.dumps(summaries, cls = self.JsonEncoder))
 
     def post(self):
 
