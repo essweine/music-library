@@ -1,4 +1,5 @@
 import json
+import traceback
 from tornado.web import RequestHandler
 
 from .json_encoder import JsonEncoder
@@ -36,3 +37,16 @@ class BaseApiHandler(RequestHandler):
     def set_default_headers(self):
         self.set_header("Content-Type", "application/json")
 
+    def write_error(self, status_code, **kwargs):
+
+        payload = { }
+        if "exc_info" in kwargs:
+            etype, value, tb = kwargs["exc_info"]
+            payload["messages"] = [ line.strip() for line in traceback.format_exception_only(etype, value) ]
+            log_message = kwargs.get("log_message", "An unexpected error occurred")
+            self.application.logger.error(log_message, exc_info = kwargs["exc_info"])
+        elif "messages" in kwargs:
+            payload["messages"]  = kwargs.get("messages")
+
+        self.set_status(status_code)
+        self.write(json.dumps(payload))

@@ -4,15 +4,16 @@ import { createDirectoryList, createRecordingList } from "/static/components/ite
 import { createImportContainer, createRecordingContainer } from "/static/components/recording-container.js";
 import { createPlayerContainer } from "/static/components/player-container.js";
 import { createLogManager } from "/static/components/log-manager.js";
+import { createErrorDisplay } from "/static/components/error-display.js";
 
 class Application {
 
     constructor(action, arg) {
 
-        this.importerApi  = new Importer();
-        this.recordingApi = new Recording();
-        this.playerApi    = new Player();
-        this.searchApi    = new Search();
+        this.importerApi  = new Importer(this.errorHandler.bind(this));
+        this.recordingApi = new Recording(this.errorHandler.bind(this));
+        this.playerApi    = new Player(this.errorHandler.bind(this));
+        this.searchApi    = new Search(this.errorHandler.bind(this));
 
         this.content   = document.getElementById("content");
         this.container = this.selectContainer(action, arg);
@@ -116,6 +117,12 @@ class Application {
         let ws = new WebSocket(wsUrl);
         ws.addEventListener("open", e => ws.send(""));
         ws.addEventListener("message", e => logManager.update(JSON.parse(e.data)));
+    }
+
+    errorHandler(messages) {
+        console.log(messages);
+        let container = createErrorDisplay(messages);
+        this.content.replaceChild(container, this.container);
     }
 }
 

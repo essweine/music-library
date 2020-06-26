@@ -1,7 +1,9 @@
 let NoOp = r => { };
 
 class Api {
-    constructor() { }
+    constructor(errorHandler) {
+        this.errorHandler = errorHandler;
+    }
 
     get(path, callback = NoOp) { this.doRequest("GET", path, null, callback); }
 
@@ -23,14 +25,17 @@ class Api {
 
     parseResponse(e, callback) {
         let response = (e.target.response) ? JSON.parse(e.target.response) : e.target.response;
-        callback(response);
+        if (e.target.status < 400)
+            callback(response);
+        else
+            this.errorHandler(response.messages);
     }
 }
 
 class Recording extends Api {
 
-    constructor() {
-        super();
+    constructor(errorHandler) {
+        super(errorHandler);
         this.base = "/api/recording";
     }
 
@@ -50,8 +55,8 @@ class Recording extends Api {
 
 class Importer extends Api {
 
-    constructor() {
-        super();
+    constructor(errorHandler) {
+        super(errorHandler);
         this.base = "/api/importer";
     }
 
@@ -62,8 +67,8 @@ class Importer extends Api {
 
 class Player extends Api {
 
-    constructor() {
-        super();
+    constructor(errorHandler) {
+        super(errorHandler);
         this.base = "/api/player";
         this.wsUrl = "/api/player/notifications";
 
@@ -131,8 +136,8 @@ class Player extends Api {
 
 class Search extends Api {
 
-    constructor() {
-        super();
+    constructor(errorHandler) {
+        super(errorHandler);
         this.base = "/api/search";
     }
 

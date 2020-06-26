@@ -78,6 +78,7 @@ function createDirectoryList(className) {
     let listHeader = createListRow("list-heading");
     for (let colName of [ "Directory", "Audio", "Images", "Text" ])
         listHeader.addText(colName, "directory-list-" + colName.toLowerCase());
+    listHeader.addText("", "directory-list-add");
     root.append(listHeader);
 
     root.addRow = (entry) => {
@@ -104,6 +105,9 @@ function createRecordingList(className) {
     let listHeader = createListRow("list-heading");
     for (let colName of [ "Artist", "Title", "Date", "Rating", "Sound Rating" ])
         listHeader.addText(colName, "recording-list-" + colName.replace(" ", "-").toLowerCase());
+    listHeader.addText("", "recording-list-view");
+    listHeader.addText("", "recording-list-play");
+    listHeader.addText("", "recording-list-queue");
     root.append(listHeader);
 
     root.addTrack = (track, recordingId) => {

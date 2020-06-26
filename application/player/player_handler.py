@@ -1,4 +1,5 @@
 import json
+import sys
 
 from tornado.web import RequestHandler
 from tornado.websocket import WebSocketHandler
@@ -17,15 +18,21 @@ class PlayerHandler(BaseApiHandler):
 
     def get(self):
 
-        self.write(json.dumps(self._get_state(), cls = self.JsonEncoder))
+        try:
+            self.write(json.dumps(self._get_state(), cls = self.JsonEncoder))
+        except:
+            self.write_error(500, log_message = "Could not get current state", exc_info = sys.exc_info())
 
     def post(self):
 
-        if self.json_body:
+        if self.json_body is None:
+            self.write_error(400, messages = [ "Expected json" ])
+
+        try:
             for task in self.json_body["tasks"]:
                 self.application.player.send_task(**task)
-        else:
-            self.logger.error(f"POST request {request.url}: expected json")
+        except:
+            self.write_error(500, log_message = "Could not get update the current state", exc_info = sys.exc_info())
 
     def _get_state(self):
 
@@ -33,16 +40,13 @@ class PlayerHandler(BaseApiHandler):
         state = { "current": None, "next_entries": [ ], "recently_played": [ ] }
         state["proc_state"] = self.application.player.state.proc_state.value
         state["elapsed"] = self.application.player.state.elapsed
-        try:
-            if self.application.player.state.current is not None:
-                state["current"] = self.db_query(PlaylistTrack.from_filename, self.application.player.state.current.filename)[0]
-            # And sadly I can't use a batch query since I need to preserve the order of the tracks.
-            for filename in [ entry.filename for entry in self.application.player.state.next_entries ]:
-                state["next_entries"].append(self.db_query(PlaylistTrack.from_filename, filename)[0])
-            for filename in [ entry.filename for entry in self.application.player.state.recently_played ]:
-                state["recently_played"].append(self.db_query(PlaylistTrack.from_filename, filename)[0])
-        except Exception as exc:
-            self.logger.error("Could not get track info", exc_info = True)
+        if self.application.player.state.current is not None:
+            state["current"] = self.db_query(PlaylistTrack.from_filename, self.application.player.state.current.filename)[0]
+        # And sadly I can't use a batch query since I need to preserve the order of the tracks.
+        for filename in [ entry.filename for entry in self.application.player.state.next_entries ]:
+            state["next_entries"].append(self.db_query(PlaylistTrack.from_filename, filename)[0])
+        for filename in [ entry.filename for entry in self.application.player.state.recently_played ]:
+            state["recently_played"].append(self.db_query(PlaylistTrack.from_filename, filename)[0])
         return state
 
 class PlayerNotificationHandler(WebSocketHandler):

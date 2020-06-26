@@ -1,3 +1,4 @@
+import sys
 import json
 from datetime import date
 
@@ -11,19 +12,17 @@ class RecordingRootHandler(BaseApiHandler):
 
         try:
             summaries = self.db_query(Recording.get_summaries)
+            self.write(json.dumps(summaries, cls = self.JsonEncoder))
         except Exception as exc:
-            self.application.logger.error("Could not get recording list", exc_info = True)
-
-        self.write(json.dumps(summaries, cls = self.JsonEncoder))
+            self.write_error(500, log_message = "Could not get recording list", exc_info = sys.exc_info())
 
     def post(self):
 
         if self.json_body:
             results = self.db_query(Recording.search, self.json_body)
+            self.write(json.dumps(results, cls = self.JsonEncoder))
         else:
-            self.logger.error(f"POST request {request.url}: expected json")
-
-        self.write(json.dumps(results, cls = self.JsonEncoder))
+            self.write_error(400, messsages = [ "Expected json" ])
 
 class RecordingHandler(BaseApiHandler):
 
@@ -31,26 +30,40 @@ class RecordingHandler(BaseApiHandler):
 
         try:
             recording = self.db_action(Recording.get, recording_id)
+            if recording is not None:
+                self.write(json.dumps(recording, cls = self.JsonEncoder))
+            else:
+                self.write_error(404, messages = [ f"Recording not found: {recording_id}" ])
         except Exception as exc:
-            self.logger.error(f"Could not get recording {recording_id}", exc_info = True)
-        self.write(json.dumps(recording, cls = self.JsonEncoder))
+            self.write_error(500, log_message = f"Could not get recording {recording_id}", exc_info = sys.exc_info())
 
     def put(self, recording_id, item = None):
 
-        if self.json_body:
-            try:
-                if item is None:
-                    self.db_action(Recording.update, self.json_body)
-                elif item == "rating":
-                    self.db_action(Recording.set_rating, recording_id, self.json_body)
-            except:
-                self.logger.error(f"PUT {request.url}: Expected json")
+        if self.json_body is None:
+            self.write_error(400, messsages = [ "Expected json" ])
+
+        try:
+            if item is None:
+                errors = Recording.validate(self.json_body)
+                if errors:
+                    self.write_error(400, messages = errors)
+                self.db_action(Recording.update, self.json_body)
+            elif item == "rating":
+                self.db_action(Recording.set_rating, recording_id, self.json_body)
+        except:
+            self.write_error(500, log_message = f"Could not update recording {recording_id}", exc_info = sys.exc_info())
 
     def post(self, recording_id):
 
-        if self.json_body:
+        if self.json_body is None:
+            self.write_error(400, messsages = [ "Expected json" ])
+
+        try:
+            errors = Recording.validate(self.json_body)
+            if errors:
+                self.write_error(400, messages = errors)
             self.db_action(Recording.create, self.json_body)
             self.application.directory_service.add_directory_to_index(self.json_body["directory"])
-        else:
-            self.logger.error(f"POST {request.url}: Expected json")
-        
+        except:
+            self.write_error(500, log_message = f"Could not create recording {recording_id}", exc_info = sys.exc_info())
+

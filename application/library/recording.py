@@ -1,6 +1,7 @@
 import sqlite3, re
 import os.path
 from datetime import datetime
+from dateutil.parser import parse as parsedate
 
 from ..db import Column, insert_statement, update_statement
 from ..util import JsonSerializable
@@ -48,10 +49,14 @@ class Recording(JsonSerializable):
 
         cursor.row_factory = sqlite3.Row
         cursor.execute("select * from recording where id=?", (recording_id, ))
-        recording = dict(cursor.fetchone())
-        cursor.execute("select * from track where recording_id=? order by track_num", (recording_id, ))
-        recording["tracks"] = [ dict(track) for track in cursor.fetchall() ]
-        return cls(recording)
+        recording = cursor.fetchone()
+        if recording is not None:
+            recording = dict(recording)
+            cursor.execute("select * from track where recording_id=? order by track_num", (recording_id, ))
+            recording["tracks"] = [ dict(track) for track in cursor.fetchall() ]
+            return cls(recording)
+        else:
+            return None
 
     @staticmethod
     def create(cursor, recording):
@@ -82,6 +87,17 @@ class Recording(JsonSerializable):
 
         cursor.execute(update_recording, recording_vals)
         cursor.executemany(update_track, track_vals)
+
+    @staticmethod
+    def validate(recording):
+
+        # Could add other validation, but not sure how useful that would be.
+        validation = [ ]
+        try:
+            recording["recording_date"] = parsedate(recording["recording_date"]).strftime("%Y-%m-%d")
+        except:
+            validation.append(f"Invalid date: {recording['recording_date']}")
+        return validation
 
     @staticmethod
     def set_rating(cursor, recording_id, data):

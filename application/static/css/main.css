@@ -41,3 +41,14 @@ a:hover {
     background-color: #aaf;
 }
 
+.error-display {
+    padding: 10px 0;
+}
+
+.error-heading {
+    font-size: large;
+}
+
+.error-message {
+    padding: 5px;
+}
