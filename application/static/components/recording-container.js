@@ -41,6 +41,19 @@ function createRecordingDisplay() {
     for (let elem of container.infoFields)
         container.infoContainer.append(elem);
 
+    container.official = document.createElement("div");
+    container.official.classList.add("recording-official");
+
+    let text = document.createElement("span");
+    text.innerText = "Official Recording";
+    text.style["padding-right"] = "8px";
+    container.official.append(text);
+
+    let input = document.createElement("input");
+    input.type = "checkbox";
+    input.id = "official-recording";
+    container.official.append(input);
+
     container.heading = document.createElement("span");
     container.heading.id = "recording-heading";
     container.heading.style["padding-right"] = "20px";
@@ -84,6 +97,11 @@ function createRecordingDisplay() {
         for (let field of container.infoFields)
             field.toggleEdit(editable);
         container.tracklist.toggleEdit(editable);
+
+        if (editable)
+            container.infoContainer.append(container.official);
+        else
+            container.official.remove();
         
         if (typeof(container.imageContainer.toggleEdit) != "undefined")
             container.imageContainer.toggleEdit(editable);
@@ -101,6 +119,9 @@ function createRecordingDisplay() {
         container.source.recording_date = container.recordingDate.get();
         container.source.venue = container.recordingVenue.get();
         container.source.tracks = container.tracklist.getTracklist();
+
+        let official = document.getElementById("official-recording").checked;
+        container.source.official = official;
 
         if (container.data.images.length)
             container.source.artwork = document.getElementById("recording-artwork").getAttribute("src").replace(/^\/file\//, "");

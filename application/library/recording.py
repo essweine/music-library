@@ -20,6 +20,7 @@ RECORDING_COLUMNS = [
     Column("added_date", "date", None, False),
     Column("rating", "int", None, True),
     Column("sound_rating", "int", None, True),
+    Column("official", "bool", None, True)
 ]
 
 TRACK_COLUMNS = [
