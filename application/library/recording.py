@@ -95,7 +95,8 @@ class Recording(JsonSerializable):
         # Could add other validation, but not sure how useful that would be.
         validation = [ ]
         try:
-            recording["recording_date"] = parsedate(recording["recording_date"]).strftime("%Y-%m-%d")
+            if recording["recording_date"]:
+                recording["recording_date"] = parsedate(recording["recording_date"]).strftime("%Y-%m-%d")
         except:
             validation.append(f"Invalid date: {recording['recording_date']}")
         return validation

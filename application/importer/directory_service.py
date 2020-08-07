@@ -40,8 +40,9 @@ class DirectoryService(object):
         if parent is None:
             parent = self.root
         for child in parent.children:
-            acc.append(child)
-            self.list_all(acc, child)
+            if any(map(len, [ child.children, child.audio, child.images, child.text ])):
+                acc.append(child)
+                self.list_all(acc, child)
         return acc
 
     def aggregate(self, directory):
@@ -59,12 +60,10 @@ class DirectoryService(object):
         if parent is None:
             parent = self.root
 
-        for idx, child in enumerate([ c.relative_path for c in parent.children ]):
-            if child == directory:
+        for idx, child in enumerate(parent.children):
+            if child.relative_path == directory:
                 parent.children.pop(idx)
                 return True
-
-        for child in parent.children:
             if self.remove(directory, child):
                 return True
 
@@ -119,11 +118,8 @@ class DirectoryService(object):
 
     def parse_text(self, filename):
 
-        try:
-            text = open(os.path.join(self.root_path, filename), 'rb')
-        except:
-            raise
-        return ParsedText(text)
+        with open(os.path.join(self.root_path, filename), 'rb') as text:
+            return ParsedText(text)
 
     @staticmethod
     def is_audio(filename):
