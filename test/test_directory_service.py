@@ -1,11 +1,7 @@
 import unittest
-import os
 
 from application.importer import DirectoryService
-
-ROOT_PATH = os.path.join(os.path.dirname(__file__), "data")
-DEFAULT_INDEX = [ "text" ]
-COMPLETE_INDEX = [ "root/Keep It Like A Secret", "root/Edge of the Sun" ]
+from . import ROOT_PATH, DEFAULT_INDEX, COMPLETE_INDEX
 
 class TestDirectoryService(unittest.TestCase):
 
