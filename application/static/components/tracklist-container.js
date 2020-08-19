@@ -23,11 +23,18 @@ function createTracklistContainer(childClass) {
             children.item(i).updatePosition(i, i == 0, i == children.length - 1);
     }
 
+    container._update = (entries) => {
+        container.clear();
+        for (let entry of entries)
+            container.append(entry);
+    }
+
     // I can't figure out how to effectively inherit from html elements so I'm giving up and
     // just creating an element and assigning methods to it because I generally don't need a
     // class hierarchy.  Except in this case, where I need to call and override these methods.
     container.shiftTrackUp = container._shiftTrackUp;
     container.removeTrack = container._removeTrack;
+    container.update = container._update;
 
     container.clear = (tracklist) => { 
         for (let track of Array.from(container.getElementsByClassName(container.childClass)))

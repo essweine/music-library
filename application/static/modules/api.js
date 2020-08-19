@@ -144,4 +144,22 @@ class Search extends Api {
     searchRecordings(query, callback) { this.post("/recording", query, callback); }
 }
 
-export { Recording, Importer, Player, Search };
+class History extends Api {
+
+    constructor(errorHandler) {
+        super(errorHandler);
+        this.base = "/api/history";
+    }
+
+    getRecentTracks(period, callback) {
+        let end = new Date(Date.now());
+        let start = new Date(end - (period * 1000));
+        let query = {
+            start: start.toISOString(),
+            end: end.toISOString()
+        }
+        this.post("", query, callback); 
+    }
+}
+
+export { Recording, Importer, Player, Search, History };

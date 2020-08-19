@@ -1,0 +1,71 @@
+#history-container {
+    display: grid;
+    justify-content: center;
+    align-items: start;
+    grid-row-gap: 20px;
+}
+
+.history-heading {
+    font-weight: bold;
+    font-size: large;
+}
+
+#recent-heading {
+    grid-row: 1;
+    grid-column: 1 / 6;
+    display: inline-grid;
+    justify-items: center;
+}
+
+#recently-played {
+    grid-row: 2;
+    display: grid;
+}
+
+#recent-select {
+    grid-column: 1 / 6;
+    display: flex;
+    justify-content: center;
+}
+
+.recent-period, .recent-intro {
+    padding: 0 3px;
+}
+
+.recent-period-selected, .recent-period:hover {
+    text-decoration: underline;
+}
+
+.recently-played-entry {
+    display: contents;
+}
+
+.recent-title {
+    grid-column: 1;
+    font-weight: bold;
+    width: max-content;
+}
+
+.recent-artist {
+    grid-column: 2;
+    width: max-content;
+    padding: 0 15px;
+}
+
+.recent-recording {
+    grid-column: 3;
+    font-style: italic;
+    width: max-content;
+    padding: 0 15px;
+}
+
+.recent-rating {
+    grid-column: 4;
+    width: max-content;
+}
+
+.recent-count {
+    grid-column: 5;
+    width: max-content;
+    padding: 0 15px;
+}

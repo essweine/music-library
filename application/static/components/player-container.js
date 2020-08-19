@@ -1,4 +1,4 @@
-import { createNextTracksContainer, createRecentlyPlayedContainer } from "/static/components/player-tracklist.js";
+import { createNextTracksContainer } from "/static/components/player-tracklist.js";
 import { createRatingContainer } from "/static/components/rating-container.js";
 import { createIcon, createPlayerEvent } from "/static/components/icons.js";
 
@@ -91,15 +91,13 @@ function createPlayerContainer() {
     container.currentTrack = addCurrentTrack();
     container.playerControls = addPlayerControls();
     container.nextTracks = createNextTracksContainer();
-    container.recentlyPlayed = createRecentlyPlayedContainer();
 
-    for (let elem of [ container.currentTrack, container.playerControls, container.nextTracks, container.recentlyPlayed ])
+    for (let elem of [ container.currentTrack, container.playerControls, container.nextTracks ])
         container.append(elem);
 
     container.update = (state) => {
         container.elapsed = state.elapsed;
         container.current = state.current;
-        container.previous = state.recently_played[0];
         let current = state.current;
         if (current != null) {
             container.currentTrack.update(current);
@@ -108,7 +106,6 @@ function createPlayerContainer() {
             container.currentTrack.remove();
         }
         container.nextTracks.update(state.next_entries);
-        container.recentlyPlayed.update(state.recently_played);
     }
 
     return container;

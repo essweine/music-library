@@ -35,13 +35,12 @@ class PlaylistEntry(JsonSerializable):
 
 class State(JsonSerializable):
 
-    def __init__(self, proc_state, current, last_entry, next_entries, recently_played): 
+    def __init__(self, proc_state, current, last_entry, next_entries): 
 
         self.proc_state = proc_state
         self.current = current
         self.last_entry = last_entry
         self.next_entries = next_entries
-        self.recently_played = recently_played
         self.elapsed = { }
 
     def copy(self):
@@ -51,7 +50,6 @@ class State(JsonSerializable):
             self.current,
             self.last_entry,
             self.next_entries.copy(),
-            self.recently_played.copy()
         )
 
     def __eq__(self, other):

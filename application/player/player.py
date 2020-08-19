@@ -17,7 +17,7 @@ class Player(object):
 
         self.logger = logging.getLogger(__name__)
         self.root = root
-        self.state = State(ProcState.Stopped, None, None, [ ], [ ])
+        self.state = State(ProcState.Stopped, None, None, [ ])
         self._subprocess = None
         self.logger = logging.getLogger('tornado.application')
         self.websockets = set()
@@ -73,16 +73,13 @@ class Player(object):
 
     def update_state(self, cursor, state):
 
-        # Maintain recently played only in parent (the forked process doesn't need it)
         period_start = datetime.utcnow() - timedelta(minutes = 30)
-        state.recently_played = [ track for track in self.state.recently_played if track.end_time > period_start ]
         if state.last_entry is not None:
             if (state.last_entry.end_time - state.last_entry.start_time).seconds > 10:
                 try:
                     History.create(cursor, state.last_entry)
                 except Exception as exc:
                     self.logger.error("Could not create history entry for {state.last_entry.filename}", exc_info = True)
-                state.recently_played.insert(0, state.last_entry)
             if state.last_entry.error:
                 self.logger.error(f"Error for {state.last_entry.filename}:\n{state.last_entry.error_output}")
             state.last_entry = None

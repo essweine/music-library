@@ -1,8 +1,9 @@
-import { Importer, Recording, Player, Search } from "/static/modules/api.js";
+import { Importer, Recording, Player, Search, History } from "/static/modules/api.js";
 
 import { createDirectoryList, createRecordingList } from "/static/components/item-list.js";
 import { createImportContainer, createRecordingContainer } from "/static/components/recording-container.js";
 import { createPlayerContainer } from "/static/components/player-container.js";
+import { createHistoryContainer } from "/static/components/history-container.js";
 import { createLogManager } from "/static/components/log-manager.js";
 import { createErrorDisplay } from "/static/components/error-display.js";
 
@@ -14,6 +15,7 @@ class Application {
         this.recordingApi = new Recording(this.errorHandler.bind(this));
         this.playerApi    = new Player(this.errorHandler.bind(this));
         this.searchApi    = new Search(this.errorHandler.bind(this));
+        this.historyApi   = new History(this.errorHandler.bind(this));
 
         this.content   = document.getElementById("content");
         this.container = this.selectContainer(action, arg);
@@ -60,22 +62,32 @@ class Application {
             let container = createRecordingList("recording-list-root");
             this.recordingApi.listAll(container.addRows);
             return container;
+        } else if (action == "history") {
+            let container = createHistoryContainer();
+            this.historyApi.getRecentTracks(container.recent.period, container.recent.update);
+            this.addHistoryEvents(container);
+            return container;
         } else if (action == "log") {
             let container = createLogManager();
             this.createLogNotificationService(container);
             return container;
         } else {
             let container = createPlayerContainer();
-            this.createPlayerNotificationService(container);
+            this.addPlayerEvents(container);
             return container;
         }
     }
 
-    createPlayerNotificationService(playerContainer) {
-
+    getPlayerNotificationService() {
         let wsUrl = "ws://" + location.host + this.playerApi.wsUrl;
         let ws = new WebSocket(wsUrl);
         ws.addEventListener("open", e => ws.send("open"));
+        return ws;
+    }
+
+    addPlayerEvents(playerContainer) {
+
+        let ws = this.getPlayerNotificationService();
         ws.addEventListener("message", e => this.playerApi.getCurrentState(playerContainer.update));
 
         this.content.addEventListener("player-control", e => {
@@ -110,6 +122,17 @@ class Application {
                 this.playerApi.sendTasks([ this.playerApi.createTask("remove", null, e.detail.position) ]);
             }
         });
+    }
+
+    addHistoryEvents(historyContainer) {
+
+        let ws = this.getPlayerNotificationService();
+        ws.addEventListener("message", e => 
+            this.historyApi.getRecentTracks(historyContainer.recent.period, historyContainer.recent.update));
+
+        this.content.addEventListener("update-recently-played", e => 
+            this.historyApi.getRecentTracks(e.detail, historyContainer.recent.update)
+        );
     }
 
     createLogNotificationService(logManager) {

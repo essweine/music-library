@@ -1,5 +1,5 @@
 import { createTracklistContainer } from "/static/components/tracklist-container.js";
-import { createNextTracksEntry, createRecentlyPlayedEntry } from "/static/components/player-tracklist-entry.js";
+import { createNextTracksEntry } from "/static/components/player-tracklist-entry.js";
 
 function createPlayerTracklist(childClass) {
 
@@ -16,14 +16,6 @@ function createPlayerTracklist(childClass) {
         tracklist.tracklistHidden = !tracklist.tracklistHidden;
         tracklist.updateToggle();
     };
-
-    tracklist._update = (tracks) => {
-        tracklist.clear();
-        for (let track of tracks)
-            tracklist.append(track);
-        tracklist.addToggle();
-        tracklist.updateToggle();
-    }
 
     tracklist.update = tracklist._update;
 
@@ -77,26 +69,11 @@ function createNextTracksContainer() {
             entry.updatePosition(i, i == 0, i == entries.length - 1);
         }
         tracklist._update(entries);
+        tracklist.addToggle();
+        tracklist.updateToggle();
     }
 
     return tracklist;
 }
 
-function createRecentlyPlayedContainer() {
-
-    let tracklist = createPlayerTracklist("recently-played-entry");
-
-    tracklist.id = "recently-played";
-    tracklist.heading.innerText = "Recently Played"
-
-    tracklist._update = tracklist.update;
-
-    tracklist.update = (tracks) => {
-        let entries = tracks.map(track => createRecentlyPlayedEntry(track));
-        tracklist._update(entries);
-    }
-
-    return tracklist;
-}
-
-export { createNextTracksContainer, createRecentlyPlayedContainer };
+export { createNextTracksContainer };
