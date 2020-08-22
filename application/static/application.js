@@ -98,12 +98,11 @@ class Application {
             } else if (e.detail == "start") {
                 this.playerApi.start();
             } else if (e.detail == "back") {
-                // This will go back to the beginning of the track, but not through the playlist.
-                // I might have to rethink how the playlist would work.
-                let addTask = this.playerApi.createTask("add", playerContainer.current.filename, 0);
-                this.playerApi.sendTasks([ addTask, this.playerApi.stopTask, this.playerApi.startTask ]);
+                let task = this.playerApi.createTask("goto", null, playerContainer.current - 1);
+                this.playerApi.sendTasks([ task ]);
             } else if (e.detail == "next") {
-                this.playerApi.advance();
+                let task = this.playerApi.createTask("goto", null, playerContainer.current + 1);
+                this.playerApi.sendTasks([ task ]);
             }
         });
 
@@ -130,9 +129,10 @@ class Application {
         ws.addEventListener("message", e => 
             this.historyApi.getRecentTracks(historyContainer.recent.period, historyContainer.recent.update));
 
-        this.content.addEventListener("update-recently-played", e => 
-            this.historyApi.getRecentTracks(e.detail, historyContainer.recent.update)
-        );
+        this.content.addEventListener("update-recently-played", e => {
+            this.historyApi.getRecentTracks(e.detail, historyContainer.recent.update);
+            historyContainer.recent.period = e.detail;
+        });
     }
 
     createLogNotificationService(logManager) {

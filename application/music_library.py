@@ -79,13 +79,13 @@ class MusicLibrary(Application):
         while self.player.conn.poll():
             try:
                 cursor = self.conn.cursor()
-                self.player.update_state(cursor, self.player.conn.recv())
+                self.player.update_history(cursor, self.player.conn.recv())
                 for ws in self.player.websockets:
                     ws.write_message("state changed")
                 cursor.close()
                 self.conn.commit()
             except:
-                self.logger.error("An exception occurred while updating the state", exc_info = True)
+                self.logger.error("An exception occurred while updating the history", exc_info = True)
 
         while not self.console.queue.empty():
             try:

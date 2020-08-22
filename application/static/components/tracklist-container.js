@@ -1,3 +1,15 @@
+function createTracklistOption(text, className, selectedClass, selectEvent) {
+    let span = document.createElement("span");
+    span.innerText = text;
+    span.classList.add(className);
+    span.onclick = () => {
+        Array.from(document.getElementsByClassName(selectedClass)).map(e => e.classList.remove(selectedClass));
+        span.classList.add(selectedClass);
+        span.dispatchEvent(selectEvent);
+    }
+    return span;
+}
+
 function createTracklistContainer(childClass) {
 
     let container = document.createElement("div");
@@ -44,4 +56,4 @@ function createTracklistContainer(childClass) {
     return container;
 }
 
-export { createTracklistContainer };
+export { createTracklistContainer, createTracklistOption };

@@ -1,5 +1,5 @@
 import { createRatingContainer } from "/static/components/rating-container.js";
-import { createTracklistContainer } from "/static/components/tracklist-container.js";
+import { createTracklistContainer, createTracklistOption } from "/static/components/tracklist-container.js";
 
 function createRecentlyPlayedEntry(track) {
 
@@ -33,14 +33,6 @@ function createRecentlyPlayedEntry(track) {
     return entry;
 }
 
-function createPeriodSelector(text, period, cb) {
-    let span = document.createElement("span");
-    span.innerText = text;
-    span.classList.add("recent-period");
-    span.onclick = () => cb(period, span);
-    return span;
-}
-
 function createRecentTracklist() {
 
     let tracklist = createTracklistContainer("recently-played-entry");
@@ -53,34 +45,28 @@ function createRecentTracklist() {
     heading.innerText = "Recently Played"
     tracklist.append(heading);
 
-    tracklist.updatePeriod = (period, span) => {
-        tracklist.period = period;
-        Array.from(document.getElementsByClassName("recent-period-selected")).map(e => e.classList.remove("recent-period-selected"));
-        span.classList.add("recent-period-selected");
-        let ev = new CustomEvent("update-recently-played", { detail: period, bubbles: true });
-        tracklist.dispatchEvent(ev);
-    }
-
-    let period = document.createElement("div");
-    period.id = "recent-select";
+    let options = document.createElement("div");
+    options.id = "recent-select";
 
     let text = document.createElement("span");
     text.classList.add("recent-intro");
     text.innerText = "Show";
-    period.append(text);
+    options.append(text);
 
-    let span30 = createPeriodSelector("30 minutes", 1800, tracklist.updatePeriod);
+    let createEvent = (period) => { return new CustomEvent("update-recently-played", { detail: period, bubbles: true }) };
+
+    let span30 = createTracklistOption("30 minutes", "recent-period", "recent-period-selected", createEvent(1800));
     span30.classList.add("recent-period-selected");
-    period.append(span30);
+    options.append(span30);
 
-    period.append(createPeriodSelector("1 hour", 3600, tracklist.updatePeriod));
-    period.append(createPeriodSelector("2 hours", 7200, tracklist.updatePeriod));
-    period.append(createPeriodSelector("1 day", 86400, tracklist.updatePeriod));
+    options.append(createTracklistOption("1 hour", "recent-period", "recent-period-selected", createEvent(3600)));
+    options.append(createTracklistOption("2 hours", "recent-period", "recent-period-selected", createEvent(7200)));
+    options.append(createTracklistOption("1 day", "recent-period", "recent-period-selected", createEvent(86400)));
 
     tracklist.update = (tracks) => {
         let entries = tracks.map(track => createRecentlyPlayedEntry(track));
         tracklist._update(entries);
-        tracklist.append(period);
+        tracklist.append(options);
     }
 
     return tracklist;

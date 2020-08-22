@@ -18,10 +18,10 @@ class Task(JsonSerializable):
 
 class PlaylistEntry(JsonSerializable):
 
-    def __init__(self, filename, start_time):
+    def __init__(self, filename):
 
         self.filename = filename
-        self.start_time = start_time
+        self.start_time = None
         self.end_time = None
         self.error = False
         self.error_output = None
@@ -35,21 +35,20 @@ class PlaylistEntry(JsonSerializable):
 
 class State(JsonSerializable):
 
-    def __init__(self, proc_state, current, last_entry, next_entries): 
+    def __init__(self, proc_state, current, playlist, history):
 
         self.proc_state = proc_state
         self.current = current
-        self.last_entry = last_entry
-        self.next_entries = next_entries
-        self.elapsed = { }
+        self.playlist = playlist
+        self.history = history
 
     def copy(self):
 
         return State(
             self.proc_state,
             self.current,
-            self.last_entry,
-            self.next_entries.copy(),
+            self.playlist.copy(),
+            self.history.copy(),
         )
 
     def __eq__(self, other):
@@ -57,7 +56,7 @@ class State(JsonSerializable):
         return all([
             self.proc_state == other.proc_state,
             self.current == other.current,
-            self.last_entry == other.last_entry,
-            self.next_entries == other.next_entries,
+            self.playlist == other.playlist,
+            self.history == other.history,
         ])
 

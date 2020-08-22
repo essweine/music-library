@@ -91,8 +91,6 @@ class Player extends Api {
 
     pause() { this.sendTasks([ this.pauseTask ]); }
 
-    advance() { this.sendTasks([ this.stopTask, this.startTask ]); }
-
     playRecording(recording) { this.playAll(recording.tracks); }
 
     playAll(tracks) {

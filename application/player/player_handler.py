@@ -36,15 +36,10 @@ class PlayerHandler(BaseApiHandler):
 
     def _get_state(self):
 
-        # I don't think I like this.  Maybe I need to rethink how db access works.
-        state = { "current": None, "next_entries": [ ] }
-        state["proc_state"] = self.application.player.state.proc_state.value
-        state["elapsed"] = self.application.player.state.elapsed
-        if self.application.player.state.current is not None:
-            state["current"] = self.db_query(PlaylistTrack.from_filename, self.application.player.state.current.filename)[0]
-        # And sadly I can't use a batch query since I need to preserve the order of the tracks.
-        for filename in [ entry.filename for entry in self.application.player.state.next_entries ]:
-            state["next_entries"].append(self.db_query(PlaylistTrack.from_filename, filename)[0])
+        state = self.application.player.state
+        filenames = [ entry.filename for entry in state.playlist ]
+        tracks = self.db_query(PlaylistTrack.from_filenames, filenames)
+        state.playlist = sorted(tracks, key = lambda t: filenames.index(t.filename))
         return state
 
 class PlayerNotificationHandler(WebSocketHandler):

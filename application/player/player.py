@@ -17,7 +17,7 @@ class Player(object):
 
         self.logger = logging.getLogger(__name__)
         self.root = root
-        self.state = State(ProcState.Stopped, None, None, [ ])
+        self.state = State(ProcState.Stopped, 0, [ ], [ ])
         self._subprocess = None
         self.logger = logging.getLogger('tornado.application')
         self.websockets = set()
@@ -41,6 +41,8 @@ class Player(object):
                     self._handle_start()
                 elif task.name == "play":
                     self._handle_play_entry(task)
+                elif task.name == "goto":
+                    self._handle_goto_position(task)
                 elif task.name == "pause":
                     self._handle_pause()
                 elif task.name == "add":
@@ -58,10 +60,10 @@ class Player(object):
 
             if self.state != initial_state:
                 conn.send(self.state)
-                # Never send the last entry more than once to prevent duplicate history items
-                self.state.last_entry = None
+                # Only send history once to prevent duplicates
+                self.state.history.clear()
 
-            time.sleep(0.20)
+            time.sleep(0.10)
 
     def send_task(self, **kwargs):
 
@@ -71,50 +73,59 @@ class Player(object):
         task = Task(name, filename, position)
         self.conn.send(task)
 
-    def update_state(self, cursor, state):
+    def update_history(self, cursor, state):
 
-        period_start = datetime.utcnow() - timedelta(minutes = 30)
-        if state.last_entry is not None:
-            if (state.last_entry.end_time - state.last_entry.start_time).seconds > 10:
+        for entry in state.history:
+            if (entry.end_time - entry.start_time).seconds > 10:
                 try:
-                    History.create(cursor, state.last_entry)
+                    History.create(cursor, entry)
                 except Exception as exc:
-                    self.logger.error("Could not create history entry for {state.last_entry.filename}", exc_info = True)
-            if state.last_entry.error:
-                self.logger.error(f"Error for {state.last_entry.filename}:\n{state.last_entry.error_output}")
-            state.last_entry = None
+                    self.logger.error("Could not create history entry for {entry.filename}", exc_info = True)
+            if entry.error:
+                self.logger.error(f"Error for {entry.filename}:\n{entry.error_output}")
+        state.history.clear()
         self.state = state
 
     def _handle_play_entry(self, task):
 
-        entry = PlaylistEntry(task.filename, None)
+        entry = PlaylistEntry(task.filename)
         if self._subprocess_running():
             self._handle_stop()
         self._play(entry)
 
-    def _handle_advance_playlist(self):
+    def _handle_goto_position(self, task):
 
         if self._subprocess_running():
             self._handle_stop()
 
-        if self.state.next_entries:
-            self._play(self.state.next_entries.pop(0))
+        if task.position >= 0 and task.position < len(self.state.playlist):
+            self.state.current = task.position
+        self._handle_start()
+
+    def _handle_advance_playlist(self):
+
+        if self.state.current < len(self.state.playlist):
+            entry = self.state.playlist[self.state.current]
+            self._play(entry)
+        else:
+            self._handle_stop()
+            self.state.current = 0
 
     def _handle_add_to_playlist(self, task):
 
-        entry = PlaylistEntry(task.filename, None)
+        entry = PlaylistEntry(task.filename)
         if task.position is not None:
-            self.state.next_entries.insert(task.position, entry)
+            self.state.playlist.insert(task.position, entry)
         else:
-            self.state.next_entries.append(entry)
+            self.state.playlist.append(entry)
 
     def _handle_remove_from_playlist(self, task):
 
         if task.position is None:
-            for entry in [ entry for entry in self.state.next_entries if entry.filename == task.filename ]:
-                self.state.next_entries.remove(entry)
-        elif task.position < len(self.state.next_entries):
-            self.state.next_entries.pop(task.position)
+            for entry in [ entry for entry in self.state.playlist if entry.filename == task.filename ]:
+                self.state.playlist.remove(entry)
+        elif task.position < len(self.state.playlist):
+            self.state.playlist.pop(task.position)
 
     def _handle_pause(self):
 
@@ -138,7 +149,7 @@ class Player(object):
                 if self.state.proc_state == ProcState.Paused:
                     self._subprocess.send_signal(signal.SIGCONT)
                 self._subprocess.send_signal(signal.SIGTERM)
-                self._reset_subprocess()
+                self._reset_subprocess(False)
             self.state.proc_state = ProcState.Stopped
         except Exception as exc:
             self.logger.error("An exception occurred during stop", exc_info = True)
@@ -153,9 +164,8 @@ class Player(object):
             )
             stderr = self._subprocess.stderr.fileno()
             os.set_blocking(stderr, False)
-            entry.start_time = datetime.utcnow()
-            self.state.current = entry
             self.state.proc_state = ProcState.Playing
+            entry.start_time = datetime.utcnow()
         except Exception as exc:
             self.logger.error("An exception occurred during play", exc_info = True)
 
@@ -171,28 +181,23 @@ class Player(object):
             if retval > 0:
                 self.state.current.error = True
                 self.state.current.error_output = stderr.decode("utf-8")
-            self._reset_subprocess()
-        elif stderr is not None:
-            for line in stderr.decode("utf-8").split():
-                elapsed = re.match("time=(.*?)\.", line)
-                if elapsed:
-                    hours, minutes, seconds = elapsed.group(1).split(":")
-                    self.state.elapsed = { "hours": int(hours), "minutes": int(minutes), "seconds": int(seconds) }
+            self._reset_subprocess(True)
 
-    def _reset_subprocess(self):
+    def _reset_subprocess(self, advance):
 
         self._subprocess.wait()
         stderr = self._subprocess.stderr.fileno()
         os.set_blocking(stderr, True)
-        self._update_last_entry()
+
+        entry = self.state.playlist[self.state.current]
+        entry.end_time = datetime.utcnow()
+        self.state.history.append(entry)
+        self.state.playlist[self.state.current] = PlaylistEntry(entry.filename)
+
+        if advance:
+            self.state.current = self.state.current + 1
+
         self._subprocess = None
-
-    def _update_last_entry(self):
-
-        if self.state.current is not None:
-            self.state.current.end_time = datetime.utcnow()
-            self.state.last_entry = self.state.current
-            self.state.current = None
 
     def _append_to_root(self, filename):
 

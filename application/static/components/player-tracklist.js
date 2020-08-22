@@ -1,23 +1,97 @@
-import { createTracklistContainer } from "/static/components/tracklist-container.js";
-import { createNextTracksEntry } from "/static/components/player-tracklist-entry.js";
+import { createTracklistContainer, createTracklistOption } from "/static/components/tracklist-container.js";
+import { createRatingContainer } from "/static/components/rating-container.js";
+import { createIcon, createTracklistEvent } from "/static/components/icons.js";
+
+function addColumn(text, className) {
+    let span = document.createElement("span");
+    span.classList.add(className);
+    span.innerText = text;
+    return span;
+}
+
+function createPlaylistEntry(track) {
+
+    let playlistEntry = document.createElement("div");
+    playlistEntry.classList.add("playlist-entry");
+    playlistEntry.track = track;
+
+    playlistEntry.append(addColumn(track.title, "playlist-title"));
+    playlistEntry.append(addColumn(track.recording, "playlist-recording"));
+    playlistEntry.append(addColumn(track.artist, "playlist-artist"));
+
+    playlistEntry.moveUp = createIcon("arrow_upward", e => playlistEntry.dispatchEvent(createTracklistEvent("move-track-up")), "move-up");
+    playlistEntry.append(playlistEntry.moveUp);
+
+    playlistEntry.moveDown = createIcon("arrow_downward", e => playlistEntry.dispatchEvent(createTracklistEvent("move-track-down")), "move-down");
+    playlistEntry.append(playlistEntry.moveDown);
+
+    playlistEntry.removeTrack = createIcon("clear", e => playlistEntry.dispatchEvent(createTracklistEvent("remove-track")), "remove-track");
+    playlistEntry.append(playlistEntry.removeTrack);
+
+    playlistEntry.addEventListener("tracklist-action", e => {
+
+        let detail = {
+            action: e.detail,
+            position: playlistEntry.position,
+            filename: playlistEntry.track.filename
+        };
+        playlistEntry.dispatchEvent(new CustomEvent("update-playlist", { detail: detail, bubbles: true }));
+
+        if (e.detail == "move-track-up")
+            playlistEntry.dispatchEvent(new CustomEvent("move-track", { detail: playlistEntry.position, bubbles: true }));
+        else if (e.detail == "move-track-down")
+            playlistEntry.dispatchEvent(new CustomEvent("move-track", { detail: playlistEntry.position + 1, bubbles: true }));
+        else if (e.detail == "remove-track")
+            playlistEntry.dispatchEvent(new CustomEvent("remove-track", { detail: playlistEntry.position, bubbles: true }));
+    });
+
+    playlistEntry.updatePosition = (position, firstTrack, lastTrack) => {
+        playlistEntry.position = position;
+        if (firstTrack) {
+            playlistEntry.moveUp.hide();
+            playlistEntry.moveDown.show();
+        } else if (lastTrack) {
+            playlistEntry.moveUp.show();
+            playlistEntry.moveDown.hide();
+        } else {
+            playlistEntry.moveUp.show();
+            playlistEntry.moveDown.show();
+        }
+    }
+
+    return playlistEntry;
+}
 
 function createPlayerTracklist(childClass) {
 
-    let tracklist = createTracklistContainer(childClass);
+    let tracklist = createTracklistContainer("playlist-entry");
+    tracklist.id = "player-tracklist";
 
-    tracklist.heading = document.createElement("div");
-    tracklist.heading.classList.add("tracklist-heading");
-    tracklist.append(tracklist.heading);
-
+    tracklist.current = 0;
+    tracklist.currentView = "nextTracks";
     tracklist.tracklistHidden = true;
+    tracklist.tracks = [ ];
+
+    let heading = document.createElement("div");
+    heading.classList.add("tracklist-heading");
+
+    let createEvent = (view) => { return new CustomEvent("update-view", { detail: view, bubbles: true }); };
+
+    let nextTracksView = createTracklistOption("Next Tracks", "tracklist-heading-option", "tracklist-heading-selected", createEvent("nextTracks"));
+    nextTracksView.classList.add("tracklist-heading-selected");
+    heading.append(nextTracksView);
+
+    let playlistView = createTracklistOption("All Tracks", "tracklist-heading-option", "tracklist-heading-selected", createEvent("allTracks"));
+    heading.append(playlistView);
+
+    tracklist.append(heading);
+
     tracklist.listToggle = document.createElement("div");
     tracklist.listToggle.classList.add("list-toggle");
     tracklist.listToggle.onclick = e => {
         tracklist.tracklistHidden = !tracklist.tracklistHidden;
         tracklist.updateToggle();
     };
-
-    tracklist.update = tracklist._update;
 
     tracklist.shiftTrackUp = (position) => {
         tracklist._shiftTrackUp(position);
@@ -52,28 +126,37 @@ function createPlayerTracklist(childClass) {
                 entries.item(i).style.display = (tracklist.tracklistHidden) ? "none" : "contents";
     }
 
-    return tracklist;
-}
-
-function createNextTracksContainer() {
-
-    let tracklist = createPlayerTracklist("next-tracks-entry");
-
-    tracklist.id = "next-tracks";
-    tracklist.heading.innerText = "Next Tracks";
-
-    tracklist.update = (tracks) => {
-        let entries = tracks.map(track => createNextTracksEntry(track));
+    tracklist.update = (tracks, current) => {
+        tracklist.tracks = tracks;
+        tracklist.current = current;
+        let entries = tracks.map(track => createPlaylistEntry(track));
         for (let i = 0; i < entries.length; i++) {
             let entry = entries[i];
             entry.updatePosition(i, i == 0, i == entries.length - 1);
+            if (tracklist.currentView == "allTracks" && i == current)
+                entry.classList.add("playlist-entry-current");
+            if (tracklist.currentView == "nextTracks" && i == current) {
+                entry.style["font-size"] = "large";
+                entry.moveUp.hide();
+            }
         }
-        tracklist._update(entries);
-        tracklist.addToggle();
-        tracklist.updateToggle();
+        let displayEntries = (tracklist.currentView == "nextTracks") ? entries.slice(tracklist.current, tracklist.length) : entries;
+        tracklist._update(displayEntries);
+        if (tracklist.currentView == "nextTracks") {
+            tracklist.addToggle();
+            tracklist.updateToggle();
+        } else {
+            tracklist.listToggle.remove();
+        }
+
     }
+
+    tracklist.addEventListener("update-view", e => { 
+        tracklist.currentView = e.detail;
+        tracklist.update(tracklist.tracks, tracklist.current);
+    });
 
     return tracklist;
 }
 
-export { createNextTracksContainer };
+export { createPlayerTracklist };

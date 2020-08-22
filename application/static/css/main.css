@@ -18,6 +18,10 @@ a:hover {
     font-weight: bold;
 }
 
+span, div {
+    background-color: inherit;
+}
+
 #navigation {
     background-color: #ddd;
     padding: 5px;

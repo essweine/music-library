@@ -69,7 +69,7 @@
     padding-top: 10px;
 }
 
-#next-tracks, #recently-played {
+#player-tracklist {
     display: grid;
     grid-row-gap: 5px;
     align-items: center;
@@ -77,11 +77,19 @@
 
 .tracklist-heading {
     grid-column: 1 / 7;
-    display: inline-grid;
-    justify-items: center;
+    display: flex;
+    justify-content: center;
     padding: 5px;
     font-size: large;
     font-weight: bold;
+}
+
+.tracklist-heading-option {
+    padding: 0 5px;
+}
+
+.tracklist-heading-selected, .tracklist-heading-option:hover {
+    text-decoration: underline;
 }
 
 .list-toggle {
@@ -91,31 +99,31 @@
     padding: 5px;
 }
 
-.next-tracks-entry, .recently-played-entry {
+.playlist-entry {
     display: contents;
 }
 
-.playlist-entry:nth-child(2) .recently-played-entry:nth-child(2) {
-    font-size: large;
+.playlist-entry-current {
+    background-color: #ccf;
 }
 
 .playlist-title {
     grid-column: 1;
     font-weight: bold;
-    width: max-content;
+    align-self: stretch;
 }
 
 .playlist-recording {
     grid-column: 2;
     font-style: italic;
-    width: max-content;
     padding: 0 15px;
+    align-self: stretch;
 }
 
 .playlist-artist {
     grid-column: 3;
-    width: max-content;
     padding-right: 15px;
+    align-self: stretch;
 }
 
 .move-up { grid-column: 4; }
