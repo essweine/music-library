@@ -1,5 +1,5 @@
-import { createTracklistContainer } from "/static/components/tracklist-container.js";
-import { createRecordingTrack } from "/static/components/recording-tracklist-entry.js";
+import { createTracklistContainer } from "/static/components/shared/tracklist-container.js";
+import { createRecordingTrack } from "./recording-tracklist-entry.js";
 
 function createRecordingTracklist() {
 

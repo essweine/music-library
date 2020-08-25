@@ -1,4 +1,4 @@
-function createLogManager() {
+function createLogManager(app, ws) {
 
     let container = document.createElement("div");
 
@@ -37,7 +37,8 @@ function createLogManager() {
     }
 
     document.title = "Player Logs";
-    return container;
+    ws.addEventListener("message", e => container.update(JSON.parse(e.data)));
+    app.container = container;
 }
 
 export { createLogManager };

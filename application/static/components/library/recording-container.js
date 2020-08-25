@@ -1,10 +1,9 @@
-import { Importer } from "/static/modules/api.js";
-import { createRecordingImage } from "/static/components/recording-image.js";
-import { createEditableInfo } from "/static/components/editable-info.js";
-import { createRatingContainer } from "/static/components/rating-container.js";
-import { createRecordingTracklist } from "/static/components/recording-tracklist.js";
-import { createRecordingRawInfo } from "/static/components/recording-raw-info.js";
-import { createIcon } from "/static/components/icons.js";
+import { createRecordingImage } from "./recording-image.js";
+import { createEditableInfo } from "./editable-info.js";
+import { createRecordingTracklist } from "./recording-tracklist.js";
+import { createRecordingRawInfo } from "./recording-raw-info.js";
+import { createRatingContainer } from "/static/components/shared/rating-container.js";
+import { createIcon } from "/static/components/shared/icons.js";
 
 function createRecordingDisplay() {
 
@@ -146,7 +145,12 @@ function createRecordingDisplay() {
     return container;
 }
 
-function createImportContainer() {
+function addRecordingEvents(app) {
+    app.content.addEventListener("add-recording", e => app.recordingApi.addToLibrary(e.detail));
+    app.content.addEventListener("save-recording", e => app.recordingApi.saveRecording(e.detail));
+}
+
+function createImportContainer(app) {
 
     let container = createRecordingDisplay();
 
@@ -177,10 +181,11 @@ function createImportContainer() {
 
     container.cancel = () => { window.location.href = "/importer"; }
 
-    return container;
+    app.container = container;
+    addRecordingEvents(app);
 }
 
-function createRecordingContainer() {
+function createRecordingContainer(app) {
 
     let container = createRecordingDisplay();
 
@@ -219,8 +224,7 @@ function createRecordingContainer() {
     container.selectContext = (editable) => {
 
         if (editable && container.data == null) {
-            let importApi = new Importer();
-            importApi.getDirectoryListing(container.source.directory, container.updateFiles.bind(container));
+            app.importApi.getDirectoryListing(container.source.directory, container.updateFiles.bind(container));
         }
 
         (editable) ? container.editIcon.remove() : container.overview.append(container.editIcon);
@@ -247,7 +251,8 @@ function createRecordingContainer() {
         container.selectContext(false);
     }
 
-    return container;
+    app.container = container;
+    addRecordingEvents(app);
 }
 
 export { createImportContainer, createRecordingContainer };

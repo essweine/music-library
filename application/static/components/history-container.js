@@ -1,34 +1,21 @@
-import { createRatingContainer } from "/static/components/rating-container.js";
-import { createTracklistContainer, createTracklistOption } from "/static/components/tracklist-container.js";
+import { createRatingContainer } from "/static/components/shared/rating-container.js";
+import { createTracklistContainer, createTracklistOption, addText } from "/static/components/shared/tracklist-container.js";
 
 function createRecentlyPlayedEntry(track) {
 
     let entry = document.createElement("div");
     entry.classList.add("recently-played-entry");
 
-    let title = document.createElement("span");
-    title.classList.add("recent-title");
-    title.innerText = track.title;
-    entry.append(title);
-
-    let artist = document.createElement("span");
-    artist.classList.add("recent-artist");
-    artist.innerText = track.artist;
-    entry.append(artist);
-
-    let recording = document.createElement("span");
-    recording.classList.add("recent-recording");
-    recording.innerText = track.recording;
-    entry.append(recording);
+    entry.append(addText(track.title, "recent-title"));
+    entry.append(addText(track.artist, "recent-artist"));
+    entry.append(addText(track.recording, "recent-recording"));
 
     let ratingContainer = createRatingContainer("recent-rating");
     ratingContainer.configure(track.recording_id, track.filename, track.rating);
     entry.append(ratingContainer);
 
-    let count = document.createElement("span");
-    count.classList.add("recent-count");
-    count.innerText = (track.count > 1) ? "x " + track.count : "";
-    entry.append(count)
+    let count = (track.count > 1) ? "x " + track.count : "";
+    entry.append(addText(count, "recent-count"))
 
     return entry;
 }
@@ -72,7 +59,8 @@ function createRecentTracklist() {
     return tracklist;
 }
 
-function createHistoryContainer() {
+function createHistoryContainer(app, ws) {
+
     let container = document.createElement("div");
     container.id = "history-container";
 
@@ -80,7 +68,15 @@ function createHistoryContainer() {
     container.append(container.recent);
 
     document.title = "Player History";
-    return container;
+    app.container = container;
+
+    ws.addEventListener("message", e => 
+        app.historyApi.getRecentTracks(app.container.recent.period, app.container.recent.update));
+
+    app.content.addEventListener("update-recently-played", e => {
+        app.historyApi.getRecentTracks(e.detail, app.container.recent.update);
+        app.container.recent.period = e.detail;
+    });
 }
 
 export { createHistoryContainer };

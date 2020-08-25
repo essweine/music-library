@@ -1,3 +1,10 @@
+function addText(text, className) {
+    let span = document.createElement("span");
+    span.classList.add(className);
+    span.innerText = text;
+    return span;
+}
+
 function createTracklistOption(text, className, selectedClass, selectEvent) {
     let span = document.createElement("span");
     span.innerText = text;
@@ -56,4 +63,4 @@ function createTracklistContainer(childClass) {
     return container;
 }
 
-export { createTracklistContainer, createTracklistOption };
+export { createTracklistContainer, createTracklistOption, addText };

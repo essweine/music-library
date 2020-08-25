@@ -1,13 +1,6 @@
-import { createTracklistContainer, createTracklistOption } from "/static/components/tracklist-container.js";
-import { createRatingContainer } from "/static/components/rating-container.js";
-import { createIcon, createTracklistEvent } from "/static/components/icons.js";
-
-function addColumn(text, className) {
-    let span = document.createElement("span");
-    span.classList.add(className);
-    span.innerText = text;
-    return span;
-}
+import { createTracklistContainer, createTracklistOption, addText } from "/static/components/shared/tracklist-container.js";
+import { createRatingContainer } from "/static/components/shared/rating-container.js";
+import { createIcon, createTracklistEvent } from "/static/components/shared/icons.js";
 
 function createPlaylistEntry(track) {
 
@@ -15,9 +8,9 @@ function createPlaylistEntry(track) {
     playlistEntry.classList.add("playlist-entry");
     playlistEntry.track = track;
 
-    playlistEntry.append(addColumn(track.title, "playlist-title"));
-    playlistEntry.append(addColumn(track.recording, "playlist-recording"));
-    playlistEntry.append(addColumn(track.artist, "playlist-artist"));
+    playlistEntry.append(addText(track.title, "playlist-title"));
+    playlistEntry.append(addText(track.recording, "playlist-recording"));
+    playlistEntry.append(addText(track.artist, "playlist-artist"));
 
     playlistEntry.moveUp = createIcon("arrow_upward", e => playlistEntry.dispatchEvent(createTracklistEvent("move-track-up")), "move-up");
     playlistEntry.append(playlistEntry.moveUp);

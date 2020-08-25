@@ -1,6 +1,6 @@
-import { createRatingContainer } from "/static/components/rating-container.js";
-import { createIcon, createRecordingEvent, createTrackEvent } from "/static/components/icons.js";
-import { createSearchBar } from "/static/components/search-bar.js";
+import { createRatingContainer } from "/static/components/shared/rating-container.js";
+import { createIcon, createRecordingEvent, createTrackEvent } from "/static/components/shared/icons.js";
+import { createSearchBar } from "./search-bar.js";
 
 function createListRow(className, parent = true) {
 
@@ -71,9 +71,9 @@ function createListRoot(className) {
     return root;
 }
 
-function createDirectoryList(className) {
+function createDirectoryList(app) {
 
-    let root = createListRoot(className);
+    let root = createListRoot("directory-list-root");
 
     let listHeader = createListRow("list-heading");
     for (let colName of [ "Directory", "Audio", "Images", "Text" ])
@@ -92,12 +92,29 @@ function createDirectoryList(className) {
     }
 
     document.title = "Unindexed Directory List";
-    return root;
+    app.container = root;
 }
 
-function createRecordingList(className) { 
+function addListEvents(app) {
 
-    let root = createListRoot(className);
+    app.content.addEventListener("play-track", e => app.playerApi.play(e.detail));
+    app.content.addEventListener("play-tracks", e => app.playerApi.playAll(e.detail));
+    app.content.addEventListener("play-recording", 
+        e => app.recordingApi.getRecording(e.detail, app.playerApi.playRecording.bind(app.playerApi)));
+
+    app.content.addEventListener("queue-track", e => app.playerApi.queue(e.detail));
+    app.content.addEventListener("queue-tracks", e => app.playerApi.queueAll(e.detail));
+    app.content.addEventListener("queue-recording", 
+        e => app.recordingApi.getRecording(e.detail, app.playerApi.queueRecording.bind(app.playerApi)));
+
+    app.content.addEventListener("expand-tracks", e => app.recordingApi.getRecording(e.detail, app.container.expandRow));
+    app.content.addEventListener("collapse-tracks", e => app.container.collapseRow(e.detail));
+    app.content.addEventListener("update-recordings", e => app.searchApi.searchRecordings(e.detail, app.container.update));
+}
+
+function createRecordingList(app) { 
+
+    let root = createListRoot("recording-list-root");
 
     let search = createSearchBar();
     root.append(search);
@@ -158,7 +175,8 @@ function createRecordingList(className) {
     }
 
     document.title = "Browse Recordings";
-    return root;
+    app.container = root;
+    addListEvents(app);
 }
 
 export { createDirectoryList, createRecordingList };

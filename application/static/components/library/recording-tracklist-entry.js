@@ -1,6 +1,6 @@
-import { createRatingContainer } from "/static/components/rating-container.js";
-import { createEditableInfo } from "/static/components/editable-info.js";
-import { createIcon, createTracklistEvent, createTrackEvent } from "/static/components/icons.js";
+import { createEditableInfo } from "./editable-info.js";
+import { createRatingContainer } from "/static/components/shared/rating-container.js";
+import { createIcon, createTracklistEvent, createTrackEvent } from "/static/components/shared/icons.js";
 
 function createRecordingTrack(track) {
 

@@ -1,4 +1,4 @@
-import { createIcon } from "/static/components/icons.js";
+import { createIcon } from "/static/components/shared/icons.js";
 
 function createSelect(text, values) {
     let select = document.createElement("select");

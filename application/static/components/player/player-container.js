@@ -1,6 +1,6 @@
-import { createPlayerTracklist } from "/static/components/player-tracklist.js";
-import { createRatingContainer } from "/static/components/rating-container.js";
-import { createIcon, createPlayerEvent } from "/static/components/icons.js";
+import { createPlayerTracklist } from "./player-tracklist.js";
+import { createRatingContainer } from "/static/components/shared/rating-container.js";
+import { createIcon, createPlayerEvent } from "/static/components/shared/icons.js";
 
 function addPlayerControls() {
 
@@ -82,7 +82,42 @@ function addCurrentTrack() {
     return container;
 }
 
-function createPlayerContainer() {
+function addPlayerEvents(app) {
+
+    app.content.addEventListener("player-control", e => {
+        if (e.detail == "stop") {
+            app.playerApi.stop();
+        } else if (e.detail == "pause") {
+            app.playerApi.pause();
+        } else if (e.detail == "start") {
+            app.playerApi.start();
+        } else if (e.detail == "back") {
+            let task = app.playerApi.createTask("goto", null, app.container.current - 1);
+            app.playerApi.sendTasks([ task ]);
+        } else if (e.detail == "next") {
+            let task = app.playerApi.createTask("goto", null, app.container.current + 1);
+            app.playerApi.sendTasks([ task ]);
+        }
+    });
+
+    app.content.addEventListener("update-playlist", e => {
+        if (e.detail.action == "move-track-up") {
+            app.playerApi.sendTasks([
+                app.playerApi.createTask("remove", null, e.detail.position),
+                app.playerApi.createTask("add", e.detail.filename, e.detail.position - 1)
+            ]);
+        } else if (e.detail.action == "move-track-down") {
+            app.playerApi.sendTasks([
+                app.playerApi.createTask("remove", null, e.detail.position),
+                app.playerApi.createTask("add", e.detail.filename, e.detail.position + 1)
+            ]);
+        } else if (e.detail.action == "remove-track") {
+            app.playerApi.sendTasks([ app.playerApi.createTask("remove", null, e.detail.position) ]);
+        }
+    });
+}
+
+function createPlayerContainer(app, ws) {
 
     let container = document.createElement("div");
     container.id = "player-container";
@@ -107,7 +142,9 @@ function createPlayerContainer() {
         container.playlistContainer.update(state.playlist, state.current);
     }
 
-    return container;
+    app.container = container;
+    ws.addEventListener("message", e => app.playerApi.getCurrentState(app.container.update));
+    addPlayerEvents(app);
 }
 
 export { createPlayerContainer };
