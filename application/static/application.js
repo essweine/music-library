@@ -4,6 +4,7 @@ import { createDirectoryList, createRecordingList } from "/static/components/lib
 import { createImportContainer, createRecordingContainer } from "/static/components/library/recording-container.js";
 import { createPlayerContainer } from "/static/components/player/player-container.js";
 import { createHistoryContainer } from "/static/components/history-container.js";
+import { createRadioContainer } from "/static/components/radio-container.js";
 import { createLogManager } from "/static/components/log-manager.js";
 import { createErrorDisplay } from "/static/components/error-display.js";
 
@@ -46,6 +47,8 @@ class Application {
             let ws = this.getPlayerNotificationService();
             createHistoryContainer(this, ws);
             this.historyApi.getRecentTracks(this.container.recent.period, this.container.recent.update);
+        } else if (action == "radio") {
+            createRadioContainer(this);
         } else if (action == "log") {
             let ws = this.getLogNotificationService();
             createLogManager(this, ws);

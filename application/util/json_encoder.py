@@ -3,6 +3,8 @@ from enum import Enum
 from datetime import datetime, date
 from abc import ABC
 
+from requests import Response
+
 class JsonSerializable(ABC):
 
     def as_dict(self):
@@ -31,4 +33,6 @@ class JsonEncoder(json.JSONEncoder):
             return obj.strftime("%Y-%m-%d")
         elif isinstance(obj, Enum):
             return obj.value
+        elif isinstance(obj, Response):
+            return obj.url
         return json.JSONEncoder.default(self, obj)

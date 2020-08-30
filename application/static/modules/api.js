@@ -127,6 +127,8 @@ class Player extends Api {
         this.sendTasks(tasks);
     }
 
+    streamUrl(url) { this.sendTasks([ this.createTask("stream", url) ]); }
+
     getCurrentState(callback) { this.get("", callback); }
 
     sendTasks(tasks) { this.post("", { "tasks": tasks }, NoOp); }

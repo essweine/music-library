@@ -12,6 +12,10 @@
     align-items: start;
 }
 
+#current-stream {
+    display: grid;
+}
+
 #player-controls {
     display: grid;
     grid-auto-flow: column;
@@ -58,6 +62,31 @@
 #recording-link {
     font-size: large;
     font-style: italic;
+}
+
+#stream-url {
+    font-size: large;
+    grid-row: 1;
+}
+
+#stream-title-container {
+    grid-row: 2;
+    overflow: hidden;
+}
+
+@keyframes stream-title-container {
+    0%   { transform: translate(0, 0); }
+    100% { transform: translate(-100%, 0); }
+}
+
+#stream-title {
+    font-size: x-large;
+    font-style: italic;
+    font-weight: bold;
+    width: max-content;
+    padding-left: 100%;
+    padding-top: 8px;
+    animation: stream-title-container 15s linear infinite;
 }
 
 #track-artist {
@@ -131,3 +160,5 @@
 .remove-track { grid-column: 6; } 
 
 .recent-rating { grid-column: 4 / 7; }
+
+

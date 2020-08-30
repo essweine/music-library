@@ -78,7 +78,34 @@ function addCurrentTrack() {
         container.ratingContainer.configure(track.recording_id, track.filename, track.rating);
     }
 
-    document.title = "Now Playing";
+    return container;
+}
+
+function addCurrentStream() {
+
+    let container = document.createElement("div");
+    container.id = "current-stream";
+
+    container.url = document.createElement("div");
+    container.url.id = "stream-url";
+    container.append(container.url);
+
+    let titleContainer = document.createElement("div");
+    titleContainer.id = "stream-title-container";
+
+    container.streamTitle = document.createElement("div");
+    container.streamTitle.id = "stream-title";
+    titleContainer.append(container.streamTitle);
+
+    container.append(titleContainer);
+
+    container.update = (stream) => {
+        container.url.innerText = "Streaming " + stream.url;
+        if (stream.metadata != null) {
+            container.streamTitle.innerText = stream.metadata.StreamTitle;
+        }
+    }
+
     return container;
 }
 
@@ -124,6 +151,7 @@ function createPlayerContainer(app, ws) {
     container.current = null;
 
     container.currentTrack = addCurrentTrack();
+    container.currentStream = addCurrentStream();
     container.playerControls = addPlayerControls();
     container.playlistContainer = createPlayerTracklist();
 
@@ -132,16 +160,26 @@ function createPlayerContainer(app, ws) {
 
     container.update = (state) => {
         container.current = state.current;
-        if (state.playlist.length > 0) {
+        if (state.stream != null) {
+            container.currentStream.update(state.stream);
+            container.currentTrack.remove();
+            container.playlistContainer.remove();
+            container.insertBefore(container.currentStream, container.playerControls);
+        } else if (state.playlist.length > 0) {
             let current = state.playlist[state.current];
             container.currentTrack.update(current);
+            container.currentStream.remove();
             container.insertBefore(container.currentTrack, container.playerControls);
+            container.append(container.playlistContainer);
         } else {
             container.currentTrack.remove();
+            container.currentStream.remove();
+            container.append(container.playlistContainer);
         }
         container.playlistContainer.update(state.playlist, state.current);
     }
 
+    document.title = "Now Playing";
     app.container = container;
     ws.addEventListener("message", e => app.playerApi.getCurrentState(app.container.update));
     addPlayerEvents(app);

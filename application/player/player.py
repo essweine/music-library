@@ -5,7 +5,7 @@ import logging
 from datetime import datetime, timedelta
 
 from ..library import Track
-from .state import State, Task, PlaylistEntry, ProcState
+from .state import State, Task, PlaylistEntry, StreamEntry, ProcState
 from .history import History
 
 CMD = [ "ffmpeg", "-hide_banner" ]
@@ -17,7 +17,7 @@ class Player(object):
 
         self.logger = logging.getLogger(__name__)
         self.root = root
-        self.state = State(ProcState.Stopped, 0, [ ], [ ])
+        self.state = State(ProcState.Stopped, 0, [ ], [ ], None)
         self._subprocess = None
         self.logger = logging.getLogger('tornado.application')
         self.websockets = set()
@@ -38,28 +38,33 @@ class Player(object):
             while conn.poll():
                 task = conn.recv()
                 if task.name == "start":
-                    self._handle_start()
-                elif task.name == "play":
-                    self._handle_play_entry(task)
+                    self._start()
+                elif task.name == "pause":
+                    self._pause()
+                elif task.name == "stop":
+                    self._stop()
                 elif task.name == "goto":
                     self._handle_goto_position(task)
-                elif task.name == "pause":
-                    self._handle_pause()
                 elif task.name == "add":
                     self._handle_add_to_playlist(task)
                 elif task.name == "remove":
                     self._handle_remove_from_playlist(task)
-                elif task.name == "stop":
-                    self._handle_stop()
+                elif task.name == "stream":
+                    self._handle_stream(task)
 
             if self._subprocess is not None:
                 self._check_subprocess()
 
-            if self.state.proc_state == ProcState.Playing and self._subprocess is None:
-                self._handle_advance_playlist()
+            if self.state.proc_state == ProcState.Playing and self.state.stream is not None:
+                if self._subprocess is not None:
+                    self._subprocess.stdin.write(self.state.stream.read())
+                else:
+                    self._play(PlaylistEntry("-"))
+            elif self.state.proc_state == ProcState.Playing and self._subprocess is None:
+                self._advance()
 
             if self.state != initial_state:
-                conn.send(self.state)
+                conn.send(self.state.copy())
                 # Only send history once to prevent duplicates
                 self.state.history.clear()
 
@@ -86,30 +91,21 @@ class Player(object):
         state.history.clear()
         self.state = state
 
-    def _handle_play_entry(self, task):
+    def _handle_stream(self, task):
 
-        entry = PlaylistEntry(task.filename)
         if self._subprocess_running():
-            self._handle_stop()
-        self._play(entry)
+            self._stop()
+        self.state.stream = StreamEntry(task.filename)
+        self._start()
 
     def _handle_goto_position(self, task):
 
         if self._subprocess_running():
-            self._handle_stop()
+            self._stop()
 
         if task.position >= 0 and task.position < len(self.state.playlist):
             self.state.current = task.position
-        self._handle_start()
-
-    def _handle_advance_playlist(self):
-
-        if self.state.current < len(self.state.playlist):
-            entry = self.state.playlist[self.state.current]
-            self._play(entry)
-        else:
-            self._handle_stop()
-            self.state.current = 0
+        self._start()
 
     def _handle_add_to_playlist(self, task):
 
@@ -127,22 +123,36 @@ class Player(object):
         elif task.position < len(self.state.playlist):
             self.state.playlist.pop(task.position)
 
-    def _handle_pause(self):
-
-        if self._subprocess_running():
-            self._subprocess.send_signal(signal.SIGSTOP)
-            self.state.proc_state = ProcState.Paused
-
-    def _handle_start(self):
+    def _start(self):
 
         try:
             if self.state.proc_state == ProcState.Paused and self._subprocess_running():
                 self._subprocess.send_signal(signal.SIGCONT)
+            if self.state.stream is not None:
+                self.state.stream.connect()
             self.state.proc_state = ProcState.Playing
         except Exception as exc:
             self.logger.error("An exception occurred during start", exc_info = True)
+            self.state.proc_state = ProcState.Paused
 
-    def _handle_stop(self):
+    def _advance(self):
+
+        if self.state.current < len(self.state.playlist):
+            entry = self.state.playlist[self.state.current]
+            self._play(entry)
+        else:
+            self._stop()
+            self.state.current = 0
+
+    def _pause(self):
+
+        if self._subprocess_running():
+            self._subprocess.send_signal(signal.SIGSTOP)
+            self.state.proc_state = ProcState.Paused
+            if self.state.stream is not None:
+                self.state.stream.close()
+
+    def _stop(self):
 
         try:
             if self._subprocess_running():
@@ -150,17 +160,25 @@ class Player(object):
                     self._subprocess.send_signal(signal.SIGCONT)
                 self._subprocess.send_signal(signal.SIGTERM)
                 self._reset_subprocess(False)
+            if self.state.stream is not None:
+                self.state.stream.close()
+            self.state.stream = None
             self.state.proc_state = ProcState.Stopped
         except Exception as exc:
             self.logger.error("An exception occurred during stop", exc_info = True)
 
     def _play(self, entry):
 
-        try:
+        if self.state.stream is None:
             filename = self._append_to_root(entry.filename)
+        else:
+            filename = entry.filename
+
+        try:
             self._subprocess = subprocess.Popen(
                 CMD + [ "-i", filename ] + OUTPUT_ARGS,
                 stderr = subprocess.PIPE,
+                stdin = subprocess.PIPE,
             )
             stderr = self._subprocess.stderr.fileno()
             os.set_blocking(stderr, False)
@@ -179,8 +197,12 @@ class Player(object):
         retval = self._subprocess.poll()
         if retval is not None:
             if retval > 0:
-                self.state.current.error = True
-                self.state.current.error_output = stderr.decode("utf-8")
+                if self.state.stream is None:
+                    entry = self.state.playlist[self.state.current]
+                    entry.error = True
+                    entry.error_output = stderr.decode("utf-8")
+                else:
+                    self.logger.error(stderr.decode("utf-8"))
             self._reset_subprocess(True)
 
     def _reset_subprocess(self, advance):
@@ -189,10 +211,11 @@ class Player(object):
         stderr = self._subprocess.stderr.fileno()
         os.set_blocking(stderr, True)
 
-        entry = self.state.playlist[self.state.current]
-        entry.end_time = datetime.utcnow()
-        self.state.history.append(entry)
-        self.state.playlist[self.state.current] = PlaylistEntry(entry.filename)
+        if self.state.stream is None:
+            entry = self.state.playlist[self.state.current]
+            entry.end_time = datetime.utcnow()
+            self.state.history.append(entry)
+            self.state.playlist[self.state.current] = PlaylistEntry(entry.filename)
 
         if advance:
             self.state.current = self.state.current + 1
