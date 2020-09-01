@@ -1,5 +1,3 @@
-function createRecordingEvent(eventName, recordingId) { return new CustomEvent(eventName, { detail: recordingId, bubbles: true }); }
-
 function createTrackEvent(eventName, track) { return new CustomEvent(eventName, { detail: track, bubbles: true }); }
 
 function createTracklistEvent(action) { return new CustomEvent("tracklist-action", { detail: action, bubbles: true }); }
@@ -23,4 +21,4 @@ function createIcon(iconName, action, className = null) {
     return icon;
 }
 
-export { createIcon, createRecordingEvent, createTrackEvent, createTracklistEvent, createPlayerEvent };
+export { createIcon, createTrackEvent, createTracklistEvent, createPlayerEvent };

@@ -50,7 +50,7 @@ function createRecordingDisplay() {
 
     let input = document.createElement("input");
     input.type = "checkbox";
-    input.id = "official-recording";
+    input.id = "official-checkbox";
     container.official.append(input);
 
     container.heading = document.createElement("span");
@@ -97,9 +97,11 @@ function createRecordingDisplay() {
             field.toggleEdit(editable);
         container.tracklist.toggleEdit(editable);
 
-        if (editable)
+        if (editable) {
             container.infoContainer.append(container.official);
-        else
+            let official = document.getElementById("official-checkbox");
+            official.checked = container.source.official;
+        } else
             container.official.remove();
         
         if (typeof(container.imageContainer.toggleEdit) != "undefined")
@@ -119,11 +121,13 @@ function createRecordingDisplay() {
         container.source.venue = container.recordingVenue.get();
         container.source.tracks = container.tracklist.getTracklist();
 
-        let official = document.getElementById("official-recording").checked;
+        let official = document.getElementById("official-checkbox").checked;
         container.source.official = official;
 
-        if (container.data.images.length)
-            container.source.artwork = document.getElementById("recording-artwork").getAttribute("src").replace(/^\/file\//, "");
+        if (container.data.images.length) {
+            let img = document.getElementById("recording-artwork").getAttribute("src")
+            container.source.artwork = decodeURIComponent(img.replace(/^\/file\//, ""));
+        }
     }
 
     container.addInfoFromSource = () => {
@@ -143,11 +147,6 @@ function createRecordingDisplay() {
     }
 
     return container;
-}
-
-function addRecordingEvents(app) {
-    app.content.addEventListener("add-recording", e => app.recordingApi.addToLibrary(e.detail));
-    app.content.addEventListener("save-recording", e => app.recordingApi.saveRecording(e.detail));
 }
 
 function createImportContainer(app) {
@@ -176,13 +175,12 @@ function createImportContainer(app) {
 
     container.addToLibrary = () => {
         container.update();
-        container.dispatchEvent(new CustomEvent("add-recording", { detail: container.source, bubbles: true }));
+        app.recordingApi.addToLibrary(container.source);
     }
 
     container.cancel = () => { window.location.href = "/importer"; }
 
     app.container = container;
-    addRecordingEvents(app);
 }
 
 function createRecordingContainer(app) {
@@ -212,10 +210,8 @@ function createRecordingContainer(app) {
         container.saveIcon = container.createIcon("save", e => container.save());
         container.cancelIcon = container.createIcon("clear", e => container.cancel());
 
-        container.playIcon = container.createIcon("play_arrow", 
-            e => container.dispatchEvent(new CustomEvent("play-tracks", { detail: container.source.tracks, bubbles: true })) );
-        container.queueIcon = container.createIcon("playlist_play", 
-            e => container.dispatchEvent(new CustomEvent("queue-tracks", { detail: container.source.tracks, bubbles: true })) );
+        container.playIcon = container.createIcon("play_arrow", e => app.playerApi.playAll(container.source.tracks));
+        container.queueIcon = container.createIcon("playlist_play", e => app.playerApi.queueAll(container.source.tracks));
 
         container.selectContext(false);
         document.title = recording.title;
@@ -224,7 +220,7 @@ function createRecordingContainer(app) {
     container.selectContext = (editable) => {
 
         if (editable && container.data == null) {
-            app.importApi.getDirectoryListing(container.source.directory, container.updateFiles.bind(container));
+            app.importerApi.getDirectoryListing(encodeURIComponent(container.source.directory), container.updateFiles.bind(container));
         }
 
         (editable) ? container.editIcon.remove() : container.overview.append(container.editIcon);
@@ -241,7 +237,7 @@ function createRecordingContainer(app) {
 
     container.save = () => {
         container.update();
-        container.dispatchEvent(new CustomEvent("save-recording", { detail: container.source, bubbles: true }));
+        app.recordingApi.saveRecording(container.source);
     }
 
     container.cancel = () => {
@@ -252,7 +248,6 @@ function createRecordingContainer(app) {
     }
 
     app.container = container;
-    addRecordingEvents(app);
 }
 
 export { createImportContainer, createRecordingContainer };

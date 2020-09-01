@@ -49,6 +49,8 @@ class Player(object):
                     self._handle_add_to_playlist(task)
                 elif task.name == "remove":
                     self._handle_remove_from_playlist(task)
+                elif task.name == "clear":
+                    self._handle_clear_playlist()
                 elif task.name == "stream":
                     self._handle_stream(task)
 
@@ -68,7 +70,7 @@ class Player(object):
                 # Only send history once to prevent duplicates
                 self.state.history.clear()
 
-            time.sleep(0.10)
+            time.sleep(0.05)
 
     def send_task(self, **kwargs):
 
@@ -123,6 +125,13 @@ class Player(object):
         elif task.position < len(self.state.playlist):
             self.state.playlist.pop(task.position)
 
+    def _handle_clear_playlist(self):
+
+        if self._subprocess_running():
+            self._stop()
+        self.state.playlist.clear()
+        self.state.current = 0
+
     def _start(self):
 
         try:
@@ -141,8 +150,8 @@ class Player(object):
             entry = self.state.playlist[self.state.current]
             self._play(entry)
         else:
-            self._stop()
             self.state.current = 0
+            self._stop()
 
     def _pause(self):
 

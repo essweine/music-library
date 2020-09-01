@@ -75,6 +75,7 @@ class Player extends Api {
         this.stopTask = { "name": "stop" };
         this.startTask = { "name": "start" };
         this.pauseTask = { "name": "pause" };
+        this.clearTask = { "name": "clear" };
     }
 
     createTask(name, filename, position) {
@@ -90,6 +91,8 @@ class Player extends Api {
     stop() { this.sendTasks([ this.stopTask ]); }
 
     pause() { this.sendTasks([ this.pauseTask ]); }
+
+    clearPlaylist() { this.sendTasks([ this.clearTask ]); }
 
     playRecording(recording) { this.playAll(recording.tracks); }
 

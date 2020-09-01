@@ -19,6 +19,12 @@ function addPlayerControls() {
     controls.play = controls.addIcon("play_arrow", "start");
     controls.next = controls.addIcon("skip_next", "next");
 
+    let space = document.createElement("span");
+    space.style.width = "30px";
+    controls.append(space);
+
+    controls.clear = controls.addIcon("clear", "clear");
+
     return controls;
 }
 
@@ -72,7 +78,7 @@ function addCurrentTrack() {
         container.recordingLink.innerText = track.recording;
         container.artist.innerText = track.artist;
         if (track.artwork != null)
-            container.img.src = "/file/" + track.artwork;
+            container.img.src = "/file/" + encodeURIComponent(track.artwork);
         else
             container.img.remove();
         container.ratingContainer.configure(track.recording_id, track.filename, track.rating);
@@ -124,6 +130,8 @@ function addPlayerEvents(app) {
         } else if (e.detail == "next") {
             let task = app.playerApi.createTask("goto", null, app.container.current + 1);
             app.playerApi.sendTasks([ task ]);
+        } else if (e.detail == "clear") {
+            app.playerApi.clearPlaylist();
         }
     });
 

@@ -28,6 +28,7 @@
 
 .control-icon {
     font-size: xx-large;
+    width: min-content;
 }
 
 #bullshit-container-1 {

@@ -18,7 +18,7 @@ function createRecordingImage(images, directory, selected = null) {
     }
 
     container.selectImage = (image) => {
-        container.img.src = "/file/" + image;
+        container.img.src = "/file/" + encodeURIComponent(image);
         for (let option of container.select.options)
             if (option.value == image)
                 option.selected = true;

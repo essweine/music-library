@@ -48,7 +48,7 @@ function createRecordingRawInfo(files, directory, selected = null) {
     container.getNotes = (file) => {
         let request = new XMLHttpRequest();
         request.onload = e => container.notes.innerText = e.target.response;
-        request.open("GET", "/file/" + file);
+        request.open("GET", "/file/" + encodeURIComponent(file));
         request.send();
     }
 

@@ -79,7 +79,6 @@ class Application {
 }
 
 window.onload = e => {
-
     let path = window.location.pathname.split("/");
     let action = (path.length > 1) ? path[1] : null
     let arg = (path.length > 2) ? path.slice(2, path.length).join("/") : null

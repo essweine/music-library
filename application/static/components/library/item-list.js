@@ -1,5 +1,5 @@
 import { createRatingContainer } from "/static/components/shared/rating-container.js";
-import { createIcon, createRecordingEvent, createTrackEvent } from "/static/components/shared/icons.js";
+import { createIcon } from "/static/components/shared/icons.js";
 import { createSearchBar } from "./search-bar.js";
 
 function createListRow(className, parent = true) {
@@ -87,29 +87,12 @@ function createDirectoryList(app) {
         row.addText(entry.audio.length, "directory-list-audio");
         row.addText(entry.images.length, "directory-list-images");
         row.addText(entry.text.length, "directory-list-text");
-        row.addIcon("add", e => window.location.href = "/importer/" + entry.relative_path, "directory-list-add");
+        row.addIcon("add", e => window.location.href = "/importer/" + encodeURIComponent(entry.relative_path), "directory-list-add");
         return row;
     }
 
     document.title = "Unindexed Directory List";
     app.container = root;
-}
-
-function addListEvents(app) {
-
-    app.content.addEventListener("play-track", e => app.playerApi.play(e.detail));
-    app.content.addEventListener("play-tracks", e => app.playerApi.playAll(e.detail));
-    app.content.addEventListener("play-recording", 
-        e => app.recordingApi.getRecording(e.detail, app.playerApi.playRecording.bind(app.playerApi)));
-
-    app.content.addEventListener("queue-track", e => app.playerApi.queue(e.detail));
-    app.content.addEventListener("queue-tracks", e => app.playerApi.queueAll(e.detail));
-    app.content.addEventListener("queue-recording", 
-        e => app.recordingApi.getRecording(e.detail, app.playerApi.queueRecording.bind(app.playerApi)));
-
-    app.content.addEventListener("expand-tracks", e => app.recordingApi.getRecording(e.detail, app.container.expandRow));
-    app.content.addEventListener("collapse-tracks", e => app.container.collapseRow(e.detail));
-    app.content.addEventListener("update-recordings", e => app.searchApi.searchRecordings(e.detail, app.container.update));
 }
 
 function createRecordingList(app) { 
@@ -136,8 +119,8 @@ function createRecordingList(app) {
         row.addRatingContainer(recordingId, track.filename, track.rating, "recording-list-rating");
         row.addText("", "recording-list-sound-rating");
         row.addText("", "recording-list-view");
-        row.addIcon("play_arrow", e => root.dispatchEvent(createTrackEvent("play-track", track)), "recording-list-play");
-        row.addIcon("playlist_add", e => root.dispatchEvent(createTrackEvent("queue-track", track)), "recording-list-queue");
+        row.addText("", "recording-list.play");
+        row.addIcon("playlist_add", e => app.playerApi.queue(track));
         return row;
     }
 
@@ -165,18 +148,22 @@ function createRecordingList(app) {
         row.addRatingContainer(entry.id, "rating", entry.rating, "recording-list-rating");
         row.addRatingContainer(entry.id, "sound-rating", entry.sound_rating, "recording-list-sound-rating");
         row.addIcon("info", e => window.location.href = "/recording/" + entry.id, "recording-list-view");
-        row.addIcon("playlist_play", e => root.dispatchEvent(createRecordingEvent("play-recording", entry.id)), "recording-list-play");
-        row.addIcon("playlist_add", e => root.dispatchEvent(createRecordingEvent("queue-recording", entry.id)), "recording-list-queue");
+        row.addIcon("playlist_play", e => {
+            app.playerApi.clearPlaylist();
+            app.recordingApi.getRecording(entry.id, app.playerApi.playRecording.bind(app.playerApi));
+        });
+        row.addIcon("playlist_add", e => app.recordingApi.getRecording(entry.id, app.playerApi.queueRecording.bind(app.playerApi)));
         row.setExpandable(
-            e => row.dispatchEvent(createRecordingEvent("expand-tracks", entry.id)),
-            e => row.dispatchEvent(createRecordingEvent("collapse-tracks", entry.id))
+            e => app.recordingApi.getRecording(entry.id, app.container.expandRow),
+            e => app.container.collapseRow(entry.id)
         );
         return row;
     }
 
+    app.content.addEventListener("update-recordings", e => app.searchApi.searchRecordings(e.detail, app.container.update));
+
     document.title = "Browse Recordings";
     app.container = root;
-    addListEvents(app);
 }
 
 export { createDirectoryList, createRecordingList };
