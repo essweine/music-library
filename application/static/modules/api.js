@@ -76,14 +76,32 @@ class Player extends Api {
         this.startTask = { "name": "start" };
         this.pauseTask = { "name": "pause" };
         this.clearTask = { "name": "clear" };
+        this.shuffleTask = { "name": "shuffle" };
+        this.repeatTask = { "name": "repeat" };
     }
 
-    createTask(name, filename, position) {
+    moveTask(original, destination) {
         return {
-            name: name,
+            name: "move",
+            original: original,
+            destination: destination
+        }
+    }
+
+    addTask(filename, position = null) {
+        return {
+            name: "add",
             filename: filename,
             position: position
         }
+    }
+
+    removeTask(position) {
+        return { name: "remove", position: position }
+    }
+
+    skipTask(offset) {
+        return { name: "skip", offset: offset }
     }
 
     start() { this.sendTasks([ this.startTask ]); }
@@ -94,43 +112,29 @@ class Player extends Api {
 
     clearPlaylist() { this.sendTasks([ this.clearTask ]); }
 
-    playRecording(recording) { this.playAll(recording.tracks); }
+    repeat() { this.sendTasks([ this.repeatTask ]); }
 
-    playAll(tracks) {
-        let tasks = [ ];
-        for (let track of tracks)
-            tasks.unshift(this.createTask("add", track.filename, 0));
-        tasks.push(this.startTask);
-        this.sendTasks(tasks);
-    }
+    shuffle() { this.sendTasks([ this.shuffleTask ]); }
 
-    play(track) { 
-        this.sendTasks([ 
-            this.createTask("add", track.filename, 0),
-            this.stopTask,
-            this.startTask
-        ]);
-    }
+    queue(track) { this.sendTasks([ this.addTask(track.filename) ]); }
 
     queueRecording(recording) { this.queueAll(recording.tracks); }
 
     queueAll(tracks) {
         let tasks = [ ];
         for (let track of tracks)
-            tasks.push(this.createTask("add", track.filename));
+            tasks.push(this.addTask(track.filename));
         this.sendTasks(tasks);
     }
 
-    queue(track) { this.sendTasks([ this.createTask("add", track.filename) ]); }
-
-    clearAll(tracks) {
+    removeAll(tracks) {
         let tasks = [ ];
         for (let i = 0; i < tracks.length; i++)
-            tasks.push(this.createTask("remove", track.filename, 0));
+            tasks.push(this.removeTask(0));
         this.sendTasks(tasks);
     }
 
-    streamUrl(url) { this.sendTasks([ this.createTask("stream", url) ]); }
+    streamUrl(url) { this.sendTasks([ { name: "stream", url: url } ]); }
 
     getCurrentState(callback) { this.get("", callback); }
 

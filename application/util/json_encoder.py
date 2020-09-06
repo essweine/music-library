@@ -3,15 +3,24 @@ from enum import Enum
 from datetime import datetime, date
 from abc import ABC
 
-from requests import Response
-
 class JsonSerializable(ABC):
 
     def as_dict(self):
-        return self.__dict__.copy()
+        return dict([ (attr, val) for attr, val in self.__dict__.items() if not attr.startswith("_") ])
+
+    def copy(self):
+
+        _copy = lambda v: v.copy() if "copy" in v.__dir__() else v
+        return self.__class__(*[ _copy(val) for attr, val in self.__dict__.items() if not attr.startswith("_") ])
 
     def __repr__(self):
         return json.dumps(self, cls = JsonEncoder, indent = 2, separators = [ ", ", ": " ])
+
+    def __eq__(self, other):
+
+        if other is None:
+            return False
+        return all([ self.__getattribute__(attr) == other.__getattribute__(attr) for attr in self.__dict__ if not attr.startswith("_") ])
 
     @classmethod
     def row_factory(cls, cursor, row):
@@ -33,6 +42,4 @@ class JsonEncoder(json.JSONEncoder):
             return obj.strftime("%Y-%m-%d")
         elif isinstance(obj, Enum):
             return obj.value
-        elif isinstance(obj, Response):
-            return obj.url
         return json.JSONEncoder.default(self, obj)

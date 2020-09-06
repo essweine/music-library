@@ -210,7 +210,11 @@ function createRecordingContainer(app) {
         container.saveIcon = container.createIcon("save", e => container.save());
         container.cancelIcon = container.createIcon("clear", e => container.cancel());
 
-        container.playIcon = container.createIcon("play_arrow", e => app.playerApi.playAll(container.source.tracks));
+        container.playIcon = container.createIcon("play_arrow", e => {
+            app.playerApi.clearPlaylist();
+            app.playerApi.queueAll(container.source.tracks)
+            app.playerApi.start();
+        });
         container.queueIcon = container.createIcon("playlist_play", e => app.playerApi.queueAll(container.source.tracks));
 
         container.selectContext(false);

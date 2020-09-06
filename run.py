@@ -18,6 +18,7 @@ settings = {
     "debug": True,
     "template_path": os.path.join(os.path.dirname(__file__), "application", "templates"),
     "static_path": os.path.join(os.path.dirname(__file__), "application", "static"),
+    "autoreload": False,
 }
 
 def print_options(options):

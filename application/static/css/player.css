@@ -107,19 +107,31 @@
 
 .tracklist-heading {
     grid-column: 1 / 7;
-    display: flex;
-    justify-content: center;
-    padding: 5px;
+    display: grid;
+    grid-auto-flow: column;
+    justify-items: stretch;
+    align-items: center;
     font-size: large;
     font-weight: bold;
+    padding: 5px 0;
 }
 
 .tracklist-heading-option {
-    padding: 0 5px;
+    padding-right: 10px;
 }
 
 .tracklist-heading-selected, .tracklist-heading-option:hover {
     text-decoration: underline;
+}
+
+#playlist-view {
+    align-content: center;
+}
+
+#playlist-controls {
+    display: flex;
+    justify-content: end;
+    font-size: large;
 }
 
 .list-toggle {

@@ -23,7 +23,6 @@ function createRecordingTrack(track) {
 
     entry.moveUp     = createIcon("arrow_upward", e => entry.dispatchEvent(createTracklistEvent("move-track-up")), "move-up");
     entry.moveDown   = createIcon("arrow_downward", e => entry.dispatchEvent(createTracklistEvent("move-track-down")), "move-down");
-    entry.playTrack  = createIcon("play_arrow", e => entry.dispatchEvent(createTrackEvent("play-track", track)), "play-track");
     entry.queueTrack = createIcon("playlist_add", e => entry.dispatchEvent(createTrackEvent("queue-track", track)), "queue-track");
 
     entry.addEventListener("tracklist-action", e => {
@@ -39,7 +38,6 @@ function createRecordingTrack(track) {
         entry.trackTitle.toggleEdit(editable);
         if (editable) {
             entry.ratingContainer.remove();
-            entry.playTrack.remove();
             entry.queueTrack.remove();
             entry.append(entry.moveUp);
             entry.append(entry.moveDown);
@@ -47,7 +45,6 @@ function createRecordingTrack(track) {
             entry.moveUp.remove();
             entry.moveDown.remove();
             entry.append(entry.ratingContainer);
-            entry.append(entry.playTrack);
             entry.append(entry.queueTrack);
         }
     }

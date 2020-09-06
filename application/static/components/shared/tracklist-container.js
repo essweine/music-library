@@ -5,14 +5,14 @@ function addText(text, className) {
     return span;
 }
 
-function createTracklistOption(text, className, selectedClass, selectEvent) {
+function createTracklistOption(text, className, selectedClass, action) {
     let span = document.createElement("span");
     span.innerText = text;
     span.classList.add(className);
     span.onclick = () => {
         Array.from(document.getElementsByClassName(selectedClass)).map(e => e.classList.remove(selectedClass));
         span.classList.add(selectedClass);
-        span.dispatchEvent(selectEvent);
+        action();
     }
     return span;
 }

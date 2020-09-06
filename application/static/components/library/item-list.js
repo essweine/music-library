@@ -150,7 +150,8 @@ function createRecordingList(app) {
         row.addIcon("info", e => window.location.href = "/recording/" + entry.id, "recording-list-view");
         row.addIcon("playlist_play", e => {
             app.playerApi.clearPlaylist();
-            app.recordingApi.getRecording(entry.id, app.playerApi.playRecording.bind(app.playerApi));
+            app.recordingApi.getRecording(entry.id, app.playerApi.queueRecording.bind(app.playerApi));
+            app.playerApi.start();
         });
         row.addIcon("playlist_add", e => app.recordingApi.getRecording(entry.id, app.playerApi.queueRecording.bind(app.playerApi)));
         row.setExpandable(

@@ -2,7 +2,7 @@ import { Importer, Recording, Player, Search, History } from "/static/modules/ap
 
 import { createDirectoryList, createRecordingList } from "/static/components/library/item-list.js";
 import { createImportContainer, createRecordingContainer } from "/static/components/library/recording-container.js";
-import { createPlayerContainer } from "/static/components/player/player-container.js";
+import { createPlayerContainer } from "/static/components/player/container.js";
 import { createHistoryContainer } from "/static/components/history-container.js";
 import { createRadioContainer } from "/static/components/radio-container.js";
 import { createLogManager } from "/static/components/log-manager.js";
@@ -46,7 +46,7 @@ class Application {
         } else if (action == "history") {
             let ws = this.getPlayerNotificationService();
             createHistoryContainer(this, ws);
-            this.historyApi.getRecentTracks(this.container.recent.period, this.container.recent.update);
+            this.historyApi.getRecentTracks(this.container.tracklist.period, this.container.tracklist.update);
         } else if (action == "radio") {
             createRadioContainer(this);
         } else if (action == "log") {

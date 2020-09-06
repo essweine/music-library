@@ -1,11 +1,11 @@
 from multiprocessing import Process, Pipe
 import subprocess, signal, time, os
-import re
 import logging
 from datetime import datetime, timedelta
 
 from ..library import Track
-from .state import State, Task, PlaylistEntry, StreamEntry, ProcState
+from .state import Task, State, ProcState
+from .playlist import PlaylistEntry, StreamEntry
 from .history import History
 
 CMD = [ "ffmpeg", "-hide_banner" ]
@@ -17,7 +17,7 @@ class Player(object):
 
         self.logger = logging.getLogger(__name__)
         self.root = root
-        self.state = State(ProcState.Stopped, 0, [ ], [ ], None)
+        self.state = State(ProcState.Stopped, 0, [ ], [ ], None, False, False)
         self._subprocess = None
         self.logger = logging.getLogger('tornado.application')
         self.websockets = set()
@@ -43,8 +43,10 @@ class Player(object):
                     self._pause()
                 elif task.name == "stop":
                     self._stop()
-                elif task.name == "goto":
-                    self._handle_goto_position(task)
+                elif task.name == "skip":
+                    self._handle_skip(task)
+                elif task.name == "move":
+                    self._handle_move(task)
                 elif task.name == "add":
                     self._handle_add_to_playlist(task)
                 elif task.name == "remove":
@@ -53,6 +55,10 @@ class Player(object):
                     self._handle_clear_playlist()
                 elif task.name == "stream":
                     self._handle_stream(task)
+                elif task.name == "repeat":
+                    self._handle_repeat()
+                elif task.name == "shuffle":
+                    self._handle_shuffle()
 
             if self._subprocess is not None:
                 self._check_subprocess()
@@ -75,9 +81,7 @@ class Player(object):
     def send_task(self, **kwargs):
 
         name = kwargs.pop("name")
-        position = kwargs.pop("position", None)
-        filename = kwargs.pop("filename", None)
-        task = Task(name, filename, position)
+        task = Task(name, **kwargs)
         self.conn.send(task)
 
     def update_history(self, cursor, state):
@@ -97,40 +101,71 @@ class Player(object):
 
         if self._subprocess_running():
             self._stop()
-        self.state.stream = StreamEntry(task.filename)
+        self.state.stream = StreamEntry(task.url)
         self._start()
 
-    def _handle_goto_position(self, task):
+    def _handle_skip(self, task):
 
+        playing = self.state.proc_state
         if self._subprocess_running():
             self._stop()
+        self.state._playlist_state.skip(task.offset)
+        self.state.current = self.state._playlist_state.current
+        if playing == ProcState.Playing:
+            self._start()
 
-        if task.position >= 0 and task.position < len(self.state.playlist):
-            self.state.current = task.position
-        self._start()
+    def _handle_move(self, task):
+
+        entry = self.state.playlist.pop(task.original)
+        self.state.playlist.insert(task.destination, entry)
+        if self.state.current == task.original:
+            self.state._playlist_state.move(task.destination)
+        if self.state.current == task.destination:
+            self.state._playlist_state.move(task.original)
+        self.state.current = self.state._playlist_state.current
 
     def _handle_add_to_playlist(self, task):
 
         entry = PlaylistEntry(task.filename)
-        if task.position is not None:
-            self.state.playlist.insert(task.position, entry)
-        else:
-            self.state.playlist.append(entry)
+        position = task.position if task.position is not None else len(self.state.playlist)
+        self.state.playlist.insert(position, entry)
+        self.state._playlist_state.add(position)
+        self.state.current = self.state._playlist_state.current
 
     def _handle_remove_from_playlist(self, task):
 
-        if task.position is None:
-            for entry in [ entry for entry in self.state.playlist if entry.filename == task.filename ]:
-                self.state.playlist.remove(entry)
-        elif task.position < len(self.state.playlist):
+        playing = self.state.proc_state
+        if task.position == self.state.current and self._subprocess_running():
+            self._stop()
+
+        if task.position < len(self.state.playlist):
             self.state.playlist.pop(task.position)
+            self.state._playlist_state.remove(task.position)
+            self.state.current = self.state._playlist_state.current
+
+        if playing == ProcState.Playing:
+            self._start()
 
     def _handle_clear_playlist(self):
 
         if self._subprocess_running():
             self._stop()
         self.state.playlist.clear()
+        self.state._playlist_state.clear()
         self.state.current = 0
+
+    def _handle_repeat(self):
+
+        self.state.repeat = not self.state.repeat
+        self.state._playlist_state.repeat = self.state.repeat
+
+    def _handle_shuffle(self):
+
+        self.state.shuffle = not self.state.shuffle
+        if self.state.shuffle:
+            self.state._playlist_state.shuffle(self.state.current)
+        else:
+            self.state._playlist_state.unshuffle(self.state.current)
 
     def _start(self):
 
@@ -146,12 +181,14 @@ class Player(object):
 
     def _advance(self):
 
-        if self.state.current < len(self.state.playlist):
+        if not self.state._playlist_state.at_end:
+            self.state.current = self.state._playlist_state.current
             entry = self.state.playlist[self.state.current]
             self._play(entry)
         else:
-            self.state.current = 0
             self._stop()
+            self.state._playlist_state.position = 0
+            self.state.current = self.state._playlist_state.current
 
     def _pause(self):
 
@@ -227,7 +264,7 @@ class Player(object):
             self.state.playlist[self.state.current] = PlaylistEntry(entry.filename)
 
         if advance:
-            self.state.current = self.state.current + 1
+            self.state._playlist_state.advance()
 
         self._subprocess = None
 

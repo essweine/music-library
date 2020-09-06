@@ -45,6 +45,10 @@ span, div {
     background-color: #aaf;
 }
 
+.disabled-icon {
+    color: #aaa;
+}
+
 .error-display {
     padding: 10px 0;
 }
