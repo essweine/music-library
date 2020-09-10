@@ -1,8 +1,8 @@
 import { createEditableInfo } from "./editable-info.js";
 import { createRatingContainer } from "/static/components/shared/rating-container.js";
-import { createIcon, createTracklistEvent, createTrackEvent } from "/static/components/shared/icons.js";
+import { createIcon } from "/static/components/shared/icons.js";
 
-function createRecordingTrack(track) {
+function createRecordingTrack(tracklist, track) {
 
     let entry = document.createElement("div");
     entry.classList.add("recording-track");
@@ -21,18 +21,9 @@ function createRecordingTrack(track) {
     entry.ratingContainer.configure(track.recording_id, track.filename, track.rating);
     entry.append(entry.ratingContainer);
 
-    entry.moveUp     = createIcon("arrow_upward", e => entry.dispatchEvent(createTracklistEvent("move-track-up")), "move-up");
-    entry.moveDown   = createIcon("arrow_downward", e => entry.dispatchEvent(createTracklistEvent("move-track-down")), "move-down");
-    entry.queueTrack = createIcon("playlist_add", e => entry.dispatchEvent(createTrackEvent("queue-track", track)), "queue-track");
-
-    entry.addEventListener("tracklist-action", e => {
-        if (e.detail == "move-track-up")
-            entry.dispatchEvent(new CustomEvent("move-track", { detail: entry.currentPosition, bubbles: true }));
-        else if (e.detail == "move-track-down")
-            entry.dispatchEvent(new CustomEvent("move-track", { detail: entry.currentPosition + 1, bubbles: true }));
-        else if (e.detail == "remove-track")
-            entry.dispatchEvent(new CustomEvent("remove-track", { detail: entry.currentPosition, bubbles: true }));
-    });
+    entry.moveUp     = createIcon("arrow_upward", e => tracklist.shiftTrackUp(entry.currentPosition));
+    entry.moveDown   = createIcon("arrow_downward", e => tracklist.shiftTrackUp(entry.currentPosition + 1));
+    entry.queueTrack = createIcon("playlist_add", e => tracklist.queueTrack(entry.track), "queue-track");
 
     entry.toggleEdit = (editable) => {
         entry.trackTitle.toggleEdit(editable);

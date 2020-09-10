@@ -22,9 +22,6 @@ function createTracklistContainer(childClass) {
     let container = document.createElement("div");
     container.childClass = childClass;
 
-    container.addEventListener("move-track", e => container.shiftTrackUp(e.detail));
-    container.addEventListener("remove-track", e => container.removeTrack(e.detail));
-
     container._shiftTrackUp = (position) => {
         let children = container.getElementsByClassName(container.childClass);
         let item = children.item(position);

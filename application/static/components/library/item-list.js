@@ -99,7 +99,7 @@ function createRecordingList(app) {
 
     let root = createListRoot("recording-list-root");
 
-    let search = createSearchBar();
+    let search = createSearchBar(root);
     root.append(search);
 
     let listHeader = createListRow("list-heading");
@@ -161,7 +161,7 @@ function createRecordingList(app) {
         return row;
     }
 
-    app.content.addEventListener("update-recordings", e => app.searchApi.searchRecordings(e.detail, app.container.update));
+    root.updateRecordings = (query) => app.searchApi.searchRecordings(query, root.update);
 
     document.title = "Browse Recordings";
     app.container = root;

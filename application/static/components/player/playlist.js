@@ -1,7 +1,7 @@
 import { createTracklistControls } from "./controls.js";
 import { createPlaylistEntry } from "./playlist-entry.js";
 import { createTracklistContainer, createTracklistOption, addText } from "/static/components/shared/tracklist-container.js";
-import { createIcon, createTracklistEvent } from "/static/components/shared/icons.js";
+import { createIcon } from "/static/components/shared/icons.js";
 
 function createPlaylist(app) {
 
@@ -50,11 +50,13 @@ function createPlaylist(app) {
     };
 
     tracklist.shiftTrackUp = (position) => {
+        app.playerApi.sendTasks([ app.playerApi.moveTask(position, position - 1) ]);
         tracklist._shiftTrackUp(position);
         tracklist.addToggle();
     }
 
     tracklist.removeTrack = (position) => {
+        app.playerApi.sendTasks([ app.playerApi.removeTask(position) ]);
         tracklist._removeTrack(position);
         tracklist.addToggle();
     }
@@ -88,7 +90,7 @@ function createPlaylist(app) {
         tracklist.shuffle = shuffle;
         tracklist.repeat = repeat;
         controls.updateIcons(shuffle, repeat);
-        let entries = tracklist.tracks.map(track => createPlaylistEntry(track));
+        let entries = tracklist.tracks.map(track => createPlaylistEntry(tracklist, track));
         for (let i = 0; i < entries.length; i++) {
             let entry = entries[i];
             entry.updatePosition(i, i == 0, i == entries.length - 1);

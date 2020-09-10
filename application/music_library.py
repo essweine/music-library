@@ -86,6 +86,7 @@ class MusicLibrary(Application):
                 self.conn.commit()
             except:
                 self.logger.error("An exception occurred while updating the history", exc_info = True)
+                break
 
         while not self.console.queue.empty():
             try:

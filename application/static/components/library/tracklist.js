@@ -1,7 +1,7 @@
 import { createTracklistContainer } from "/static/components/shared/tracklist-container.js";
-import { createRecordingTrack } from "./recording-tracklist-entry.js";
+import { createRecordingTrack } from "./tracklist-entry.js";
 
-function createRecordingTracklist() {
+function createRecordingTracklist(container) {
 
     let tracklist = createTracklistContainer("recording-track");
     tracklist.id = "recording-tracklist";
@@ -16,7 +16,10 @@ function createRecordingTracklist() {
 
     tracklist.reapply           = document.createElement("button");
     tracklist.reapply.innerText = "Reapply names";
-    tracklist.reapply.onclick   = e => tracklist.dispatchEvent(new CustomEvent("reapply-titles", { bubbles: true }));
+    tracklist.reapply.onclick   = e => {
+        let original = container.source.tracks.map(item => item.title);
+        container.tracklist.setTrackTitles(original);
+    }
     tracklist.options.append(tracklist.reapply);
 
     tracklist.append(tracklist.options);
@@ -24,13 +27,13 @@ function createRecordingTracklist() {
     tracklist.toggleEdit = (editable) => {
         for (let track of tracklist.getElementsByClassName(tracklist.childClass))
             track.toggleEdit(editable);
-        (editable) ?  tracklist.insertBefore(tracklist.options, tracklist.rawInfo) : tracklist.options.remove();
+        (editable) ? tracklist.insertBefore(tracklist.options, tracklist.rawInfo) : tracklist.options.remove();
     }
 
     tracklist.setTracklist = (tracks) => {
         tracklist.clear();
         for (let track of tracks) {
-            let entry = createRecordingTrack(track);
+            let entry = createRecordingTrack(tracklist, track);
             let position = track.track_num - 1;
             entry.updatePosition(position, position == 0, position == tracks.length - 1);
             tracklist.insertBefore(entry, tracklist.options);

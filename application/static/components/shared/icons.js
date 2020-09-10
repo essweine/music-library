@@ -1,7 +1,3 @@
-function createTrackEvent(eventName, track) { return new CustomEvent(eventName, { detail: track, bubbles: true }); }
-
-function createTracklistEvent(action) { return new CustomEvent("tracklist-action", { detail: action, bubbles: true }); }
-
 function createIcon(iconName, action, className = null) {
 
     let icon = document.createElement("span");
@@ -19,4 +15,4 @@ function createIcon(iconName, action, className = null) {
     return icon;
 }
 
-export { createIcon, createTrackEvent, createTracklistEvent };
+export { createIcon };

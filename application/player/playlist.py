@@ -19,7 +19,7 @@ class PlaylistState(JsonSerializable):
 
     @property
     def current(self):
-        return self.order[self.position]
+        return self.order[self.position] if len(self.order) else 0
 
     @property
     def at_end(self):

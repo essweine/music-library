@@ -11,53 +11,71 @@ function createSelect(text, values) {
     return select;
 }
 
-function updateQuery(container, exclude) {
+function addCheckbox(container, recordingType, className) {
 
-    let selected  = container.select.value;
-    let value     = ([ "rating", "sound_rating" ].includes(selected)) ? container.ratingValue.value : container.textInput.value;
-    let queryType = (exclude) ? container.query.exclude : container.query.match;
+    let span = document.createElement("span");
+    span.classList.add(className);
 
-    let criterion = { };
-    criterion[selected] = value;
+    let text = document.createElement("span");
+    text.innerText = recordingType;
+    span.append(text);
 
-    let excluded = document.createElement("span");
-    excluded.classList.add("material-icons");
-    excluded.classList.add("list-search-hidden");
-    excluded.innerText = (exclude) ? "highlight_off" : "check_circle_outline";
-    container.append(excluded);
+    let checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.checked = true;
+    checkbox.oninput = e => {
+        container.query[recordingType.toLowerCase()] = checkbox.checked;
+        container.updateResults();
+    }
+    span.append(checkbox);
+
+    container.append(span);
+}
+
+function updateSearch(container, exclude) {
+
+    let selected = container.select.value;
+    let value    = ([ "rating", "sound_rating" ].includes(selected)) ? container.ratingValue.value : container.textInput.value;
+
+    let criterion = document.createElement("div");
+    criterion.classList.add("list-search-criterion");
+    criterion.data = { };
+    criterion.data[selected] = value;
+    criterion.exclude = exclude;
+
+    let queryType = (criterion.exclude) ? container.query.exclude : container.query.match;
+    queryType.push(criterion.data);
+
+    let visibility = document.createElement("span");
+    visibility.classList.add("material-icons");
+    visibility.classList.add("list-search-hidden");
+    visibility.innerText = (exclude) ? "visibility_off" : "visibility";
+    criterion.append(visibility);
 
     let critName = document.createElement("span");
     critName.classList.add("list-search-name");
     critName.innerText = container.critNames[container.critValues.indexOf(selected)]
-    container.append(critName);
+    criterion.append(critName);
 
     let critValue = document.createElement("span");
     critValue.classList.add("list-search-value");
     critValue.innerText = value;
-    container.append(critValue);
+    criterion.append(critValue);
 
-    let action = e => {
-        queryType = queryType.splice(queryType.indexOf(criterion), 1);
-        excluded.remove();
-        critName.remove();
-        critValue.remove();
-        e.target.remove();
-        container.dispatchEvent(new CustomEvent("update-recordings", { detail: container.query, bubbles: true }));
-    }
+    let removeIcon = createIcon("clear", container.removeCriterion(criterion), "list-search-remove");
+    criterion.append(removeIcon);
 
-    let removeIcon = createIcon("clear", action, "list-search-remove");
-    container.append(removeIcon);
-
-    queryType.push(criterion);
-    container.dispatchEvent(new CustomEvent("update-recordings", { detail: container.query, bubbles: true }));
+    container.append(criterion);
 }
 
-function createSearchBar() {
+function createSearchBar(root) {
 
     let container = document.createElement("div");
     container.query = { 
         match: [ ],
         exclude: [ ],
+        official: true,
+        nonofficial: true
     };
     container.classList.add("list-search-bar");
 
@@ -84,7 +102,9 @@ function createSearchBar() {
             container.ratingValue.remove();
             container.insertBefore(container.textInput, showIcon);
             let date = new Date(Date.now());
-            container.textInput.value = date.getFullYear() + "-" + (date.getMonth() + 1) + "-" + date.getDate();
+            let month = (date.getMonth() + 1).toString().padStart(2, "0");
+            let day = date.getDate().toString().padStart(2, "0");
+            container.textInput.value = "****" + "-" + month + "-" + day;
         }
     }
 
@@ -96,11 +116,32 @@ function createSearchBar() {
 
     container.ratingValue = createSelect([ "1", "2", "3", "4", "5", "Unrated" ], [ "1", "2", "3", "4", "5", null ]);
 
-    let showIcon = createIcon("check_circle_outline", e => updateQuery(container, false), "list-search-show");
+    container.updateResults = () => root.updateRecordings(container.query);
+
+    container.addCriterion = (exclude) => {
+        return function(e) {
+            updateSearch(container, exclude);
+            container.updateResults();
+        }
+    }
+
+    container.removeCriterion = (criterion) => {
+        return function(e) {
+            let queryType = (criterion.exclude) ? container.query.exclude : container.query.match;
+            queryType.splice(queryType.indexOf(criterion.data), 1);
+            criterion.remove();
+            container.updateResults();
+        }
+    }
+
+    let showIcon = createIcon("visibility", container.addCriterion(false), "list-search-show");
     container.append(showIcon);
 
-    let hideIcon = createIcon("highlight_off", e => updateQuery(container, true), "list-search-hide");
+    let hideIcon = createIcon("visibility_off", container.addCriterion(true), "list-search-hide");
     container.append(hideIcon);
+
+    addCheckbox(container, "Official", "list-search-official");
+    addCheckbox(container, "Nonofficial", "list-search-nonofficial");
 
     return container;
 }

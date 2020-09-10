@@ -1,7 +1,7 @@
 import { Importer, Recording, Player, Search, History } from "/static/modules/api.js";
 
 import { createDirectoryList, createRecordingList } from "/static/components/library/item-list.js";
-import { createImportContainer, createRecordingContainer } from "/static/components/library/recording-container.js";
+import { createImportContainer, createRecordingContainer } from "/static/components/library/container.js";
 import { createPlayerContainer } from "/static/components/player/container.js";
 import { createHistoryContainer } from "/static/components/history-container.js";
 import { createRadioContainer } from "/static/components/radio-container.js";

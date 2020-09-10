@@ -1,7 +1,7 @@
 import { createRecordingImage } from "./recording-image.js";
 import { createEditableInfo } from "./editable-info.js";
-import { createRecordingTracklist } from "./recording-tracklist.js";
-import { createRecordingRawInfo } from "./recording-raw-info.js";
+import { createRecordingTracklist } from "./tracklist.js";
+import { createRawInfo } from "./raw-info.js";
 import { createRatingContainer } from "/static/components/shared/rating-container.js";
 import { createIcon } from "/static/components/shared/icons.js";
 
@@ -21,7 +21,7 @@ function createRecordingDisplay() {
     container.imageContainer = addSection("recording-image");
     container.infoContainer  = addSection("recording-info");
 
-    container.tracklist = createRecordingTracklist();
+    container.tracklist = createRecordingTracklist(container);
     container.append(container.tracklist);
 
     container.rawInfo = addSection("recording-raw-info");
@@ -58,17 +58,6 @@ function createRecordingDisplay() {
     container.heading.style["padding-right"] = "20px";
     container.overview.append(container.heading);
 
-    container.addEventListener("select-file", e => {
-        let filename = e.detail;
-        container.source = container.data.parsed_text[container.data.text.indexOf(filename)];
-        container.addInfoFromSource();
-    });
-
-    container.addEventListener("reapply-titles", e => {
-        let original = container.source.tracks.map(item => item.title);
-        container.tracklist.setTrackTitles(original);
-    });
-
     container.createIcon = createIcon.bind(container);
 
     container.addImages = (images, baseDir) => {
@@ -83,7 +72,7 @@ function createRecordingDisplay() {
 
     container.addFiles = (files, baseDir) => {
         if (files.length) {
-            let rawInfo = createRecordingRawInfo(files, baseDir);
+            let rawInfo = createRawInfo(container, files, baseDir);
             container.replaceChild(rawInfo, container.rawInfo);
             container.rawInfo = rawInfo;
         } else {
@@ -136,6 +125,7 @@ function createRecordingDisplay() {
         container.recordingDate.initialize(container.source.recording_date, "recording-date", "Date");
         container.recordingVenue.initialize(container.source.venue, "venue", "Venue");
         container.tracklist.setTracklist(container.source.tracks);
+        container.tracklist.toggleEdit(true);
     }
 
     container.updateFiles = (directory) => {
@@ -186,6 +176,8 @@ function createImportContainer(app) {
 function createRecordingContainer(app) {
 
     let container = createRecordingDisplay();
+
+    container.tracklist.queueTrack = (track) => app.playerApi.queue(track);
 
     container.initialize = (recording) => {
 

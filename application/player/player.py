@@ -32,49 +32,52 @@ class Player(object):
     def loop(self, conn):
 
         while True:
+            try:
+                initial_state = self.state.copy()
 
-            initial_state = self.state.copy()
+                while conn.poll():
+                    task = conn.recv()
+                    if task.name == "start":
+                        self._start()
+                    elif task.name == "pause":
+                        self._pause()
+                    elif task.name == "stop":
+                        self._stop()
+                    elif task.name == "skip":
+                        self._handle_skip(task)
+                    elif task.name == "move":
+                        self._handle_move(task)
+                    elif task.name == "add":
+                        self._handle_add_to_playlist(task)
+                    elif task.name == "remove":
+                        self._handle_remove_from_playlist(task)
+                    elif task.name == "clear":
+                        self._handle_clear_playlist()
+                    elif task.name == "stream":
+                        self._handle_stream(task)
+                    elif task.name == "repeat":
+                        self._handle_repeat()
+                    elif task.name == "shuffle":
+                        self._handle_shuffle()
 
-            while conn.poll():
-                task = conn.recv()
-                if task.name == "start":
-                    self._start()
-                elif task.name == "pause":
-                    self._pause()
-                elif task.name == "stop":
-                    self._stop()
-                elif task.name == "skip":
-                    self._handle_skip(task)
-                elif task.name == "move":
-                    self._handle_move(task)
-                elif task.name == "add":
-                    self._handle_add_to_playlist(task)
-                elif task.name == "remove":
-                    self._handle_remove_from_playlist(task)
-                elif task.name == "clear":
-                    self._handle_clear_playlist()
-                elif task.name == "stream":
-                    self._handle_stream(task)
-                elif task.name == "repeat":
-                    self._handle_repeat()
-                elif task.name == "shuffle":
-                    self._handle_shuffle()
-
-            if self._subprocess is not None:
-                self._check_subprocess()
-
-            if self.state.proc_state == ProcState.Playing and self.state.stream is not None:
                 if self._subprocess is not None:
-                    self._subprocess.stdin.write(self.state.stream.read())
-                else:
-                    self._play(PlaylistEntry("-"))
-            elif self.state.proc_state == ProcState.Playing and self._subprocess is None:
-                self._advance()
+                    self._check_subprocess()
 
-            if self.state != initial_state:
-                conn.send(self.state.copy())
-                # Only send history once to prevent duplicates
-                self.state.history.clear()
+                if self.state.proc_state == ProcState.Playing and self.state.stream is not None:
+                    if self._subprocess is not None:
+                        self._subprocess.stdin.write(self.state.stream.read())
+                    else:
+                        self._play(PlaylistEntry("-"))
+                elif self.state.proc_state == ProcState.Playing and self._subprocess is None:
+                    self._advance()
+
+                if self.state != initial_state:
+                    conn.send(self.state.copy())
+                    # Only send history once to prevent duplicates
+                    self.state.history.clear()
+
+            except:
+                self.logger.error("An unexpected error occurred", exc_info = True)
 
             time.sleep(0.05)
 

@@ -1,4 +1,4 @@
-function createRecordingRawInfo(files, directory, selected = null) {
+function createRawInfo(recordingContainer, files, directory, selected = null) {
 
     let container = document.createElement("div", { is: "recording-raw-info" });
     container.id = "recording-raw-info";
@@ -40,9 +40,10 @@ function createRecordingRawInfo(files, directory, selected = null) {
     }
 
     container.selectFile = (e) => {
-        container.getNotes(e.target.value);
-        let ev = new CustomEvent("select-file", { detail: e.target.value, bubbles: true });
-        container.dispatchEvent(ev);
+        let filename = e.target.value;
+        container.getNotes(filename);
+        recordingContainer.source = recordingContainer.data.parsed_text[recordingContainer.data.text.indexOf(filename)];
+        recordingContainer.addInfoFromSource();
     }
 
     container.getNotes = (file) => {
@@ -67,4 +68,4 @@ function createRecordingRawInfo(files, directory, selected = null) {
     return container;
 }
 
-export { createRecordingRawInfo };
+export { createRawInfo };

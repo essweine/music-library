@@ -131,8 +131,7 @@ class Recording(JsonSerializable):
         ops = {
             "artist": { "match": "like", "exclude": "not like" },
             "rating": { "match": ">=", "exclude": "<" },
-            "sound_rating": { "match": ">=", "exclude": ">" },
-            "recording_date": { "match": "=", "exclude": "!=" },
+            "sound_rating": { "match": ">=", "exclude": "<" },
         }
 
         recording_conditions, recording_values = [ ], [ ]
@@ -149,9 +148,18 @@ class Recording(JsonSerializable):
                     else:
                         exclude_subqueries.append(q)
                         exclude_tracks.append(val)
+                elif col == "recording_date":
+                    date_conditions, date_values = cls._parse_date(val, cond_type == "match")
+                    recording_conditions.extend(date_conditions)
+                    recording_values.extend(date_values)
                 else:
                     recording_conditions.append("{0} {1} ?".format(col, ops[col][cond_type]))
                     recording_values.append(val)
+
+        if not criteria["official"] and criteria["nonofficial"]:
+            recording_conditions.append("official=false")
+        elif not criteria["nonofficial"] and criteria["official"]:
+            recording_conditions.append("official=true")
 
         query = "select * from recording"
         if match_tracks:
@@ -166,6 +174,44 @@ class Recording(JsonSerializable):
 
         cursor.row_factory = cls.row_factory
         cursor.execute(query, recording_values + match_tracks + exclude_tracks)
+
+    @staticmethod
+    def _parse_date(val, match):
+
+        try:
+            year, month, day = re.split("[-/]", re.sub("\*+", "%", val))
+            month = month.zfill(2) if month != "%" else month
+            day = day.zfill(0) if day != "%" else day
+        except:
+            raise Exception(f"Invalid date query: {val}")
+
+        date_conditions, date_values = [ ], [ ]
+
+        if "*" not in val:
+            op = "=" if match else "!="
+            date_conditions.append(f"recording_date {op} ?")
+            date_values.append(f"{year}-{month}-{day}")
+
+        if year != "%":
+            if "%" in year:
+                op = "like" if match else "not like"
+                date_conditions.append(f"strftime('%Y', recording_date) {op} ?")
+            else:
+                op = "=" if match else "!="
+                date_conditions.append(f"strftime('%Y', recording_date) {op} ?")
+            date_values.append(year)
+
+        if month != "%":
+            op = "=" if match else "!="
+            date_conditions.append(f"strftime('%m', recording_date) {op} ?")
+            date_values.append(month)
+
+        if day != "%":
+            op = "=" if match else "!="
+            date_conditions.append(f"strftime('%d', recording_date) {op} ?")
+            date_values.append(day)
+
+        return date_conditions, date_values
 
 class Track(JsonSerializable):
 

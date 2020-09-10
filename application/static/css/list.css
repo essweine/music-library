@@ -44,10 +44,12 @@
 .list-search-input { grid-column: 3; }
 .list-search-show { grid-column: 4; }
 .list-search-hide { grid-column: 5; }
+.list-search-official { grid-column: 7; align-content: center; }
+.list-search-nonofficial { grid-column: 8; align-content: center; }
 
-.list-search-hidden {
-    grid-column 1; 
-}
+.list-search-criterion { display: contents; }
+
+.list-search-hidden { grid-column: 1; }
 
 .list-search-name { grid-column: 2; }
 .list-search-value { grid-column: 3; }
