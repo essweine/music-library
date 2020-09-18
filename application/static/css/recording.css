@@ -91,7 +91,8 @@
     width: max-content;
 }
 
-.recording-track-title > .editable-label {
+.recording-track-title > .editable-label,
+.recording-track-title > .editable-display {
     grid-column: 2;
     align-self: center;
     width: max-content;
@@ -100,12 +101,6 @@
 .recording-track-title > .editable-input {
     grid-column: 3;
     justify-self: start;
-    width: max-content;
-}
-
-.recording-track-title > .editable-display {
-    grid-column: 2;
-    align-self: center;
     width: max-content;
 }
 
@@ -132,8 +127,36 @@
     width: min-content;
 }
 
+.expand-track, .collapse-track {
+    grid-column: 6;
+    width: min-content;
+}
+
+.recording-track-artist > .editable-label,
+.recording-track-guest > .editable-label,
+.recording-track-composer > .editable-label {
+    grid-column: 2;
+    justify-self: end;
+    align-self: center;
+}
+
+.recording-track-artist > .editable-display,
+.recording-track-guest > .editable-display,
+.recording-track-composer > .editable-display {
+    grid-column: 2;
+    justify-self: start;
+    align-self: center;
+}
+
+
+.recording-track-artist > .editable-input,
+.recording-track-guest > .editable-input,
+.recording-track-composer > .editable-input {
+    grid-column: 3;
+}
+
 #recording-tracklist-options {
-    grid-column: 1 / 6;
+    grid-column: 1 / 7;
     align-self: center;
     justify-self: center;
     padding: 20px;

@@ -3,7 +3,7 @@ import os.path
 from datetime import datetime
 from dateutil.parser import parse as parsedate
 
-from ..db import Column, insert_statement, update_statement
+from ..db import Column, insert_statement, update_statement, convert_empty_strings
 from ..util import JsonSerializable
 
 RECORDING_COLUMNS = [
@@ -11,7 +11,6 @@ RECORDING_COLUMNS = [
     Column("directory", "text", None, False),
     Column("title", "text", None, True),
     Column("artist", "text", None, True),
-    Column("composer", "text", None, True),
     Column("genre", "text", None, True),
     Column("notes", "text", None, True),
     Column("artwork", "text", None, True),
@@ -29,12 +28,16 @@ TRACK_COLUMNS = [
     Column("title", "text", None, True),
     Column("filename", "text", None, False),
     Column("rating", "int", None, True),
+    Column("composer", "text", None, True),
+    Column("artist", "text", None, True),
+    Column("guest_artist", "text", None, True)
 ]
 
 class Recording(JsonSerializable):
 
     def __init__(self, recording = { }):
 
+        convert_empty_strings(recording, RECORDING_COLUMNS)
         for column in RECORDING_COLUMNS:
             self.__setattr__(column.name, recording.get(column.name, column.default))
         self.tracks = [ Track(track) for track in recording.get("tracks", [ ]) ]
@@ -130,6 +133,7 @@ class Recording(JsonSerializable):
 
         ops = {
             "artist": { "match": "like", "exclude": "not like" },
+            "genre": { "match": "like", "exclude": "not like" },
             "rating": { "match": ">=", "exclude": "<" },
             "sound_rating": { "match": ">=", "exclude": "<" },
         }
@@ -138,21 +142,27 @@ class Recording(JsonSerializable):
         match_subqueries, exclude_subqueries = [ ], [ ]
         match_tracks, exclude_tracks = [ ], [ ]
         for cond_type in [ "match", "exclude" ]:
+
             for item in criteria[cond_type]:
+
                 col, val = item.popitem()
-                if col == "track_title":
-                    q = "select recording_id from track where title like ?"
+
+                if col in [ "track_title", "artist", "composer", "guest_artist" ]:
+                    name = "title" if col == "track_title" else col
+                    q = f"select recording_id from track where {name} like ?"
                     if cond_type == "match":
                         match_subqueries.append(q)
                         match_tracks.append(val)
                     else:
                         exclude_subqueries.append(q)
                         exclude_tracks.append(val)
-                elif col == "recording_date":
+
+                if col == "recording_date":
                     date_conditions, date_values = cls._parse_date(val, cond_type == "match")
                     recording_conditions.extend(date_conditions)
                     recording_values.extend(date_values)
-                else:
+
+                if col in ops:
                     recording_conditions.append("{0} {1} ?".format(col, ops[col][cond_type]))
                     recording_values.append(val)
 
@@ -216,6 +226,8 @@ class Recording(JsonSerializable):
 class Track(JsonSerializable):
 
     def __init__(self, track = { }):
+
+        convert_empty_strings(track, TRACK_COLUMNS)
         for column in TRACK_COLUMNS:
             self.__setattr__(column.name, track.get(column.name, column.default))
 

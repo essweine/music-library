@@ -16,17 +16,17 @@ function createEditableInfo(className) {
     container.input.classList.add("editable-input");
 
     container.initialize = (text, inputId, inputLabel) => {
-        container.label.innerText   = inputLabel;
-        container.label.htmlFor     = inputId;
-        container.input.id          = inputId;
+        container.label.innerText = inputLabel;
+        container.label.htmlFor   = inputId;
+        container.input.id        = inputId;
         container.set(text);
     }
 
     container.get = () => { return container.display.innerText; }
 
-    container.set = (title) => {
-        container.display.innerText = title;
-        container.input.value = title;
+    container.set = (text) => {
+        container.display.innerText = text;
+        container.input.value = text;
     }
 
     container.save = () => { container.display.innerText = container.input.value; }

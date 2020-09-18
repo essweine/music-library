@@ -8,6 +8,7 @@ class ParsedText(JsonSerializable):
     def __init__(self, text):
 
         self.artist = None
+        self.composer = None
         self.title = None
         self.recording_date = None
         self.venue = None
@@ -51,6 +52,11 @@ class ParsedText(JsonSerializable):
                     self.recording_date = self._get_date_from_line(line)
                     if self.recording_date is not None:
                         continue
+
+                composer = re.match("Composer:\s+(.*)", line, flags = re.I)
+                if composer:
+                    self.composer = composer.group(1)
+                    continue
 
                 if self.venue is None and not re.match("\w+,\s+\w+", line):
                     self.venue = line

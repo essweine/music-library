@@ -28,3 +28,9 @@ def update_statement(table, key, COLUMNS):
         updates = updates,
         key = key,
     )
+
+def convert_empty_strings(data, COLUMNS):
+
+    for column in COLUMNS:
+        if column.name in data and data[column.name] == "":
+            data[column.name] = None

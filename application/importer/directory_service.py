@@ -113,6 +113,7 @@ class DirectoryService(object):
             for idx, title in enumerate(parsed_text.track_titles):
                 if idx < len(recording.tracks):
                     recording.tracks[idx].title = title
+                    recording.tracks[idx].composer = parsed_text.composer
 
         return recording
 

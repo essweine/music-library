@@ -30,12 +30,14 @@ function createRecordingDisplay() {
     container.recordingArtist = createEditableInfo("recording-data");
     container.recordingDate   = createEditableInfo("recording-data");
     container.recordingVenue  = createEditableInfo("recording-data");
+    container.recordingGenre  = createEditableInfo("recording-data");
 
     container.infoFields = [ 
         container.recordingTitle,
         container.recordingArtist,
         container.recordingDate,
-        container.recordingVenue
+        container.recordingVenue,
+        container.recordingGenre
     ];
     for (let elem of container.infoFields)
         container.infoContainer.append(elem);
@@ -108,6 +110,7 @@ function createRecordingDisplay() {
         container.source.artist = container.recordingArtist.get();
         container.source.recording_date = container.recordingDate.get();
         container.source.venue = container.recordingVenue.get();
+        container.source.genre = container.recordingGenre.get();
         container.source.tracks = container.tracklist.getTracklist();
 
         let official = document.getElementById("official-checkbox").checked;
@@ -124,6 +127,7 @@ function createRecordingDisplay() {
         container.recordingArtist.initialize(container.source.artist, "artist", "Artist");
         container.recordingDate.initialize(container.source.recording_date, "recording-date", "Date");
         container.recordingVenue.initialize(container.source.venue, "venue", "Venue");
+        container.recordingGenre.initialize(container.source.genre, "genre", "Genre");
         container.tracklist.setTracklist(container.source.tracks);
         container.tracklist.toggleEdit(true);
     }

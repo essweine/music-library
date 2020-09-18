@@ -84,8 +84,8 @@ function createSearchBar(root) {
     label.innerText = "Search";
     container.append(label);
 
-    container.critNames = [ "Artist", "Contains Track", "Minimum Rating", "Minimum Sound Rating", "Date" ];
-    container.critValues = [ "artist", "track_title", "rating", "sound_rating", "recording_date" ]
+    container.critNames = [ "Artist", "Contains Track", "Minimum Rating", "Minimum Sound Rating", "Genre", "Composer", "Date" ];
+    container.critValues = [ "artist", "track_title", "rating", "sound_rating", "genre", "composer", "recording_date" ]
 
     container.select = createSelect(container.critNames, container.critValues);
     container.select.classList.add("list-search-select");
