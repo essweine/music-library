@@ -11,7 +11,7 @@ function createRecentlyPlayedEntry(track) {
     entry.append(addText(track.recording, "recent-recording"));
 
     let ratingContainer = createRatingContainer("recent-rating");
-    ratingContainer.configure(track.recording_id, track.filename, track.rating);
+    ratingContainer.configure("recording", track.recording_id, track.filename, track.rating);
     entry.append(ratingContainer);
 
     let count = (track.count > 1) ? "x " + track.count : "";

@@ -7,6 +7,7 @@ from datetime import date
 
 from application.importer import DirectoryService
 from application.library import Recording
+from application.library.rating_handler import Rating
 from application.config import TABLE_DEFS
 from . import ROOT_PATH, DEFAULT_INDEX, DB_NAME
 
@@ -74,10 +75,10 @@ class TestRecording(unittest.TestCase):
         recording.artist = "Built To Spill"
         Recording.update(cursor, recording.as_dict())
 
-        album_rating = { "item": "rating", "rating": 5 }
-        track_rating = { "item": recording.tracks[0].filename, "rating": 5 }
-        Recording.set_rating(cursor, self.recording_id, album_rating)
-        Recording.set_rating(cursor, self.recording_id, track_rating)
+        album_rating = Rating("recording", self.recording_id, "rating", 5)
+        track_rating = Rating("recording", self.recording_id, recording.tracks[0].filename, 5)
+        Recording.set_rating(cursor, album_rating)
+        Recording.set_rating(cursor, track_rating)
 
         updated = Recording.get(cursor, self.recording_id)
         self.assertEqual(updated.artist, "Built To Spill")
@@ -110,8 +111,8 @@ class TestRecording(unittest.TestCase):
         directory = self.directory_service.get_directory("root/Edge of the Sun")
         recording = self.directory_service.create_recording(directory, directory.text[0])
         Recording.create(cursor, recording.as_dict())
-        album_rating = { "item": "rating", "rating": 5 }
-        Recording.set_rating(cursor, recording.id, album_rating)
+        album_rating = Rating("recording", recording.id, "rating", 5)
+        Recording.set_rating(cursor, album_rating)
 
         artist_search = { "match": [ { "artist": "Built To Spill" } ], "exclude": [ ] }
         Recording.search(cursor, artist_search)

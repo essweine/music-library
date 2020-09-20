@@ -49,8 +49,6 @@ class Recording extends Api {
     }
 
     saveRecording(data) { this.put("/" + data.id, data, NoOp); }
-
-    updateRating(recordingId, data) { this.put("/" + recordingId + "/rating", data); }
 }
 
 class Importer extends Api {
@@ -141,6 +139,16 @@ class Player extends Api {
     sendTasks(tasks) { this.post("", { "tasks": tasks }, NoOp); }
 }
 
+class Rating extends Api {
+
+    constructor(errorHandler) {
+        super(errorHandler);
+        this.base = "/api/rating";
+    }
+
+    update(rating) { this.post("", rating, NoOp); }
+}
+
 class Search extends Api {
 
     constructor(errorHandler) {
@@ -169,4 +177,4 @@ class History extends Api {
     }
 }
 
-export { Recording, Importer, Player, Search, History };
+export { Recording, Importer, Player, Rating, Search, History };

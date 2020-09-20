@@ -51,7 +51,7 @@ function createCurrentTrack() {
             container.img.src = "/file/" + encodeURIComponent(track.artwork);
         else
             container.img.remove();
-        container.ratingContainer.configure(track.recording_id, track.filename, track.rating);
+        container.ratingContainer.configure("recording", track.recording_id, track.filename, track.rating);
     }
 
     return container;

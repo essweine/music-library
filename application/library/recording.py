@@ -105,20 +105,17 @@ class Recording(JsonSerializable):
         return validation
 
     @staticmethod
-    def set_rating(cursor, recording_id, data):
+    def set_rating(cursor, rating):
 
-        item = data.get("item")
-        rating = data.get("rating")
-
-        if item == "rating":
+        if rating.rated_item == "rating":
             update = "update recording set rating=? where id=?"
-            values = (rating, recording_id)
-        elif item == "sound-rating":
+            values = (rating.value, rating.item_id)
+        elif rating.rated_item == "sound-rating":
             update = "update recording set sound_rating=? where id=?"
-            values = (rating, recording_id)
+            values = (rating.value, rating.item_id)
         else:
             update = "update track set rating=? where filename=?"
-            values = (rating, item)
+            values = (rating.value, rating.rated_item)
 
         cursor.execute(update, values)
 

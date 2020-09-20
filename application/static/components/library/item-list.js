@@ -24,9 +24,9 @@ function createListRow(className, parent = true) {
         row.append(icon);
     }
 
-    row.addRatingContainer = (recordingId, ratedItem, rating, className) => {
+    row.addRatingContainer = (recordingId, ratingType, rating, className) => {
         let ratingContainer = createRatingContainer("list-cell");
-        ratingContainer.configure(recordingId, ratedItem, rating);
+        ratingContainer.configure("recording", recordingId, ratingType, rating);
         ratingContainer.classList.add(className);
         row.append(ratingContainer);
     }

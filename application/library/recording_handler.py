@@ -37,19 +37,16 @@ class RecordingHandler(BaseApiHandler):
         except Exception as exc:
             self.write_error(500, log_message = f"Could not get recording {recording_id}", exc_info = sys.exc_info())
 
-    def put(self, recording_id, item = None):
+    def put(self, recording_id):
 
         if self.json_body is None:
             self.write_error(400, messsages = [ "Expected json" ])
 
         try:
-            if item is None:
-                errors = Recording.validate(self.json_body)
-                if errors:
-                    self.write_error(400, messages = errors)
-                self.db_action(Recording.update, self.json_body)
-            elif item == "rating":
-                self.db_action(Recording.set_rating, recording_id, self.json_body)
+            errors = Recording.validate(self.json_body)
+            if errors:
+                self.write_error(400, messages = errors)
+            self.db_action(Recording.update, self.json_body)
         except:
             self.write_error(500, log_message = f"Could not update recording {recording_id}", exc_info = sys.exc_info())
 

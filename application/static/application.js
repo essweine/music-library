@@ -1,4 +1,4 @@
-import { Importer, Recording, Player, Search, History } from "/static/modules/api.js";
+import { Importer, Recording, Player, Rating, Search, History } from "/static/modules/api.js";
 
 import { createDirectoryList, createRecordingList } from "/static/components/library/item-list.js";
 import { createImportContainer, createRecordingContainer } from "/static/components/library/container.js";
@@ -15,17 +15,14 @@ class Application {
         this.importerApi  = new Importer(this.errorHandler.bind(this));
         this.recordingApi = new Recording(this.errorHandler.bind(this));
         this.playerApi    = new Player(this.errorHandler.bind(this));
+        this.ratingApi    = new Rating(this.errorHandler.bind(this));
         this.searchApi    = new Search(this.errorHandler.bind(this));
         this.historyApi   = new History(this.errorHandler.bind(this));
 
         this.content = document.getElementById("content");
         this.addContainer(action, arg);
 
-        this.content.addEventListener("update-rating", ev => {
-            let recordingId = ev.detail.recordingId;
-            let data = ev.detail.data;
-            this.recordingApi.updateRating(recordingId, data);
-        });
+        this.content.addEventListener("update-rating", ev => this.ratingApi.update(ev.detail))
 
         this.content.append(this.container);
     }

@@ -197,10 +197,10 @@ function createRecordingContainer(app) {
         container.addInfoFromSource();
 
         container.recordingRating = createRatingContainer("recording-rating", "Rating");
-        container.recordingRating.configure(recording.id, "rating", recording.rating, "Rating");
+        container.recordingRating.configure("recording", recording.id, "rating", recording.rating, "Rating");
 
         container.soundRating = createRatingContainer("recording-rating");
-        container.soundRating.configure(recording.id, "sound-rating", recording.sound_rating, "Sound Rating");
+        container.soundRating.configure("recording", recording.id, "sound-rating", recording.sound_rating, "Sound Rating");
 
         container.editIcon = container.createIcon("create", e => container.selectContext(true));
         container.saveIcon = container.createIcon("save", e => container.save());
