@@ -60,4 +60,16 @@ function createRatingContainer(className = null) {
     return container;
 }
 
-export { createRatingContainer };
+function createRatingSelector() {
+
+    let select = document.createElement("select");
+    for (let rating of [ "1", "2", "3", "4", "5", "Unrated" ]) {
+        let option = document.createElement("option");
+        option.value = rating;
+        option.innerText = rating;
+        select.append(option)
+    }
+    return select;
+}
+
+export { createRatingContainer, createRatingSelector };

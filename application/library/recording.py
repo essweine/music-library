@@ -136,23 +136,24 @@ class Recording(JsonSerializable):
         }
 
         recording_conditions, recording_values = [ ], [ ]
-        match_subqueries, exclude_subqueries = [ ], [ ]
-        match_tracks, exclude_tracks = [ ], [ ]
+        intersect_conditions, intersect_values = [ ], [ ]
+        union_conditions, union_values = [ ], [ ]
         for cond_type in [ "match", "exclude" ]:
 
             for item in criteria[cond_type]:
 
                 col, val = item.popitem()
 
-                if col in [ "track_title", "artist", "composer", "guest_artist" ]:
+                if col in [ "track_title", "composer", "guest_artist" ]:
                     name = "title" if col == "track_title" else col
-                    q = f"select recording_id from track where {name} like ?"
-                    if cond_type == "match":
-                        match_subqueries.append(q)
-                        match_tracks.append(val)
-                    else:
-                        exclude_subqueries.append(q)
-                        exclude_tracks.append(val)
+                    op = "like" if cond_type == "match" else "not like"
+                    intersect_conditions.append(f"{name} {op} ?")
+                    intersect_values.append(val)
+
+                if col == "artist":
+                    op = "like" if cond_type == "match" else "not like"
+                    union_conditions.append(f"artist {op} ?")
+                    union_values.append(val)
 
                 if col == "recording_date":
                     date_conditions, date_values = cls._parse_date(val, cond_type == "match")
@@ -169,18 +170,18 @@ class Recording(JsonSerializable):
             recording_conditions.append("official=true")
 
         query = "select * from recording"
-        if match_tracks:
-            subquery = " intersect ".join(match_subqueries)
-            recording_conditions.append(f"id in ({subquery})")
-        if exclude_tracks:
-            subquery = " intersect ".join(exclude_subqueries)
-            recording_conditions.append(f"id not in ({subquery})")
         if recording_conditions:
             query += " where " + " and ".join(recording_conditions)
+        if intersect_conditions:
+            subquery = "select recording_id from track where " + " and ".join(intersect_conditions)
+            query += f" intersect select * from recording where id in ({subquery})"
+        if union_conditions:
+            subquery = "select recording_id from track where " + " and ".join(union_conditions)
+            query += f" union select * from recording where id in ({subquery})"
         query += " order by artist, recording_date"
 
         cursor.row_factory = cls.row_factory
-        cursor.execute(query, recording_values + match_tracks + exclude_tracks)
+        cursor.execute(query, recording_values + intersect_values + union_values)
 
     @staticmethod
     def _parse_date(val, match):

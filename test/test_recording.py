@@ -110,34 +110,35 @@ class TestRecording(unittest.TestCase):
         cursor = self.conn.cursor()
         directory = self.directory_service.get_directory("root/Edge of the Sun")
         recording = self.directory_service.create_recording(directory, directory.text[0])
+        recording.official = True
         Recording.create(cursor, recording.as_dict())
         album_rating = Rating("recording", recording.id, "rating", 5)
         Recording.set_rating(cursor, album_rating)
 
-        artist_search = { "match": [ { "artist": "Built To Spill" } ], "exclude": [ ] }
+        artist_search = { "match": [ { "artist": "Built To Spill" } ], "exclude": [ ], "official": True, "nonofficial": True }
         Recording.search(cursor, artist_search)
         artist_result = [ row for row in cursor ]
         self.assertEqual(len(artist_result), 1)
         self.assertEqual(artist_result[0].id, self.recording_id)
 
-        title_search = { "match": [ { "track_title": "Carry the Zero" } ], "exclude": [ ] }
+        title_search = { "match": [ { "track_title": "Carry the Zero" } ], "exclude": [ ], "official": True, "nonofficial": True }
         Recording.search(cursor, title_search)
         title_result = [ row for row in cursor ]
         self.assertEqual(len(title_result), 1)
         self.assertEqual(title_result[0].id, self.recording_id)
 
-        rating_search = { "match": [ { "rating": 5 } ], "exclude": [ ] }
+        rating_search = { "match": [ { "rating": 5 } ], "exclude": [ ], "official": True, "nonofficial": True }
         Recording.search(cursor, rating_search)
         rating_result = [ row for row in cursor ]
         self.assertEqual(len(rating_result), 2)
 
-        exclude_artist = { "match": [ ], "exclude": [ { "artist": "Calexico" } ] }
+        exclude_artist = { "match": [ ], "exclude": [ { "artist": "Calexico" } ], "official": True, "nonofficial": True }
         Recording.search(cursor, exclude_artist)
         exclude_artist_result = [ row for row in cursor ]
         self.assertEqual(len(exclude_artist_result), 1)
         self.assertEqual(artist_result[0].id, self.recording_id)
 
-        rating_search = { "match": [ ], "exclude": [ { "rating": 3 } ] }
+        rating_search = { "match": [ ], "exclude": [ { "rating": 3 } ], "official": True, "nonofficial": True }
         Recording.search(cursor, rating_search)
         rating_result = [ row for row in cursor ]
         self.assertEqual(len(rating_result), 0)

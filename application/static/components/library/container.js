@@ -1,5 +1,5 @@
 import { createRecordingImage } from "./recording-image.js";
-import { createEditableInfo } from "./editable-info.js";
+import { createEditableInfo } from "../shared/editable-info.js";
 import { createRecordingTracklist } from "./tracklist.js";
 import { createRawInfo } from "./raw-info.js";
 import { createRatingContainer } from "/static/components/shared/rating-container.js";
