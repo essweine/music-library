@@ -11,6 +11,8 @@ class Api {
 
     put(path, data, callback = NoOp) { this.doRequest("PUT", path, data, callback); }
 
+    httpDelete(path, callback = NoOp) { this.doRequest("DELETE", path, null, callback); }
+
     doRequest(method, path, data, callback) {
         let request = new XMLHttpRequest();
         request.addEventListener("load", e => this.parseResponse(e, callback));
@@ -157,6 +159,8 @@ class Search extends Api {
     }
 
     searchRecordings(query, callback) { this.post("/recording", query, callback); }
+
+    searchStations(query, callback) { this.post("/station", query, callback); }
 }
 
 class History extends Api {
@@ -177,4 +181,20 @@ class History extends Api {
     }
 }
 
-export { Recording, Importer, Player, Rating, Search, History };
+class Station extends Api {
+
+    constructor(errorHandler) {
+        super(errorHandler);
+        this.base = "/api/station";
+    }
+
+    listAll(callback) { this.get("", callback); }
+
+    saveStation(data, name, callback) { this.put("/" + name, data, callback); }
+
+    addStation(data, callback) { this.post("/" + data.name, data, callback); }
+
+    deleteStation(name, callback) { this.httpDelete("/" + name, callback); }
+}
+
+export { Recording, Importer, Player, Rating, Search, History, Station };

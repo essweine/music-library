@@ -63,8 +63,10 @@ function createCurrentStream() {
     container.id = "current-stream";
 
     container.url = document.createElement("div");
-    container.url.id = "stream-url";
+    container.url.id = "station-data";
     container.append(container.url);
+
+    container.stationLink = document.createElement("a");
 
     let titleContainer = document.createElement("div");
     titleContainer.id = "stream-title-container";
@@ -76,10 +78,20 @@ function createCurrentStream() {
     container.append(titleContainer);
 
     container.update = (stream) => {
-        container.url.innerText = "Streaming " + stream.url;
-        if (stream.metadata != null) {
-            container.streamTitle.innerText = stream.metadata.StreamTitle;
+        if (stream.station.website) {
+            container.url.innerText = "Streaming ";
+            container.stationLink.href = stream.station.website;
+            container.stationLink.innerText = stream.station.name;
+            container.url.append(container.stationLink);
+        } else {
+            container.stationLink.remove();
+            container.url.innerText = "Streaming " + stream.station.name;
         }
+
+        if (stream.metadata != null) 
+            container.streamTitle.innerText = stream.metadata.StreamTitle;
+        else
+            container.streamTitle.innerText = "No metadata available";
     }
 
     return container;

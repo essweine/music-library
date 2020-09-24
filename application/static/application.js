@@ -1,4 +1,4 @@
-import { Importer, Recording, Player, Rating, Search, History } from "/static/modules/api.js";
+import { Importer, Recording, Player, Rating, Search, History, Station } from "/static/modules/api.js";
 
 import { createDirectoryList } from "/static/components/library/directory-list.js";
 import { createRecordingList } from "/static/components/library/recording-list.js";
@@ -19,6 +19,7 @@ class Application {
         this.ratingApi    = new Rating(this.errorHandler.bind(this));
         this.searchApi    = new Search(this.errorHandler.bind(this));
         this.historyApi   = new History(this.errorHandler.bind(this));
+        this.stationApi   = new Station(this.errorHandler.bind(this));
 
         this.content = document.getElementById("content");
         this.addContainer(action, arg);
@@ -47,6 +48,7 @@ class Application {
             this.historyApi.getRecentTracks(this.container.tracklist.period, this.container.tracklist.update);
         } else if (action == "radio") {
             createRadioContainer(this);
+            this.stationApi.listAll(this.container.stationList.addRows);
         } else if (action == "log") {
             let ws = this.getLogNotificationService();
             createLogManager(this, ws);

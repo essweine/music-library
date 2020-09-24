@@ -2,7 +2,7 @@ import sys
 import json
 
 from ..util import BaseApiHandler
-from . import Recording
+from . import Recording, Station
 
 class Rating(object):
 
@@ -24,5 +24,7 @@ class RatingHandler(BaseApiHandler):
             rating = Rating(**self.json_body)
             if rating.item_type == "recording":
                 self.db_action(Recording.set_rating, rating)
+            elif rating.item_type == "station":
+                self.db_action(Station.set_rating, rating)
         except Exception as exc:
             self.write_error(500, log_message = "Could update rating", exc_info = sys.exc_info())

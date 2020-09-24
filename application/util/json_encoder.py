@@ -1,9 +1,8 @@
 import json
 from enum import Enum
 from datetime import datetime, date
-from abc import ABC
 
-class JsonSerializable(ABC):
+class JsonSerializable(object):
 
     def as_dict(self):
         return dict([ (attr, val) for attr, val in self.__dict__.items() if not attr.startswith("_") ])
@@ -37,7 +36,7 @@ class JsonEncoder(json.JSONEncoder):
         if issubclass(obj.__class__, (JsonSerializable, )):
             return obj.as_dict()
         elif isinstance(obj, datetime):
-            return obj.strftime("%Y-%m-%dT%H:%M:%S.%fZ")
+            return obj.strftime("%Y-%m-%d %H:%M:%S")
         elif isinstance(obj, date):
             return obj.strftime("%Y-%m-%d")
         elif isinstance(obj, Enum):

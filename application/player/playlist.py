@@ -1,6 +1,6 @@
 import json
 from enum import Enum
-import time
+from datetime import datetime
 from random import shuffle, choice
 
 import requests
@@ -99,11 +99,13 @@ class PlaylistEntry(JsonSerializable):
 
 class StreamEntry(JsonSerializable):
 
-    def __init__(self, url, metadata = { }, status = { }):
+    def __init__(self, url, metadata = { }, status = { }, start_time = None, end_time = None):
 
         self.url = url
         self.metadata = metadata
         self.status = status
+        self.start_time = start_time
+        self.end_time = end_time
 
         self._response = None
         self._has_metadata = None
@@ -116,6 +118,7 @@ class StreamEntry(JsonSerializable):
             resp = requests.get(self.url, headers = headers, stream = True)
             self.status["status_code"] = resp.status_code
             self.status["reason"] = resp.reason
+            self.start_time = datetime.utcnow()
             resp.raise_for_status()
             self._response = resp
             if "icy-metaint" in resp.headers:
@@ -139,5 +142,5 @@ class StreamEntry(JsonSerializable):
 
     def close(self):
 
+        self.end_time = datetime.utcnow()
         self._response.close()
-

@@ -18,7 +18,16 @@ function createListRow(className, parent = true) {
         row.append(cell);
     }
 
-    row.addIcon = (name, action, classNames) => row.append(createIcon(name, action, classNames));
+    row.addLink = (text, url) => {
+        let link = document.createElement("a");
+        link.href = url;
+        link.innerText = text;
+        link.style["background-color"] = "inherit";
+        link.classList.add("list-cell");
+        row.append(link);
+    }
+
+    row.addIcon = (name, action, className) => row.append(createIcon(name, action, className));
 
     row.addRatingContainer = (itemType, itemId, ratingType, rating, className) => {
         let ratingContainer = createRatingContainer("list-cell");

@@ -3,7 +3,7 @@ import subprocess, signal, time, os
 import logging
 from datetime import datetime, timedelta
 
-from ..library import Track
+from ..library import Track, Station
 from .state import Task, State, ProcState
 from .playlist import PlaylistEntry, StreamEntry
 from .history import History
@@ -90,13 +90,21 @@ class Player(object):
     def update_history(self, cursor, state):
 
         for entry in state.history:
-            if (entry.end_time - entry.start_time).seconds > 10:
+
+            if isinstance(entry, PlaylistEntry) and (entry.end_time - entry.start_time).seconds > 10:
                 try:
                     History.create(cursor, entry)
                 except Exception as exc:
                     self.logger.error("Could not create history entry for {entry.filename}", exc_info = True)
-            if entry.error:
-                self.logger.error(f"Error for {entry.filename}:\n{entry.error_output}")
+                if entry.error:
+                    self.logger.error(f"Error for {entry.filename}:\n{entry.error_output}")
+
+            elif isinstance(entry, StreamEntry):
+                try:
+                    Station.update_history(cursor, entry)
+                except Exception as exc:
+                    self.logger.error(f"Could not update history for station {entry.url}", exc_info = True)
+
         state.history.clear()
         self.state = state
 
@@ -200,6 +208,8 @@ class Player(object):
             self.state.proc_state = ProcState.Paused
             if self.state.stream is not None:
                 self.state.stream.close()
+                self.state.history.append(self.state.stream.copy())
+                self.state.stream.start_time, self.state.stream.end_time = None, None
 
     def _stop(self):
 
@@ -211,6 +221,7 @@ class Player(object):
                 self._reset_subprocess(False)
             if self.state.stream is not None:
                 self.state.stream.close()
+                self.state.history.append(self.state.stream.copy())
             self.state.stream = None
             self.state.proc_state = ProcState.Stopped
         except Exception as exc:

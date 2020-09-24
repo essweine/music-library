@@ -46,9 +46,7 @@
     font-size: large;
 }
 
-.editable-info {
-    display: contents;
-}
+.editable-info { display: contents; }
 
 .recording-data > .editable-label {
     grid-column: 1;

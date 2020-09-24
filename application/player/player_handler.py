@@ -6,7 +6,7 @@ from tornado.websocket import WebSocketHandler
 from tornado import log as logger
 
 from ..util import BaseApiHandler
-from ..library import PlaylistTrack
+from ..library import PlaylistTrack, Station
 
 class PlayerDisplayHandler(RequestHandler):
 
@@ -38,6 +38,8 @@ class PlayerHandler(BaseApiHandler):
 
         state = self.application.player.state
         filenames = [ entry.filename for entry in state.playlist ]
+        if state.stream:
+            state.stream.station = self.db_action(Station.from_url, state.stream.url)
         tracks = self.db_query(PlaylistTrack.from_filenames, filenames)
         state.playlist = sorted(tracks, key = lambda t: filenames.index(t.filename))
         return state
