@@ -63,7 +63,7 @@ function createRatingContainer(className = null) {
 function createRatingSelector() {
 
     let select = document.createElement("select");
-    for (let rating of [ "1", "2", "3", "4", "5", "Unrated" ]) {
+    for (let rating of [ "1", "2", "3", "4", "5" ]) {
         let option = document.createElement("option");
         option.value = rating;
         option.innerText = rating;

@@ -46,6 +46,8 @@
 .list-search-hide { grid-column: 5; }
 .list-search-official { grid-column: 7; align-content: center; }
 .list-search-nonofficial { grid-column: 8; align-content: center; }
+.list-search-unrated { grid-column: 9; align-content: center; }
+.list-search-unlistened { grid-column: 10; align-content: center; }
 
 .list-search-criterion { display: contents; }
 

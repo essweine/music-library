@@ -9,7 +9,9 @@ function createRecordingList(app) {
         match: [ ],
         exclude: [ ],
         official: true,
-        nonofficial: true
+        nonofficial: true,
+        unrated: false,
+        never_listened: false,
     }
     let search = createSearchBar(root, query);
 
@@ -21,6 +23,7 @@ function createRecordingList(app) {
     textInput.name = "search-criteria";
 
     search.addQueryOption("Artist", "artist", textInput);
+    search.addQueryOption("Title", "title", textInput);
     search.addQueryOption("Contains Track", "track_title", textInput);
     search.addQueryOption("Minimum Rating", "rating", ratingSelect);
     search.addQueryOption("Minimum Sound Rating", "sound_rating", ratingSelect);
@@ -30,6 +33,8 @@ function createRecordingList(app) {
 
     search.addCheckbox("Official", "official", "list-search-official");
     search.addCheckbox("Non-official", "nonofficial", "list-search-nonofficial");
+    search.addCheckbox("Unrated", "unrated", "list-search-unrated");
+    search.addCheckbox("Never listened", "never_listened", "list-search-unlistened");
 
     search.select.dispatchEvent(new Event("input"));
 

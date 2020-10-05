@@ -48,7 +48,7 @@ function createSearchBar(root, query) {
 
         let checkbox = document.createElement("input");
         checkbox.type = "checkbox";
-        checkbox.checked = true;
+        checkbox.checked = container.query[queryParam];
         checkbox.oninput = e => {
             container.query[queryParam] = checkbox.checked;
             root.updateResults(container.query);

@@ -130,6 +130,7 @@ class Recording(JsonSerializable):
 
         ops = {
             "artist": { "match": "like", "exclude": "not like" },
+            "title": { "match": "like", "exclude": "not like" },
             "genre": { "match": "like", "exclude": "not like" },
             "rating": { "match": ">=", "exclude": "<" },
             "sound_rating": { "match": ">=", "exclude": "<" },
@@ -143,6 +144,9 @@ class Recording(JsonSerializable):
             for item in criteria[cond_type]:
 
                 col, val = item.popitem()
+
+                if col not in [ "rating", "sound_rating", "recording_date", "genre" ]:
+                    val = "%" + val + "%"
 
                 if col in [ "track_title", "composer", "guest_artist" ]:
                     name = "title" if col == "track_title" else col
@@ -169,6 +173,9 @@ class Recording(JsonSerializable):
         elif not criteria["nonofficial"] and criteria["official"]:
             recording_conditions.append("official=true")
 
+        if criteria["unrated"]:
+            recording_conditions.append("rating is null")
+
         query = "select * from recording"
         if recording_conditions:
             query += " where " + " and ".join(recording_conditions)
@@ -178,6 +185,11 @@ class Recording(JsonSerializable):
         if union_conditions:
             subquery = "select recording_id from track where " + " and ".join(union_conditions)
             query += f" union select * from recording where id in ({subquery})"
+
+        if criteria["never_listened"]:
+            subquery = "select distinct recording_id from track where filename in (select distinct filename from history)"
+            query += f" intersect select * from recording where id not in ({subquery})"
+
         query += " order by artist, recording_date"
 
         cursor.row_factory = cls.row_factory
