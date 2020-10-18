@@ -4,7 +4,7 @@ from uuid import uuid4
 
 from ..config import AUDIO_FILETYPES, IMAGE_FILETYPES, TEXT_FILETYPES
 from ..util import JsonSerializable
-from ..library import Recording, Track
+from ..library import Recording, LibraryTrack
 from .parsed_text import ParsedText
 
 class DirectoryListing(JsonSerializable):
@@ -93,26 +93,29 @@ class DirectoryService(object):
 
     def create_recording(self, directory, textfile = None):
 
-        recording = Recording()
+        recording = Recording(recording = { }, tracks = [ ])
         recording.id, recording.directory = str(uuid4()), directory.relative_path
 
         for idx, filename in enumerate(directory.audio):
-            track = Track()
+
+            track = LibraryTrack()
             track.filename     = filename
             track.track_num    = idx + 1
             track.recording_id = recording.id
             recording.tracks.append(track)
 
         if textfile is not None:
+
             parsed_text              = self.parse_text(textfile)
             recording.title          = parsed_text.title
-            recording.artist         = parsed_text.artist
             recording.recording_date = parsed_text.recording_date
             recording.venue          = parsed_text.venue
             recording.notes          = textfile
+
             for idx, title in enumerate(parsed_text.track_titles):
                 if idx < len(recording.tracks):
-                    recording.tracks[idx].title = title
+                    recording.tracks[idx].title    = title
+                    recording.tracks[idx].artist   = parsed_text.artist
                     recording.tracks[idx].composer = parsed_text.composer
 
         return recording

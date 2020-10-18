@@ -1,96 +1,94 @@
 import sqlite3, re
-import os.path
 from datetime import datetime
 from dateutil.parser import parse as parsedate
+from itertools import chain
 
-from ..db import Column, insert_statement, update_statement, convert_empty_strings
+from ..util.db import Column, Subquery, Table, View, Query
 from ..util import JsonSerializable
+from .property import PropertyView, RECORDING_PROPS, RECORDING_AGGREGATE
+from .track import LibraryTrackView, LibraryTrack
 
 RECORDING_COLUMNS = [
-    Column("id", "text", None, False),
-    Column("directory", "text", None, False),
-    Column("title", "text", None, True),
-    Column("artist", "text", None, True),
-    Column("genre", "text", None, True),
-    Column("notes", "text", None, True),
-    Column("artwork", "text", None, True),
-    Column("recording_date", "date", None, True),
-    Column("venue", "text", None, True),
-    Column("added_date", "date", None, False),
-    Column("rating", "int", None, True),
-    Column("sound_rating", "int", None, True),
-    Column("official", "bool", None, True)
+    Column("id", "text", False, False),
+    Column("directory", "text", False, False),
+    Column("title", "text", True, True),
+    Column("notes", "text", True, False),
+    Column("artwork", "text", True, False),
+    Column("recording_date", "date", True, True),
+    Column("venue", "text", True, True),
+    Column("added_date", "date", False, False),
+    Column("rating", "int", False, True),
+    Column("sound_rating", "int", False, True),
+    Column("official", "bool", True, True),
 ]
 
-TRACK_COLUMNS = [
-    Column("recording_id", "text", None, False),
-    Column("track_num", "int", None, True),
-    Column("title", "text", None, True),
-    Column("filename", "text", None, False),
-    Column("rating", "int", None, True),
-    Column("composer", "text", None, True),
-    Column("artist", "text", None, True),
-    Column("guest_artist", "text", None, True)
-]
+SUMMARY_SUBQUERY = Subquery([
+    ("id", None),
+    ("title", None),
+    ("recording_date", None),
+    ("rating", None),
+    ("sound_rating", None),
+    ("official", None),
+], "recording", False)
 
-class Recording(JsonSerializable):
+RecordingTable = Table("recording", RECORDING_COLUMNS, "id")
+RecordingSummaryView = View("recording_summary", (SUMMARY_SUBQUERY, RECORDING_PROPS), RECORDING_AGGREGATE)
+
+class RecordingSummary(PropertyView):
+
+    PROPERTIES = [ "artist", "genre" ]
 
     def __init__(self, recording = { }):
 
-        convert_empty_strings(recording, RECORDING_COLUMNS)
+        super(RecordingSummary, self).__init__(recording)
+        for name, definition in SUMMARY_SUBQUERY.columns:
+            self.__setattr__(name, recording.get(name))
+
+    @classmethod
+    def get_all(cls, cursor):
+
+        RecordingSummaryView.get_all(cursor, cls.row_factory)
+
+class Recording(JsonSerializable):
+
+    def __init__(self, recording, tracks):
+
         for column in RECORDING_COLUMNS:
-            self.__setattr__(column.name, recording.get(column.name, column.default))
-        self.tracks = [ Track(track) for track in recording.get("tracks", [ ]) ]
+            self.__setattr__(column.name, recording.get(column.name))
 
-    def as_dict(self):
-
-        recording = self.__dict__.copy()
-        recording["tracks"] = [ track.as_dict() for track in recording["tracks"] ]
-        return recording
+        self.tracks = tracks
+        self.artist = sorted(set(chain.from_iterable([ track.artist for track in tracks ])))
+        self.genre  = sorted(set(chain.from_iterable([ track.genre for track in tracks ])))
 
     @classmethod
     def get(cls, cursor, recording_id):
 
-        cursor.row_factory = sqlite3.Row
-        cursor.execute("select * from recording where id=?", (recording_id, ))
+        RecordingTable.get(cursor, recording_id)
         recording = cursor.fetchone()
         if recording is not None:
-            recording = dict(recording)
-            cursor.execute("select * from track where recording_id=? order by track_num", (recording_id, ))
-            recording["tracks"] = [ dict(track) for track in cursor.fetchall() ]
-            return cls(recording)
+            query = Query(LibraryTrackView.name).compare("recording_id", recording_id, "=")
+            query.execute(cursor, LibraryTrack.row_factory)
+            tracks = cursor.fetchall()
+            return cls(dict(recording), tracks)
         else:
             return None
 
     @staticmethod
     def create(cursor, recording):
 
-        insert_recording = insert_statement("recording", RECORDING_COLUMNS)
-        insert_track = insert_statement("track", TRACK_COLUMNS)
-
         recording["added_date"] = datetime.utcnow().strftime("%Y-%m-%d")
-        recording_values = [ recording.get(col.name, col.default) for col in RECORDING_COLUMNS ]
+        RecordingTable.insert(cursor, recording)
 
         for track in recording.get("tracks", [ ]):
             track["recording_id"] = recording["id"]
-        get_track = lambda track: [ track.get(col.name, col.default) for col in TRACK_COLUMNS ]
-        tracks_values = [ get_track(track) for track in recording.get("tracks", [ ]) ]
-
-        cursor.execute(insert_recording, recording_values)
-        cursor.executemany(insert_track, tracks_values)
+            LibraryTrack.create(cursor, track)
 
     @staticmethod
     def update(cursor, recording):
 
-        recording_vals = [ recording.get(col.name) for col in RECORDING_COLUMNS if col.updateable ] + [ recording.get("id") ]
-        update_recording = update_statement("recording", "id", RECORDING_COLUMNS)
-
-        get_track = lambda track: [ track.get(col.name) for col in TRACK_COLUMNS if col.updateable ] + [ track.get("filename") ]
-        track_vals = [ get_track(track) for track in recording.get("tracks", [ ]) ]
-        update_track = update_statement("track", "filename", TRACK_COLUMNS)
-
-        cursor.execute(update_recording, recording_vals)
-        cursor.executemany(update_track, track_vals)
+        RecordingTable.update(cursor, recording)
+        for track in recording.get("tracks", [ ]):
+            LibraryTrack.update(cursor, track)
 
     @staticmethod
     def validate(recording):
@@ -118,126 +116,4 @@ class Recording(JsonSerializable):
             values = (rating.value, rating.rated_item)
 
         cursor.execute(update, values)
-
-    @classmethod
-    def get_summaries(cls, cursor):
-
-        cursor.row_factory = cls.row_factory
-        cursor.execute("select * from recording order by artist, recording_date")
-
-    @classmethod
-    def search(cls, cursor, criteria):
-
-        ops = {
-            "artist": { "match": "like", "exclude": "not like" },
-            "title": { "match": "like", "exclude": "not like" },
-            "genre": { "match": "like", "exclude": "not like" },
-            "rating": { "match": ">=", "exclude": "<" },
-            "sound_rating": { "match": ">=", "exclude": "<" },
-        }
-
-        recording_conditions, recording_values = [ ], [ ]
-        intersect_conditions, intersect_values = [ ], [ ]
-        union_conditions, union_values = [ ], [ ]
-        for cond_type in [ "match", "exclude" ]:
-
-            for item in criteria[cond_type]:
-
-                col, val = item.popitem()
-
-                if col not in [ "rating", "sound_rating", "recording_date", "genre" ]:
-                    val = "%" + val + "%"
-
-                if col in [ "track_title", "composer", "guest_artist" ]:
-                    name = "title" if col == "track_title" else col
-                    op = "like" if cond_type == "match" else "not like"
-                    intersect_conditions.append(f"{name} {op} ?")
-                    intersect_values.append(val)
-
-                if col == "artist":
-                    op = "like" if cond_type == "match" else "not like"
-                    union_conditions.append(f"artist {op} ?")
-                    union_values.append(val)
-
-                if col == "recording_date":
-                    date_conditions, date_values = cls._parse_date(val, cond_type == "match")
-                    recording_conditions.extend(date_conditions)
-                    recording_values.extend(date_values)
-
-                if col in ops:
-                    recording_conditions.append("{0} {1} ?".format(col, ops[col][cond_type]))
-                    recording_values.append(val)
-
-        if not criteria["official"] and criteria["nonofficial"]:
-            recording_conditions.append("official=false")
-        elif not criteria["nonofficial"] and criteria["official"]:
-            recording_conditions.append("official=true")
-
-        if criteria["unrated"]:
-            recording_conditions.append("rating is null")
-
-        query = "select * from recording"
-        if recording_conditions:
-            query += " where " + " and ".join(recording_conditions)
-        if intersect_conditions:
-            subquery = "select recording_id from track where " + " and ".join(intersect_conditions)
-            query += f" intersect select * from recording where id in ({subquery})"
-        if union_conditions:
-            subquery = "select recording_id from track where " + " and ".join(union_conditions)
-            query += f" union select * from recording where id in ({subquery})"
-
-        if criteria["never_listened"]:
-            subquery = "select distinct recording_id from track where filename in (select distinct filename from history)"
-            query += f" intersect select * from recording where id not in ({subquery})"
-
-        query += " order by artist, recording_date"
-
-        cursor.row_factory = cls.row_factory
-        cursor.execute(query, recording_values + intersect_values + union_values)
-
-    @staticmethod
-    def _parse_date(val, match):
-
-        try:
-            year, month, day = re.split("[-/]", re.sub("\*+", "%", val))
-            month = month.zfill(2) if month != "%" else month
-            day = day.zfill(0) if day != "%" else day
-        except:
-            raise Exception(f"Invalid date query: {val}")
-
-        date_conditions, date_values = [ ], [ ]
-
-        if "*" not in val:
-            op = "=" if match else "!="
-            date_conditions.append(f"recording_date {op} ?")
-            date_values.append(f"{year}-{month}-{day}")
-
-        if year != "%":
-            if "%" in year:
-                op = "like" if match else "not like"
-                date_conditions.append(f"strftime('%Y', recording_date) {op} ?")
-            else:
-                op = "=" if match else "!="
-                date_conditions.append(f"strftime('%Y', recording_date) {op} ?")
-            date_values.append(year)
-
-        if month != "%":
-            op = "=" if match else "!="
-            date_conditions.append(f"strftime('%m', recording_date) {op} ?")
-            date_values.append(month)
-
-        if day != "%":
-            op = "=" if match else "!="
-            date_conditions.append(f"strftime('%d', recording_date) {op} ?")
-            date_values.append(day)
-
-        return date_conditions, date_values
-
-class Track(JsonSerializable):
-
-    def __init__(self, track = { }):
-
-        convert_empty_strings(track, TRACK_COLUMNS)
-        for column in TRACK_COLUMNS:
-            self.__setattr__(column.name, track.get(column.name, column.default))
 

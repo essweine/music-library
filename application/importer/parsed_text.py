@@ -45,7 +45,7 @@ class ParsedText(JsonSerializable):
             if in_first_section:
 
                 if self.artist is None:
-                    self.artist = line
+                    self.artist = [ name.strip() for name in line.split("/") ]
                     continue
 
                 if self.recording_date is None:
@@ -55,7 +55,7 @@ class ParsedText(JsonSerializable):
 
                 composer = re.match("Composer:\s+(.*)", line, flags = re.I)
                 if composer:
-                    self.composer = composer.group(1)
+                    self.composer = [ name.strip() for name in composer.group(1).split("/") ]
                     continue
 
                 if self.venue is None and not re.match("\w+,\s+\w+", line):

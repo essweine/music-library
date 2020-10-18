@@ -1,14 +1,14 @@
 import json
 
 from ..util import BaseApiHandler
-from . import Recording, Station
+from . import Search
 
 class RecordingSearchHandler(BaseApiHandler):
 
     def post(self):
 
         if self.json_body:
-            results = self.db_query(Recording.search, self.json_body)
+            results = self.db_query(Search.recording, self.json_body)
         else:
             self.logger.error(f"POST request {self.request.url}: expected json")
 
@@ -19,7 +19,7 @@ class StationSearchHandler(BaseApiHandler):
     def post(self):
 
         if self.json_body:
-            results = self.db_query(Station.search, self.json_body)
+            results = self.db_query(Search.station, self.json_body)
         else:
             self.logger.error(f"POST request {self.request.url}: expected json")
 

@@ -31,15 +31,18 @@ function createRecordingTrack(tracklist, track) {
     entry.artist   = createEditableInfo("recording-track-artist");
     entry.guest    = createEditableInfo("recording-track-guest");
     entry.composer = createEditableInfo("recording-track-composer");
+    entry.genre    = createEditableInfo("recording-track-genre");
 
     entry.artist.initialize(track.artist, "artist", "Artist");
     entry.composer.initialize(track.composer, "composer", "Composer");
-    entry.guest.initialize(track.guest_artist, "guest_artist", "Guest Artist");
+    entry.guest.initialize(track.guest, "guest", "Guest Artist");
+    entry.genre.initialize(track.genre, "genre", "Genre");
 
     entry.updateDetailDisplay = () => {
         entry.artist.display.innerText = (track.artist != null) ? "Artist: " + track.artist : "Artist:";
-        entry.guest.display.innerText = (track.guest_artist != null) ? "Guest Artist: " + track.guest_artist : "Guest Artist:";
+        entry.guest.display.innerText = (track.guest != null) ? "Guest Artist: " + track.guest : "Guest Artist:";
         entry.composer.display.innerText = (track.composer != null) ? "Composer: " + track.composer : "Composer:";
+        entry.genre.display.innerText = (track.genre != null) ? "Genre: " + track.genre : "Genre:";
     }
 
     entry.toggleDetail = (detailVisible) => {
@@ -50,11 +53,13 @@ function createRecordingTrack(tracklist, track) {
             entry.append(entry.artist);
             entry.append(entry.guest);
             entry.append(entry.composer);
+            entry.append(entry.genre);
         } else {
             entry.collapseTrack.remove();
             entry.artist.remove();
             entry.guest.remove();
             entry.composer.remove();
+            entry.genre.remove();
             entry.append(entry.expandTrack);
         }
     }
@@ -75,6 +80,7 @@ function createRecordingTrack(tracklist, track) {
         entry.artist.toggleEdit(editable);
         entry.guest.toggleEdit(editable);
         entry.composer.toggleEdit(editable);
+        entry.genre.toggleEdit(editable);
         entry.toggleDetail(entry.detailVisible);
     }
 
@@ -98,12 +104,14 @@ function createRecordingTrack(tracklist, track) {
         entry.artist.save();
         entry.guest.save();
         entry.composer.save();
+        entry.genre.save();
 
         entry.track.track_num = entry.currentPosition + 1;
         entry.track.title = entry.trackTitle.get();
-        entry.track.artist = entry.artist.get();
-        entry.track.guest_artist = entry.guest.get();
-        entry.track.composer = entry.composer.get();
+        entry.track.artist = entry.artist.get().split(",");
+        entry.track.guest = entry.guest.get().split(",");
+        entry.track.composer = entry.composer.get().split(",");
+        entry.track.genre = entry.genre.get().split(",");
 
         entry.updateDetailDisplay();
     }

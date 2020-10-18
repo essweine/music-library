@@ -3,12 +3,13 @@ import logging
 
 from tornado.web import Application, StaticFileHandler
 
-from .config import TABLE_DEFS
-from .importer import DirectoryService, ImportHandler, ImportRootHandler
+from .library import TABLES as library_tables, VIEWS as library_views
 from .library import RecordingHandler, RecordingRootHandler
 from .library import StationHandler, StationRootHandler
 from .library import RecordingSearchHandler, StationSearchHandler, RatingHandler
+from .importer import DirectoryService, ImportHandler, ImportRootHandler
 from .player import Player, PlayerHandler, PlayerDisplayHandler, PlayerNotificationHandler, RecentlyPlayedHandler
+from .player import TABLES as history_tables, VIEWS as history_views
 from .log import LogNotificationHandler
 
 handlers = [ 
@@ -46,8 +47,8 @@ class MusicLibrary(Application):
         try:
             self.conn = sqlite3.connect(dbname, detect_types=sqlite3.PARSE_DECLTYPES)
             cursor = self.conn.cursor()
-            for stmt in TABLE_DEFS:
-                cursor.execute(stmt)
+            for item in library_tables + history_tables + library_views + history_views:
+                item.initialize(cursor)
             self.conn.commit()
             cursor.close()
         except Exception as exc:

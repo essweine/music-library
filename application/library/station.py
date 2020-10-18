@@ -1,53 +1,63 @@
 import sqlite3
 from datetime import datetime
+from uuid import uuid4
 
 from ..util import JsonSerializable
-from ..db import Column, insert_statement, update_statement
+from ..util.db import Column, Table
 
 STATION_COLUMNS = [
-    Column("name", "text", None, True),
-    Column("url", "text", None, True),
-    Column("website", "text", None, True),
-    Column("rating", "int", None, False),
-    Column("minutes_listened", "int", 0, False),
-    Column("last_listened", "timestamp", None, False),
-    Column("added_date", "date", None, False),
+    Column("id", "text", False, True),
+    Column("name", "text", True, True),
+    Column("url", "text", True, True),
+    Column("website", "text", True, True),
+    Column("rating", "int", False, False),
+    Column("minutes_listened", "int", None, False),
+    Column("last_listened", "timestamp", False, False),
+    Column("added_date", "date", False, False),
 ]
+
+StationTable = Table("station", STATION_COLUMNS, "id")
 
 class Station(JsonSerializable):
 
     def __init__(self, station = { }):
 
         for column in STATION_COLUMNS:
-            self.__setattr__(column.name, station.get(column.name, column.default))
+            self.__setattr__(column.name, station.get(column.name))
 
     @classmethod
     def get(cls, cursor, name):
 
-        cursor.row_factory = cls.row_factory
-        cursor.execute("select * from station where name=?", (name, ))
+        StationTable.get(cursor, name, cls.row_factory)
         return cursor.fetchone()
 
     @classmethod
     def get_all(cls, cursor):
 
-        cursor.row_factory = cls.row_factory
-        cursor.execute("select * from station order by name")
+        StationTable.get_all(cursor, cls.row_factory)
 
     @staticmethod
     def create(cursor, station):
 
+        station["id"] = str(uuid4())
         station["added_date"] = datetime.utcnow().strftime("%Y-%m-%d")
-        stmt = insert_statement("station", STATION_COLUMNS)
-        values = [ station.get(col.name, col.default) for col in STATION_COLUMNS ]
-        cursor.execute(stmt, values)
+        station["minutes_listened"] = 0
+        StationTable.insert(cursor, station)
 
     @staticmethod
-    def update(cursor, name, station):
+    def delete(cursor, station_id):
 
-        stmt = update_statement("station", "name", STATION_COLUMNS)
-        values = [ station.get(col.name, col.default) for col in STATION_COLUMNS if col.updateable ] + [ name ]
-        cursor.execute(stmt, values)
+        StationTable.delete(cursor, station_id)
+
+    @staticmethod
+    def update(cursor, station):
+
+        StationTable.update(cursor, station)
+
+    @staticmethod
+    def set_rating(cursor, rating):
+
+        cursor.execute("update station set rating=? where name=?", (rating.value, rating.item_id))
 
     @staticmethod
     def update_history(cursor, entry):
@@ -57,45 +67,10 @@ class Station(JsonSerializable):
         values = (duration, entry.end_time, entry.url)
         cursor.execute(stmt, values)
 
-    @staticmethod
-    def set_rating(cursor, rating):
-
-        cursor.execute("update station set rating=? where name=?", (rating.value, rating.item_id))
-
-    @staticmethod
-    def delete(cursor, name):
-
-        cursor.execute("delete from station where name=?", (name, ))
-
     @classmethod
     def from_url(cls, cursor, url):
 
         cursor.row_factory = cls.row_factory
         cursor.execute("select * from station where url=?", (url, ))
         return cursor.fetchone()
-
-    @classmethod
-    def search(cls, cursor, criteria):
-
-        ops = {
-            "name": { "match": "like", "exclude": "not like" },
-            "rating": { "match": ">=", "exclude": "<" },
-            "minutes_listened": { "match": ">=", "exclude": "<" },
-            "last_listened": { "match": ">=", "exclude": "<" },
-        }
-        
-        conditions, values = [ ], [ ]
-        for cond_type in [ "match", "exclude" ]:
-            for item in criteria[cond_type]:
-                col, val = item.popitem()
-                conditions.append("{0} {1} ?".format(col, ops[col][cond_type]))
-                values.append(val)
-
-        query = "select * from station"
-        if conditions:
-            query += " where " + " and ".join(conditions)
-        query += " order by name"
-
-        cursor.row_factory = cls.row_factory
-        cursor.execute(query, values)
 

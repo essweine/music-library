@@ -3,7 +3,7 @@ import subprocess, signal, time, os
 import logging
 from datetime import datetime, timedelta
 
-from ..library import Track, Station
+from ..library import Station
 from .state import Task, State, ProcState
 from .playlist import PlaylistEntry, StreamEntry
 from .history import History

@@ -13,7 +13,7 @@ class RecentlyPlayedHandler(BaseApiHandler):
     def post(self):
 
         if self.json_body:
-            results = self.db_action(History.tracks_from_period, **self.json_body)
+            results = self.db_query(History.tracks_from_period, **self.json_body)
         else:
             self.logger.error(f"POST request {request.url}: expected json")
 

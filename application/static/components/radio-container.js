@@ -31,13 +31,13 @@ function createStationEditor(app) {
     editor.reset = () => { name.reset(); website.reset(); url.reset(); }
 
     editor.update = (context) => {
-        let original = name.get();
         editor.save();
-        let data = { name: name.get(), website: website.get(), url: url.get() };
+        let data = { id: editor.id, name: name.get(), website: website.get(), url: url.get() };
         if (context == "add")
             app.stationApi.addStation(data, editor.refreshStations);
         else if (context == "save")
-            app.stationApi.saveStation(data, original, editor.refreshStations);
+            app.stationApi.saveStation(data, editor.refreshStations);
+        editor.setContent(null);
     }
 
     let addIcon   = createIcon("add", e => editor.update("add"), "station-edit-add");
@@ -54,6 +54,7 @@ function createStationEditor(app) {
 
     editor.setContent = (station) => {
         if (station == null) {
+            editor.id = "new";
             headingText.innerText = "New Station";
             name.initialize("", "name", "Name");
             website.initialize("", "website", "Website");
@@ -62,6 +63,7 @@ function createStationEditor(app) {
             saveIcon.hide();
             undoIcon.hide();
         } else {
+            editor.id = station.id;
             headingText.innerText = "Editing " + station.name;
             name.set(station.name);
             website.set(station.website);
@@ -112,7 +114,7 @@ function createStationList(app, stationEditor) {
 
     root.save = (station) => app.stationApi.saveStation(station);
 
-    root.deleteStation = (stationName) => app.stationApi.deleteStation(stationName, root.refresh);
+    root.deleteStation = (stationId) => app.stationApi.deleteStation(stationId, root.refresh);
 
     root.addRow = (station) => {
         let row = createListRow("station-list-row");
@@ -123,7 +125,7 @@ function createStationList(app, stationEditor) {
         row.addRatingContainer("station", station.name, "rating", station.rating, "station-list-rating");
         row.addIcon("create", e => stationEditor.setContent(station), "station-list-edit");
         row.addIcon("play_arrow", e => app.playerApi.streamUrl(station.url));
-        row.addIcon("clear", e => root.deleteStation(station.name), "station-list-delete");
+        row.addIcon("clear", e => root.deleteStation(station.id), "station-list-delete");
         return row;
     }
 

@@ -132,7 +132,8 @@
 
 .recording-track-artist > .editable-label,
 .recording-track-guest > .editable-label,
-.recording-track-composer > .editable-label {
+.recording-track-composer > .editable-label,
+.recording-track-genre > .editable-label {
     grid-column: 2;
     justify-self: end;
     align-self: center;
@@ -140,7 +141,8 @@
 
 .recording-track-artist > .editable-display,
 .recording-track-guest > .editable-display,
-.recording-track-composer > .editable-display {
+.recording-track-composer > .editable-display,
+.recording-track-genre > .editable-display {
     grid-column: 2;
     justify-self: start;
     align-self: center;
@@ -149,7 +151,8 @@
 
 .recording-track-artist > .editable-input,
 .recording-track-guest > .editable-input,
-.recording-track-composer > .editable-input {
+.recording-track-composer > .editable-input,
+.recording-track-genre > .editable-input {
     grid-column: 3;
 }
 

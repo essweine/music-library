@@ -23,8 +23,8 @@ function createRecordingList(app) {
     textInput.name = "search-criteria";
 
     search.addQueryOption("Artist", "artist", textInput);
-    search.addQueryOption("Title", "title", textInput);
-    search.addQueryOption("Contains Track", "track_title", textInput);
+    search.addQueryOption("Title", "recording", textInput);
+    search.addQueryOption("Contains Track", "title", textInput);
     search.addQueryOption("Minimum Rating", "rating", ratingSelect);
     search.addQueryOption("Minimum Sound Rating", "sound_rating", ratingSelect);
     search.addQueryOption("Genre", "genre", textInput);

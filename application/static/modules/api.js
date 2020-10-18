@@ -190,11 +190,11 @@ class Station extends Api {
 
     listAll(callback) { this.get("", callback); }
 
-    saveStation(data, name, callback) { this.put("/" + name, data, callback); }
+    saveStation(data, callback) { this.put("/" + data.id, data, callback); }
 
     addStation(data, callback) { this.post("/" + data.name, data, callback); }
 
-    deleteStation(name, callback) { this.httpDelete("/" + name, callback); }
+    deleteStation(station_id, callback) { this.httpDelete("/" + station_id, callback); }
 }
 
 export { Recording, Importer, Player, Rating, Search, History, Station };

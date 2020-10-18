@@ -2,7 +2,7 @@ import sys
 import json
 from datetime import date
 
-from . import Recording
+from . import Recording, RecordingSummary, Search
 from ..importer import DirectoryService
 from ..util import BaseApiHandler
 
@@ -11,7 +11,7 @@ class RecordingRootHandler(BaseApiHandler):
     def get(self):
 
         try:
-            summaries = self.db_query(Recording.get_summaries)
+            summaries = self.db_query(RecordingSummary.get_all)
             self.write(json.dumps(summaries, cls = self.JsonEncoder))
         except Exception as exc:
             self.write_error(500, log_message = "Could not get recording list", exc_info = sys.exc_info())
@@ -19,7 +19,7 @@ class RecordingRootHandler(BaseApiHandler):
     def post(self):
 
         if self.json_body:
-            results = self.db_query(Recording.search, self.json_body)
+            results = self.db_query(Search.recording, self.json_body)
             self.write(json.dumps(results, cls = self.JsonEncoder))
         else:
             self.write_error(400, messsages = [ "Expected json" ])
