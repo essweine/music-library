@@ -6,16 +6,16 @@ from random import shuffle, choice
 import requests
 from requests.exceptions import ConnectionError, Timeout
 
-from ..util import JsonSerializable
+from ..util import BaseObject
 
-class PlaylistState(JsonSerializable):
+class PlaylistState(BaseObject):
 
-    def __init__(self, position, order, shuffled, repeat):
+    def __init__(self, **state):
 
-        self.position = position
-        self.order = order
-        self.shuffled = shuffled
-        self.repeat = repeat
+        self.position = state.get("position", 0)
+        self.order = state.get("order", [ ])
+        self.shuffled = state.get("shuffled", False)
+        self.repeat = state.get("repeat", False)
 
     @property
     def current(self):
@@ -87,25 +87,25 @@ class PlaylistState(JsonSerializable):
         elif position >= len(self.order) and self.repeat:
             self.position = 0
 
-class PlaylistEntry(JsonSerializable):
+class PlaylistEntry(BaseObject):
 
-    def __init__(self, filename):
+    def __init__(self, filename, **entry):
 
         self.filename = filename
-        self.start_time = None
-        self.end_time = None
-        self.error = False
-        self.error_output = None
+        self.start_time = entry.get("start_time")
+        self.end_time = entry.get("end_time")
+        self.error = entry.get("error", False)
+        self.error_output = entry.get("error_output")
 
-class StreamEntry(JsonSerializable):
+class StreamEntry(BaseObject):
 
-    def __init__(self, url, metadata = { }, status = { }, start_time = None, end_time = None):
+    def __init__(self, url, **entry):
 
         self.url = url
-        self.metadata = metadata
-        self.status = status
-        self.start_time = start_time
-        self.end_time = end_time
+        self.metadata = entry.get("metadata", { })
+        self.status = entry.get("status", { })
+        self.start_time = entry.get("start_time")
+        self.end_time = entry.get("end_time")
 
         self._response = None
         self._has_metadata = None

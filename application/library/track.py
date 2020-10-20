@@ -1,5 +1,4 @@
 from ..util.db import Column, Subquery, Table, View, Query
-from ..util import JsonSerializable
 from .property import PropertyView, TRACK_PROPS, TRACK_AGGREGATE
 
 TRACK_COLUMNS = [
@@ -41,7 +40,7 @@ class LibraryTrack(PropertyView):
 
     PROPERTIES = [ "artist", "composer", "guest", "genre" ]
 
-    def __init__(self, track = { }):
+    def __init__(self, **track):
 
         super(LibraryTrack, self).__init__(track)
         for name, definition in TRACK_SUBQUERY.columns:
@@ -63,7 +62,7 @@ class PlaylistTrack(PropertyView):
 
     PROPERTIES = [ "artist" ]
 
-    def __init__(self, track = { }):
+    def __init__(self, **track):
 
         super(PlaylistTrack, self).__init__(track)
         for name, definition in PLAYLIST_SUBQUERY.columns:

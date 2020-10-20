@@ -46,7 +46,7 @@ class TestDirectoryService(unittest.TestCase):
         recording = self.directory_service.create_recording(directory, directory.text[0])
         self.assertEqual(recording.directory, directory.relative_path)
         self.assertEqual(recording.title, "Keep It Like a Secret")
-        self.assertEqual(recording.artist, "Built to Spill")
+        self.assertEqual(recording.artist[0], "Built to Spill")
         self.assertEqual(recording.notes, directory.text[0])
         self.assertEqual(len(recording.tracks), len(directory.audio))
         self.assertEqual(recording.tracks[0].title, "The Plan")

@@ -1,2 +1,2 @@
 from .base_handler import BaseApiHandler
-from .json_encoder import JsonEncoder, JsonSerializable
+from .base_object import JsonEncoder, BaseObject

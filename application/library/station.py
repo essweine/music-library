@@ -2,7 +2,7 @@ import sqlite3
 from datetime import datetime
 from uuid import uuid4
 
-from ..util import JsonSerializable
+from ..util import BaseObject
 from ..util.db import Column, Table
 
 STATION_COLUMNS = [
@@ -18,17 +18,17 @@ STATION_COLUMNS = [
 
 StationTable = Table("station", STATION_COLUMNS, "id")
 
-class Station(JsonSerializable):
+class Station(BaseObject):
 
-    def __init__(self, station = { }):
+    def __init__(self, **station):
 
         for column in STATION_COLUMNS:
             self.__setattr__(column.name, station.get(column.name))
 
     @classmethod
-    def get(cls, cursor, name):
+    def get(cls, cursor, station_id):
 
-        StationTable.get(cursor, name, cls.row_factory)
+        StationTable.get(cursor, station_id, cls.row_factory)
         return cursor.fetchone()
 
     @classmethod
@@ -57,7 +57,7 @@ class Station(JsonSerializable):
     @staticmethod
     def set_rating(cursor, rating):
 
-        cursor.execute("update station set rating=? where name=?", (rating.value, rating.item_id))
+        cursor.execute("update station set rating=? where id=?", (rating.value, rating.item_id))
 
     @staticmethod
     def update_history(cursor, entry):

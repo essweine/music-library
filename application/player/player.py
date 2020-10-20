@@ -17,7 +17,7 @@ class Player(object):
 
         self.logger = logging.getLogger(__name__)
         self.root = root
-        self.state = State(ProcState.Stopped, 0, [ ], [ ], None, False, False)
+        self.state = State()
         self._subprocess = None
         self.logger = logging.getLogger('tornado.application')
         self.websockets = set()
@@ -81,11 +81,9 @@ class Player(object):
 
             time.sleep(0.05)
 
-    def send_task(self, **kwargs):
+    def send_task(self, task):
 
-        name = kwargs.pop("name")
-        task = Task(name, **kwargs)
-        self.conn.send(task)
+        self.conn.send(Task(**task))
 
     def update_history(self, cursor, state):
 

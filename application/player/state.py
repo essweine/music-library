@@ -1,6 +1,6 @@
 from enum import Enum
 
-from ..util import JsonSerializable
+from ..util import BaseObject
 from .playlist import PlaylistState
 
 class ProcState(Enum):
@@ -9,28 +9,26 @@ class ProcState(Enum):
     Stopped = "stopped"
     Paused  = "paused"
 
-class Task(JsonSerializable):
+class Task(BaseObject):
 
-    ATTRIBUTES = [ "filename", "position", "original", "destination", "offset", "url" ]
+    ATTRIBUTES = [ "name", "filename", "position", "original", "destination", "offset", "url" ]
 
-    def __init__(self, name, **kwargs):
+    def __init__(self, **task):
 
-        self.name = name
-        for attr in self.ATTRIBUTES:
-            if attr in kwargs:
-                self.__setattr__(attr, kwargs[attr])
+        for attr in filter(lambda a: a in task, self.ATTRIBUTES):
+            self.__setattr__(attr, task.get(attr))
 
-class State(JsonSerializable):
+class State(BaseObject):
 
-    def __init__(self, proc_state, current, playlist, history, stream, shuffle, repeat):
+    def __init__(self, **state):
 
-        self.proc_state = proc_state
-        self.current = current
-        self.playlist = playlist
-        self.history = history
-        self.stream = stream
-        self.shuffle = shuffle
-        self.repeat = repeat
+        self.proc_state = state.get("proc_state", ProcState.Stopped)
+        self.current = state.get("current", 0)
+        self.playlist = state.get("playlist", [ ])
+        self.history = state.get("history", [ ])
+        self.stream = state.get("stream")
+        self.shuffle = state.get("shuffle", False)
+        self.repeat = state.get("repeat", False)
 
-        self._playlist_state = PlaylistState(0, [ ], False, False)
+        self._playlist_state = PlaylistState()
 

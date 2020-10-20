@@ -2,7 +2,7 @@ import json
 import traceback
 from tornado.web import RequestHandler
 
-from .json_encoder import JsonEncoder
+from .base_object import JsonEncoder
 
 class BaseApiHandler(RequestHandler):
 

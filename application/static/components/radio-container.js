@@ -122,7 +122,7 @@ function createStationList(app, stationEditor) {
         row.addLink(station.website, station.website, "station-list-website");
         row.addText(station.minutes_listened, "station-list-minutes-listened");
         row.addText(station.last_listened, "station-list-last-listened");
-        row.addRatingContainer("station", station.name, "rating", station.rating, "station-list-rating");
+        row.addRatingContainer("station", station.id, "rating", station.rating, "station-list-rating");
         row.addIcon("create", e => stationEditor.setContent(station), "station-list-edit");
         row.addIcon("play_arrow", e => app.playerApi.streamUrl(station.url));
         row.addIcon("clear", e => root.deleteStation(station.id), "station-list-delete");

@@ -4,7 +4,7 @@ from dateutil.parser import parse as parsedate
 from itertools import chain
 
 from ..util.db import Column, Subquery, Table, View, Query
-from ..util import JsonSerializable
+from ..util import BaseObject
 from .property import PropertyView, RECORDING_PROPS, RECORDING_AGGREGATE
 from .track import LibraryTrackView, LibraryTrack
 
@@ -38,7 +38,7 @@ class RecordingSummary(PropertyView):
 
     PROPERTIES = [ "artist", "genre" ]
 
-    def __init__(self, recording = { }):
+    def __init__(self, **recording):
 
         super(RecordingSummary, self).__init__(recording)
         for name, definition in SUMMARY_SUBQUERY.columns:
@@ -49,16 +49,16 @@ class RecordingSummary(PropertyView):
 
         RecordingSummaryView.get_all(cursor, cls.row_factory)
 
-class Recording(JsonSerializable):
+class Recording(BaseObject):
 
-    def __init__(self, recording, tracks):
+    def __init__(self, **recording):
 
         for column in RECORDING_COLUMNS:
             self.__setattr__(column.name, recording.get(column.name))
 
-        self.tracks = tracks
-        self.artist = sorted(set(chain.from_iterable([ track.artist for track in tracks ])))
-        self.genre  = sorted(set(chain.from_iterable([ track.genre for track in tracks ])))
+        self.tracks = recording.get("tracks", [ ])
+        self.artist = sorted(set(chain.from_iterable([ track.artist for track in self.tracks ])))
+        self.genre  = sorted(set(chain.from_iterable([ track.genre for track in self.tracks ])))
 
     @classmethod
     def get(cls, cursor, recording_id):
@@ -68,8 +68,9 @@ class Recording(JsonSerializable):
         if recording is not None:
             query = Query(LibraryTrackView.name).compare("recording_id", recording_id, "=")
             query.execute(cursor, LibraryTrack.row_factory)
-            tracks = cursor.fetchall()
-            return cls(dict(recording), tracks)
+            recording = dict(recording)
+            recording["tracks"] = cursor.fetchall()
+            return cls(**recording)
         else:
             return None
 

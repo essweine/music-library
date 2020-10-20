@@ -1,5 +1,5 @@
 from ..util.db import Column, Subquery, Aggregation, Table
-from ..util import JsonSerializable
+from ..util import BaseObject
 
 PROPERTY_COLUMNS = [
     Column("recording_id", "text", False, True),
@@ -29,7 +29,7 @@ RECORDING_PROPS = Subquery([
 
 PropertyTable = Table("property", PROPERTY_COLUMNS, "filename")
 
-class PropertyView(JsonSerializable):
+class PropertyView(BaseObject):
 
     def __init__(self, item):
 

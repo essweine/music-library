@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from ..util.db import Column, Table, View, Subquery, Query
-from ..util import JsonSerializable
+from ..util import BaseObject
 from ..library.property import PropertyView
 
 HISTORY_COLUMNS = [
@@ -42,15 +42,15 @@ class HistoryTrack(PropertyView):
 
     PROPERTIES = [ "artist" ]
 
-    def __init__(self, track = { }):
+    def __init__(self, **track):
 
         super(HistoryTrack, self).__init__(track)
         for name, definition in HISTORY_TRACK_COLUMNS:
             self.__setattr__(name, track.get(name))
 
-class History(JsonSerializable):
+class History(BaseObject):
 
-    def __init__(self, entry = { }):
+    def __init__(self, **entry):
 
         for column in HISTORY_COLUMNS:
             self.__setattr__(column.name, entry.get(column.name, column.default))

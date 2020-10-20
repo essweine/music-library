@@ -3,7 +3,6 @@ import sys
 from uuid import uuid4
 
 from ..util import BaseApiHandler
-
 from . import DirectoryService
 
 class ImportRootHandler(BaseApiHandler):

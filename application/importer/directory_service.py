@@ -1,13 +1,14 @@
 import os
 import re, json
 from uuid import uuid4
+from itertools import chain
 
 from ..config import AUDIO_FILETYPES, IMAGE_FILETYPES, TEXT_FILETYPES
-from ..util import JsonSerializable
+from ..util import BaseObject
 from ..library import Recording, LibraryTrack
 from .parsed_text import ParsedText
 
-class DirectoryListing(JsonSerializable):
+class DirectoryListing(BaseObject):
 
     def __init__(self, relative_path, children, audio, images, text):
 
@@ -93,7 +94,7 @@ class DirectoryService(object):
 
     def create_recording(self, directory, textfile = None):
 
-        recording = Recording(recording = { }, tracks = [ ])
+        recording = Recording()
         recording.id, recording.directory = str(uuid4()), directory.relative_path
 
         for idx, filename in enumerate(directory.audio):
@@ -117,6 +118,9 @@ class DirectoryService(object):
                     recording.tracks[idx].title    = title
                     recording.tracks[idx].artist   = parsed_text.artist
                     recording.tracks[idx].composer = parsed_text.composer
+
+            recording.artist = sorted(set(chain.from_iterable([ track.artist for track in recording.tracks ])))
+            recording.genre  = sorted(set(chain.from_iterable([ track.genre for track in recording.tracks ])))
 
         return recording
 

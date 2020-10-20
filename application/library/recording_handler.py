@@ -12,7 +12,8 @@ class RecordingRootHandler(BaseApiHandler):
 
         try:
             summaries = self.db_query(RecordingSummary.get_all)
-            self.write(json.dumps(summaries, cls = self.JsonEncoder))
+            sort = lambda rec: (rec.artist, rec.recording_date)
+            self.write(json.dumps(sorted(summaries, key = sort), cls = self.JsonEncoder))
         except Exception as exc:
             self.write_error(500, log_message = "Could not get recording list", exc_info = sys.exc_info())
 

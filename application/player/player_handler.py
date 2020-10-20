@@ -30,7 +30,7 @@ class PlayerHandler(BaseApiHandler):
 
         try:
             for task in self.json_body["tasks"]:
-                self.application.player.send_task(**task)
+                self.application.player.send_task(task)
         except:
             self.write_error(500, log_message = "Could not update the current state", exc_info = sys.exc_info())
 

@@ -1,14 +1,14 @@
 import re
 from dateutil.parser import parse as parsedate
 
-from ..util import JsonSerializable
+from ..util import BaseObject
 
-class ParsedText(JsonSerializable):
+class ParsedText(BaseObject):
 
     def __init__(self, text):
 
-        self.artist = None
-        self.composer = None
+        self.artist = [ ]
+        self.composer = [ ]
         self.title = None
         self.recording_date = None
         self.venue = None
@@ -44,7 +44,7 @@ class ParsedText(JsonSerializable):
 
             if in_first_section:
 
-                if self.artist is None:
+                if len(self.artist) == 0:
                     self.artist = [ name.strip() for name in line.split("/") ]
                     continue
 
