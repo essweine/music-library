@@ -1,6 +1,5 @@
 import { createListRoot, createListRow } from "../shared/item-list.js";
 import { createSearchBar } from "../shared/item-list-search.js";
-import { createRatingSelector } from "../shared/rating-container.js";
 
 function createRecordingList(app) { 
 
@@ -14,29 +13,12 @@ function createRecordingList(app) {
         never_listened: false,
     }
     let search = createSearchBar(root, query);
-
-    let ratingSelect = createRatingSelector();
-
-    let textInput = document.createElement("input");
-    textInput.classList.add("list-text-search");
-    textInput.type = "text";
-    textInput.name = "search-criteria";
-
-    search.addQueryOption("Artist", "artist", textInput);
-    search.addQueryOption("Title", "recording", textInput);
-    search.addQueryOption("Contains Track", "title", textInput);
-    search.addQueryOption("Minimum Rating", "rating", ratingSelect);
-    search.addQueryOption("Minimum Sound Rating", "sound_rating", ratingSelect);
-    search.addQueryOption("Genre", "genre", textInput);
-    search.addQueryOption("Composer", "composer", textInput);
-    search.addQueryOption("Date", "recording_date", textInput);
+    root.configureSearch = (config) => search.initialize(config);
 
     search.addCheckbox("Official", "official", "list-search-official");
     search.addCheckbox("Non-official", "nonofficial", "list-search-nonofficial");
-    search.addCheckbox("Unrated", "unrated", "list-search-unrated");
+    search.addCheckbox("Unrated Only", "unrated", "list-search-unrated");
     search.addCheckbox("Never listened", "never_listened", "list-search-unlistened");
-
-    search.select.dispatchEvent(new Event("input"));
 
     root.append(search);
 

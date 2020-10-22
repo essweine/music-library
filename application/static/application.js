@@ -41,6 +41,7 @@ class Application {
             this.recordingApi.getRecording(arg, this.container.initialize);
         } else if (action == "recording") {
             createRecordingList(this);
+            this.searchApi.getSearchConfig("recording", this.container.configureSearch);
             this.recordingApi.listAll(this.container.addRows);
         } else if (action == "history") {
             let ws = this.getPlayerNotificationService();
@@ -48,6 +49,7 @@ class Application {
             this.historyApi.getRecentTracks(this.container.tracklist.period, this.container.tracklist.update);
         } else if (action == "radio") {
             createRadioContainer(this);
+            this.searchApi.getSearchConfig("station", this.container.stationList.configureSearch);
             this.stationApi.listAll(this.container.stationList.addRows);
         } else if (action == "log") {
             let ws = this.getLogNotificationService();

@@ -118,3 +118,8 @@ class Recording(BaseObject):
 
         cursor.execute(update, values)
 
+    @staticmethod
+    def sort(recording):
+
+        return (recording.artist, recording.recording_date)
+

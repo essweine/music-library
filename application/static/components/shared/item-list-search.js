@@ -1,4 +1,5 @@
 import { createIcon } from "./icons.js";
+import { createRatingSelector } from "../shared/rating-container.js";
 
 function createSearchBar(root, query) {
 
@@ -12,29 +13,57 @@ function createSearchBar(root, query) {
     label.innerText = "Search";
     container.append(label);
 
-    container.select = document.createElement("select");
-    container.select.classList.add("list-search-select");
-    container.append(container.select);
+    let select = document.createElement("select");
+    select.classList.add("list-search-select");
+    container.append(select);
 
-    container.paramText = { };
-    container.elements = { };
-    container.currentElement = null;
+    let paramDisplay = { };
+    let paramElements = { };
+    let currentElement = null;
 
-    container.addQueryOption = (text, name, elem) => {
-        let option = document.createElement("option");
-        option.innerText = text;
-        option.value = name;
-        container.select.append(option);
-        container.elements[name] = elem;
-        container.paramText[name] = text;
+    container.initialize = (config) => {
+        for (let [ param, details ] of Object.entries(config)) {
+
+            let option = document.createElement("option");
+            option.innerText = details.display;
+            option.value = param;
+            select.append(option);
+
+            if (details.type == "rating") {
+                paramElements[param] = createRatingSelector();
+            } else if (details.type == "options") {
+                let propValues = document.createElement("select");
+                for (let value of details.values) {
+                    let option = document.createElement("option");
+                    option.innerText = value;
+                    option.value = value;
+                    propValues.append(option);
+                }
+                paramElements[param] = propValues;
+            } else {
+                let textInput = document.createElement("input");
+                textInput.classList.add("list-text-search");
+                textInput.type = "text";
+                textInput.name = "search-criteria";
+                paramElements[param] = textInput;
+            }
+
+            if (details.type == "date_search") {
+                let now = new Date();
+                paramElements[param].value = "*-" + (now.getMonth() + 1) + "-" + now.getDate();
+            }
+
+            paramDisplay[param] = details.display;
+        }
+        select.dispatchEvent(new Event("input"));
     }
 
-    container.select.oninput = e => {
-        let elem = container.elements[e.target.value];
-        if (container.currentElement != null)
-            container.currentElement.remove();
+    select.oninput = e => {
+        let elem = paramElements[e.target.value];
+        if (currentElement != null)
+            currentElement.remove();
         container.insertBefore(elem, showIcon);
-        container.currentElement = elem;
+        currentElement = elem;
     }
 
     container.addCheckbox = (paramText, queryParam, className) => {
@@ -62,8 +91,8 @@ function createSearchBar(root, query) {
 
         return function(e) {
 
-            let name  = container.select.value;
-            let value = container.elements[name].value;
+            let name  = select.value;
+            let value = paramElements[name].value;
 
             let param = document.createElement("div");
             param.classList.add("list-search-criterion");
@@ -81,7 +110,7 @@ function createSearchBar(root, query) {
 
             let paramText = document.createElement("span");
             paramText.classList.add("list-search-name");
-            paramText.innerText = container.paramText[name];
+            paramText.innerText = paramDisplay[name];
             param.append(paramText);
 
             let paramValue = document.createElement("span");

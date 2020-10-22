@@ -74,3 +74,7 @@ class Station(BaseObject):
         cursor.execute("select * from station where url=?", (url, ))
         return cursor.fetchone()
 
+    @staticmethod
+    def sort(station):
+
+        return station.name

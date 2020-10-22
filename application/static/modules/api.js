@@ -161,6 +161,8 @@ class Search extends Api {
     searchRecordings(query, callback) { this.post("/recording", query, callback); }
 
     searchStations(query, callback) { this.post("/station", query, callback); }
+
+    getSearchConfig(configType, callback) { this.get("/" + configType, callback); }
 }
 
 class History extends Api {

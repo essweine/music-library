@@ -11,7 +11,7 @@ class StationRootHandler(BaseApiHandler):
 
         try:
             stations = self.db_query(Station.get_all)
-            self.write(json.dumps(stations, cls = self.JsonEncoder))
+            self.write(json.dumps(sorted(stations, key = Station.sort), cls = self.JsonEncoder))
         except Exception as exc:
             self.write_error(500, log_message = "Could not get station list", exc_info = sys.exc_info())
 
@@ -21,7 +21,7 @@ class StationRootHandler(BaseApiHandler):
             self.write_error(400, messsages = [ "Expected json" ])
         try:
             results = self.db_query(Station.search, self.json_body)
-            self.write(json.dumps(results, cls = self.JsonEncoder))
+            self.write(json.dumps(sorted(results, key = Station.sort), cls = self.JsonEncoder))
         except Exception as exc:
             self.write_error(500, log_message = "Could not perform search", exc_info = sys.exc_info())
 

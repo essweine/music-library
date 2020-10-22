@@ -64,5 +64,9 @@ class History(BaseObject):
     def tracks_from_period(cls, cursor, start, end):
 
         query = Query("history_track", HISTORY_TRACK_COLUMNS, group = "filename", order = "last_listened desc")
+        start = datetime.strptime(start, "%Y-%m-%dT%H:%M:%S.%fZ").strftime("%Y-%m-%d %H:%M:%S")
+        end = datetime.strptime(end, "%Y-%m-%dT%H:%M:%S.%fZ").strftime("%Y-%m-%d %H:%M:%S")
+        query.compare("end_time", start, ">=")
+        query.compare("end_time", end, "<")
         query.execute(cursor, HistoryTrack.row_factory)
 

@@ -8,7 +8,7 @@ from .search import Search
 from .recording_handler import RecordingHandler, RecordingRootHandler
 from .station_handler import StationHandler, StationRootHandler
 from .rating_handler import RatingHandler
-from .search_handler import RecordingSearchHandler, StationSearchHandler
+from .search_handler import RecordingSearchHandler, StationSearchHandler, PropertyHandler
 
 # DB interactions
 from .recording import RecordingTable, RecordingSummaryView

@@ -5,6 +5,11 @@ from . import Search
 
 class RecordingSearchHandler(BaseApiHandler):
 
+    def get(self):
+
+        config = self.db_action(Search.configuration, "recording")
+        self.write(json.dumps(config, cls = self.JsonEncoder))
+
     def post(self):
 
         if self.json_body:
@@ -16,6 +21,11 @@ class RecordingSearchHandler(BaseApiHandler):
 
 class StationSearchHandler(BaseApiHandler):
 
+    def get(self):
+
+        config = self.db_action(Search.configuration, "station")
+        self.write(json.dumps(config, cls = self.JsonEncoder))
+
     def post(self):
 
         if self.json_body:
@@ -24,4 +34,11 @@ class StationSearchHandler(BaseApiHandler):
             self.logger.error(f"POST request {self.request.url}: expected json")
 
         self.write(json.dumps(results, cls = self.JsonEncoder))
+
+class PropertyHandler(BaseApiHandler):
+
+    def get(self, prop):
+
+        result = self.db_action(Search.property_values, prop)
+        self.write(json.dumps(result, cls = self.JsonEncoder))
 

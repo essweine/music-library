@@ -1,6 +1,7 @@
 import unittest
 import sqlite3
 import os
+import re
 
 from uuid import uuid4
 from datetime import date
@@ -61,7 +62,7 @@ class TestRecording(unittest.TestCase):
 
         cursor = self.conn.cursor()
         RecordingSummary.get_all(cursor)
-        summaries = [ row for row in cursor ]
+        summaries = cursor.fetchall()
         self.assertEqual(len(summaries), 1)
         first = summaries[0]
         self.assertEqual(first.id, self.recording_id)
@@ -128,41 +129,74 @@ class TestRecording(unittest.TestCase):
 
         artist_search = self.build_search_params(match = [ { "artist": "Built To Spill" } ])
         Search.recording(cursor, artist_search)
-        artist_result = [ row for row in cursor ]
+        artist_result = cursor.fetchall()
         self.assertEqual(len(artist_result), 1)
         self.assertEqual(artist_result[0].id, self.recording_id)
 
         title_search = self.build_search_params(match = [ { "recording": "Keep It Like A Secret" } ])
         Search.recording(cursor, title_search)
-        title_result = [ row for row in cursor ]
+        title_result = cursor.fetchall()
         self.assertEqual(len(title_result), 1)
         self.assertEqual(title_result[0].id, self.recording_id)
 
         track_search = self.build_search_params(match = [ { "title": "Carry the Zero" } ])
         Search.recording(cursor, track_search)
-        track_result = [ row for row in cursor ]
+        track_result = cursor.fetchall()
         self.assertEqual(len(track_result), 1)
         self.assertEqual(track_result[0].id, self.recording_id)
 
         rating_search = self.build_search_params(match = [ { "recording_rating": 5 } ])
         Search.recording(cursor, rating_search)
-        rating_result = [ row for row in cursor ]
+        rating_result = cursor.fetchall()
         self.assertEqual(len(rating_result), 1)
 
         exclude_artist = self.build_search_params(exclude = [ { "artist": "Calexico" } ])
         Search.recording(cursor, exclude_artist)
-        exclude_artist_result = [ row for row in cursor ]
+        exclude_artist_result = cursor.fetchall()
         self.assertEqual(len(exclude_artist_result), 1)
         self.assertEqual(artist_result[0].id, self.recording_id)
 
         rating_search = self.build_search_params(exclude = [ { "recording_rating": 3 } ])
         Search.recording(cursor, rating_search)
-        rating_result = [ row for row in cursor ]
+        rating_result = cursor.fetchall()
         self.assertEqual(len(rating_result), 0)
 
         rating_search = self.build_search_params(unrated = True)
         Search.recording(cursor, rating_search)
-        rating_result = [ row for row in cursor ]
+        rating_result = cursor.fetchall()
         self.assertEqual(len(rating_result), 0)
 
         cursor.close()
+
+    def test_009_search_date(self):
+
+        cursor = self.conn.cursor()
+        recording = Recording.get(cursor, self.recording_id)
+
+        exact_date = date.strftime(recording.recording_date, "%Y-%m-%d")
+        any_year = date.strftime(recording.recording_date, "*-%m-%d")
+        partial_year = re.sub("19", "*", date.strftime(recording.recording_date, "%Y-%m-%d"))
+        year_and_month = date.strftime(recording.recording_date, "%Y-%m-*")
+
+        search = self.build_search_params(match = [ { "recording_date": exact_date } ])
+        Search.recording(cursor, search)
+        result = cursor.fetchall()
+        self.assertEqual(len(result), 1)
+
+        search["match"][0]["recording_date"] = any_year
+        Search.recording(cursor, search)
+        result = cursor.fetchall()
+        self.assertEqual(len(result), 1)
+
+        search["match"][0]["recording_date"] = partial_year
+        Search.recording(cursor, search)
+        result = cursor.fetchall()
+        self.assertEqual(len(result), 1)
+
+        search["match"][0]["recording_date"] = year_and_month
+        Search.recording(cursor, search)
+        result = cursor.fetchall()
+        self.assertEqual(len(result), 1)
+
+        cursor.close()
+

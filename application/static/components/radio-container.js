@@ -1,6 +1,5 @@
 import { createListRoot, createListRow } from "./shared/item-list.js";
 import { createSearchBar } from "./shared/item-list-search.js";
-import { createRatingSelector } from "./shared/rating-container.js";
 import { createIcon } from "./shared/icons.js";
 import { createEditableInfo } from "./shared/editable-info.js";
 
@@ -88,24 +87,12 @@ function createStationList(app, stationEditor) {
     let query = { match: [ ], exclude: [ ] }
     
     let search = createSearchBar(root, query);
-
-    let ratingSelect = createRatingSelector();
-    let textInput = document.createElement("input");
-    textInput.classList.add("list-search-text");
-    textInput.type = "text";
-
-    search.addQueryOption("Name", "name", textInput);
-    search.addQueryOption("Minimum Rating", "rating", ratingSelect);
-    search.addQueryOption("Listened Since", "last_listened", textInput);
-    search.addQueryOption("Listen Duration", "minutes_listened", textInput);
-
-    search.select.dispatchEvent(new Event("input"));
+    root.configureSearch = (config) => search.initialize(config);
+    root.append(search);
 
     root.updateResults = (query) => app.searchApi.searchStations(query, root.update);
 
     root.refresh = () => app.searchApi.searchStations(search.query, root.update);
-
-    root.append(search);
 
     let header = createListRow("list-heading");
     for (let colName of [ "Name", "Website", "Minutes Listened", "Last Listened", "Rating", "", "", "" ])
