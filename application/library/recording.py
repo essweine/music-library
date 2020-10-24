@@ -55,10 +55,7 @@ class Recording(BaseObject):
 
         for column in RECORDING_COLUMNS:
             self.__setattr__(column.name, recording.get(column.name))
-
         self.tracks = recording.get("tracks", [ ])
-        self.artist = sorted(set(chain.from_iterable([ track.artist for track in self.tracks ])))
-        self.genre  = sorted(set(chain.from_iterable([ track.genre for track in self.tracks ])))
 
     @classmethod
     def get(cls, cursor, recording_id):

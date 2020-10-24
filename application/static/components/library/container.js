@@ -1,5 +1,6 @@
 import { createRecordingImage } from "./recording-image.js";
 import { createEditableInfo } from "../shared/editable-info.js";
+import { createRecordingTaglist } from "./taglist.js";
 import { createRecordingTracklist } from "./tracklist.js";
 import { createRawInfo } from "./raw-info.js";
 import { createRatingContainer } from "/static/components/shared/rating-container.js";
@@ -26,20 +27,16 @@ function createRecordingDisplay() {
 
     container.rawInfo = addSection("recording-raw-info");
 
-    container.recordingTitle  = createEditableInfo("recording-data");
-    container.recordingArtist = createEditableInfo("recording-data");
-    container.recordingDate   = createEditableInfo("recording-data");
-    container.recordingVenue  = createEditableInfo("recording-data");
-    container.recordingGenre  = createEditableInfo("recording-data");
+    let recordingTitle    = createEditableInfo("recording-data");
+    let recordingArtist   = createRecordingTaglist("artist", "Artist", container.tracklist);
+    let recordingComposer = createRecordingTaglist("composer", "Composer", container.tracklist);
+    let recordingDate     = createEditableInfo("recording-data");
+    let recordingVenue    = createEditableInfo("recording-data");
+    let recordingGenre    = createRecordingTaglist("genre", "Genre", container.tracklist);
 
-    container.infoFields = [ 
-        container.recordingTitle,
-        container.recordingArtist,
-        container.recordingDate,
-        container.recordingVenue,
-        container.recordingGenre
-    ];
-    for (let elem of container.infoFields)
+    let infoFields = [ recordingTitle, recordingArtist, recordingComposer, recordingDate, recordingVenue, recordingGenre ];
+
+    for (let elem of infoFields)
         container.infoContainer.append(elem);
 
     container.official = document.createElement("div");
@@ -59,8 +56,6 @@ function createRecordingDisplay() {
     container.heading.id = "recording-heading";
     container.heading.style["padding-right"] = "20px";
     container.overview.append(container.heading);
-
-    container.createIcon = createIcon.bind(container);
 
     container.addImages = (images, baseDir) => {
         if (images.length) {
@@ -84,14 +79,14 @@ function createRecordingDisplay() {
 
     container.toggleEdit = (editable) => {
 
-        for (let field of container.infoFields)
+        for (let field of infoFields)
             field.toggleEdit(editable);
         container.tracklist.toggleEdit(editable);
 
         if (editable) {
             container.infoContainer.append(container.official);
             let official = document.getElementById("official-checkbox");
-            official.checked = container.source.official;
+            official.checked = (container.recording == null) ? false : container.recording.official;
         } else
             container.official.remove();
         
@@ -102,42 +97,51 @@ function createRecordingDisplay() {
     }
 
     container.update = () => {
-        for (let elem of container.infoFields)
+
+        for (let elem of infoFields)
             elem.save();
         container.tracklist.save();
 
-        container.source.title = container.recordingTitle.get();
-        container.source.artist = container.recordingArtist.get();
-        container.source.recording_date = container.recordingDate.get();
-        container.source.venue = container.recordingVenue.get();
-        container.source.genre = container.recordingGenre.get();
-        container.source.tracks = container.tracklist.getTracklist();
+        container.recording.title = recordingTitle.get();
+        container.recording.recording_date = recordingDate.get();
+        container.recording.venue = recordingVenue.get();
+        container.recording.tracks = container.tracklist.getTracklist();
 
         let official = document.getElementById("official-checkbox").checked;
-        container.source.official = official;
+        container.recording.official = official;
 
         if (container.data.images.length) {
             let img = document.getElementById("recording-artwork").getAttribute("src")
-            container.source.artwork = decodeURIComponent(img.replace(/^\/file\//, ""));
+            container.recording.artwork = decodeURIComponent(img.replace(/^\/file\//, ""));
         }
     }
 
-    container.addInfoFromSource = () => {
-        container.recordingTitle.initialize(container.source.title, "title", "Title");
-        container.recordingArtist.initialize(container.source.artist, "artist", "Artist");
-        container.recordingDate.initialize(container.source.recording_date, "recording-date", "Date");
-        container.recordingVenue.initialize(container.source.venue, "venue", "Venue");
-        container.recordingGenre.initialize(container.source.genre, "genre", "Genre");
-        container.tracklist.setTracklist(container.source.tracks);
+    container.collectProperties = () => {
+        recordingArtist.initialize(container.tracklist.getAllValues("artist"));
+        recordingComposer.initialize(container.tracklist.getAllValues("composer"));
+        recordingGenre.initialize(container.tracklist.getAllValues("genre"));
+    }
+
+    container.addInfoFromSource = (source) => {
+        recordingTitle.initialize(source.title, "title", "Title");
+        recordingDate.initialize(source.recording_date, "recording-date", "Date");
+        recordingVenue.initialize(source.venue, "venue", "Venue");
+        container.tracklist.setTracklist(source.tracks);
+        container.collectProperties();
         container.tracklist.toggleEdit(true);
     }
 
     container.updateFiles = (directory) => {
         container.data = directory;
-        for (let image of directory.images.filter(i => i != container.source.artwork))
+        for (let image of directory.images.filter(i => i != container.recording.artwork))
             container.imageContainer.addImage(image, container.data.relative_path);
-        for (let file of directory.text.filter(f => f != container.source.notes))
+        for (let file of directory.text.filter(f => f != container.recording.notes))
             container.rawInfo.addFile(file, container.data.relative_path);
+    }
+
+    container.reset = () => {
+        container.addInfoFromSource(container.recording);
+        container.selectContext(false);
     }
 
     return container;
@@ -149,19 +153,21 @@ function createImportContainer(app) {
 
     container.initialize = (directory) => {
 
+        let source = (directory.text.length) ? directory.parsed_text[0] : directory.parsed_text[directory.parsed_text.length - 1];
+
         container.data = directory;
-        container.source = (directory.text.length) ? directory.parsed_text[0] : directory.parsed_text[directory.parsed_text.length - 1];
+        container.recording = source;
         container.heading.innerText = directory.relative_path;
 
-        container.importIcon = container.createIcon("add", e => container.addToLibrary());
-        container.cancelIcon = container.createIcon("clear", e => container.cancel());
+        container.importIcon = createIcon("add", e => container.addToLibrary());
+        container.cancelIcon = createIcon("clear", e => container.cancel());
 
         container.overview.append(container.importIcon);
         container.overview.append(container.cancelIcon);
 
+        container.addInfoFromSource(source);
         container.addImages(directory.images, directory.relative_path);
         container.addFiles(directory.text, directory.relative_path);
-        container.addInfoFromSource();
 
         container.toggleEdit(true);
         document.title = directory.relative_path;
@@ -169,7 +175,7 @@ function createImportContainer(app) {
 
     container.addToLibrary = () => {
         container.update();
-        app.recordingApi.addToLibrary(container.source);
+        app.recordingApi.addToLibrary(container.recording);
     }
 
     container.cancel = () => { window.location.href = "/importer"; }
@@ -186,7 +192,7 @@ function createRecordingContainer(app) {
     container.initialize = (recording) => {
 
         container.data = null;
-        container.source = recording;
+        container.recording = recording;
         container.heading.innerText = recording.title;
 
         let images = (recording.artwork != null) ? [ recording.artwork ] : [ ];
@@ -194,7 +200,7 @@ function createRecordingContainer(app) {
 
         let files = (recording.notes != null) ? [ recording.notes ] : [ ];
         container.addFiles(files, recording.directory);
-        container.addInfoFromSource();
+        container.addInfoFromSource(recording);
 
         container.recordingRating = createRatingContainer("recording-rating", "Rating");
         container.recordingRating.configure("recording", recording.id, "rating", recording.rating, "Rating");
@@ -202,16 +208,16 @@ function createRecordingContainer(app) {
         container.soundRating = createRatingContainer("recording-rating");
         container.soundRating.configure("recording", recording.id, "sound-rating", recording.sound_rating, "Sound Rating");
 
-        container.editIcon = container.createIcon("create", e => container.selectContext(true));
-        container.saveIcon = container.createIcon("save", e => container.save());
-        container.cancelIcon = container.createIcon("clear", e => container.cancel());
+        container.editIcon = createIcon("create", e => container.selectContext(true));
+        container.saveIcon = createIcon("save", e => container.save());
+        container.cancelIcon = createIcon("clear", e => container.cancel());
 
-        container.playIcon = container.createIcon("play_arrow", e => {
+        container.playIcon = createIcon("play_arrow", e => {
             app.playerApi.clearPlaylist();
-            app.playerApi.queueAll(container.source.tracks)
+            app.playerApi.queueAll(container.recording.tracks)
             app.playerApi.start();
         });
-        container.queueIcon = container.createIcon("playlist_play", e => app.playerApi.queueAll(container.source.tracks));
+        container.queueIcon = createIcon("playlist_play", e => app.playerApi.queueAll(container.recording.tracks));
 
         container.selectContext(false);
         document.title = recording.title;
@@ -220,7 +226,7 @@ function createRecordingContainer(app) {
     container.selectContext = (editable) => {
 
         if (editable && container.data == null) {
-            app.importerApi.getDirectoryListing(encodeURIComponent(container.source.directory), container.updateFiles.bind(container));
+            app.importerApi.getDirectoryListing(encodeURIComponent(container.recording.directory), container.updateFiles.bind(container));
         }
 
         (editable) ? container.editIcon.remove() : container.overview.append(container.editIcon);
@@ -237,15 +243,10 @@ function createRecordingContainer(app) {
 
     container.save = () => {
         container.update();
-        app.recordingApi.saveRecording(container.source);
+        app.recordingApi.saveRecording(container.recording);
     }
 
-    container.cancel = () => {
-        for (let elem of container.infoFields)
-            elem.reset();
-        container.tracklist.setTracklist(container.source.tracks);
-        container.selectContext(false);
-    }
+    container.cancel = () => container.reset();
 
     app.container = container;
 }

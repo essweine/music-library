@@ -42,8 +42,8 @@ function createRawInfo(recordingContainer, files, directory, selected = null) {
     container.selectFile = (e) => {
         let filename = e.target.value;
         container.getNotes(filename);
-        recordingContainer.source = recordingContainer.data.parsed_text[recordingContainer.data.text.indexOf(filename)];
-        recordingContainer.addInfoFromSource();
+        let source = recordingContainer.data.parsed_text[recordingContainer.data.text.indexOf(filename)];
+        recordingContainer.addInfoFromSource(source);
     }
 
     container.getNotes = (file) => {

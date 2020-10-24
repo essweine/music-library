@@ -73,8 +73,8 @@ class TestRecording(unittest.TestCase):
 
         cursor = self.conn.cursor()
         recording = Recording.get(cursor, self.recording_id)
-        self.assertEqual(recording.artist[0], "Built to Spill")
         self.assertEqual(len(recording.tracks), 3)
+        self.assertEqual(recording.tracks[0].artist[0], "Built to Spill")
         self.assertEqual(recording.tracks[0].title, "The Plan")
         self.assertEqual(recording.recording_date, date(1999, 2, 2))
         cursor.close()
@@ -84,7 +84,7 @@ class TestRecording(unittest.TestCase):
         cursor = self.conn.cursor()
         recording = Recording.get(cursor, self.recording_id)
         for track in recording.tracks:
-            track.artist.append("Built To Spill")
+            track.artist[0] = "Built To Spill"
         Recording.update(cursor, recording.as_dict())
 
         album_rating = Rating("recording", self.recording_id, "rating", 5)
@@ -93,7 +93,7 @@ class TestRecording(unittest.TestCase):
         Recording.set_rating(cursor, track_rating)
 
         updated = Recording.get(cursor, self.recording_id)
-        self.assertEqual(updated.artist[0], "Built To Spill")
+        self.assertEqual(updated.tracks[0].artist[0], "Built To Spill")
         self.assertEqual(updated.rating, 5)
         self.assertEqual(updated.tracks[0].rating, 5)
         cursor.close()

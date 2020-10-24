@@ -22,6 +22,8 @@ function createTracklistContainer(childClass) {
     let container = document.createElement("div");
     container.childClass = childClass;
 
+    container.tracks = () => { return container.getElementsByClassName(container.childClass); }
+
     container._shiftTrackUp = (position) => {
         let children = container.getElementsByClassName(container.childClass);
         let item = children.item(position);
@@ -53,7 +55,7 @@ function createTracklistContainer(childClass) {
     container.update = container._update;
 
     container.clear = (tracklist) => { 
-        for (let track of Array.from(container.getElementsByClassName(container.childClass)))
+        for (let track of Array.from(container.tracks()))
             track.remove();
     }
 

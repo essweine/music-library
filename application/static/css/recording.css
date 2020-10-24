@@ -46,16 +46,34 @@
     font-size: large;
 }
 
-.editable-info { display: contents; }
+.editable-info, .recording-taglist { display: contents; }
 
+.taglist-label, 
 .recording-data > .editable-label {
     grid-column: 1;
     justify-self: end;
 }
 
-.recording-data > .editable-input {
+.taglist-values, .recording-data > .editable-input {
     grid-column: 2;
     justify-self: start;
+}
+
+.tag {
+    display: block;
+    justify-content: start;
+    background-color: #ccf;
+    padding: 2px 0;
+    border: 2px;
+    border-color: #aaf;
+    border-style: solid;
+    margin: 5px;
+    width: max-content;
+}
+
+.tag-property, .tag-value {
+    padding: 2px 5px;
+    font-size: medium;
 }
 
 .recording-official {
@@ -107,53 +125,22 @@
     width: max-content;
 }
 
-.play-track {
-    grid-column: 4;
+.queue-track { grid-column: 5; }
+
+.move-up { grid-column: 4; }
+.move-down { grid-column: 5; }
+.expand-track, .collapse-track { grid-column: 6; }
+
+.recording-track-taglist { }
+
+.update-tag {
+    padding: 2px 0;
+    font-size: medium;
 }
 
-.queue-track {
-    grid-column: 5;
-}
-
-.move-up {
-    grid-column: 4;
-    width: min-content;
-}
-
-.move-down {
-    grid-column: 5;
-    width: min-content;
-}
-
-.expand-track, .collapse-track {
-    grid-column: 6;
-    width: min-content;
-}
-
-.recording-track-artist > .editable-label,
-.recording-track-guest > .editable-label,
-.recording-track-composer > .editable-label,
-.recording-track-genre > .editable-label {
-    grid-column: 2;
-    justify-self: end;
-    align-self: center;
-}
-
-.recording-track-artist > .editable-display,
-.recording-track-guest > .editable-display,
-.recording-track-composer > .editable-display,
-.recording-track-genre > .editable-display {
-    grid-column: 2;
-    justify-self: start;
-    align-self: center;
-}
-
-
-.recording-track-artist > .editable-input,
-.recording-track-guest > .editable-input,
-.recording-track-composer > .editable-input,
-.recording-track-genre > .editable-input {
-    grid-column: 3;
+.edit-tag {
+    padding: 2px 0;
+    font-size: 24px;
 }
 
 #recording-tracklist-options {

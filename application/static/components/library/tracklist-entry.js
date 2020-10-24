@@ -1,4 +1,5 @@
 import { createEditableInfo } from "../shared/editable-info.js";
+import { createTrackTaglist } from "./taglist.js";
 import { createRatingContainer } from "../shared/rating-container.js";
 import { createIcon } from "../shared/icons.js";
 
@@ -8,118 +9,104 @@ function createRecordingTrack(tracklist, track) {
     entry.classList.add("recording-track");
 
     entry.track = track;
-    entry.detailVisible = false;
 
-    entry.trackNum = document.createElement("span");
-    entry.trackNum.classList.add("recording-track-position");
-    entry.append(entry.trackNum);
+    let trackNum = document.createElement("span");
+    trackNum.classList.add("recording-track-position");
+    entry.append(trackNum);
 
     entry.trackTitle = createEditableInfo("recording-track-title");
     entry.trackTitle.initialize(track.title, track.filename, track.filename);
     entry.append(entry.trackTitle);
 
-    entry.ratingContainer = createRatingContainer("recording-track-rating");
-    entry.ratingContainer.configure("recording", track.recording_id, track.filename, track.rating);
-    entry.append(entry.ratingContainer);
+    let ratingContainer = createRatingContainer("recording-track-rating");
+    ratingContainer.configure("recording", track.recording_id, track.filename, track.rating);
+    entry.append(ratingContainer);
 
-    entry.moveUp        = createIcon("arrow_upward", e => tracklist.shiftTrackUp(entry.currentPosition), "move-up");
-    entry.moveDown      = createIcon("arrow_downward", e => tracklist.shiftTrackUp(entry.currentPosition + 1), "move-down");
-    entry.queueTrack    = createIcon("playlist_add", e => tracklist.queueTrack(entry.track), "queue-track");
-    entry.expandTrack   = createIcon("expand_more", e => entry.toggleDetail(true), "expand-track");
-    entry.collapseTrack = createIcon("expand_less", e => entry.toggleDetail(false), "collapse-track");
+    let moveUp        = createIcon("arrow_upward", e => tracklist.shiftTrackUp(entry.currentPosition), "move-up");
+    let moveDown      = createIcon("arrow_downward", e => tracklist.shiftTrackUp(entry.currentPosition + 1), "move-down");
+    let queueTrack    = createIcon("playlist_add", e => tracklist.queueTrack(entry.track), "queue-track");
+    let expandTrack   = createIcon("expand_more", e => entry.toggleDetail(true), "expand-track");
+    let collapseTrack = createIcon("expand_less", e => entry.toggleDetail(false), "collapse-track");
 
-    entry.artist   = createEditableInfo("recording-track-artist");
-    entry.guest    = createEditableInfo("recording-track-guest");
-    entry.composer = createEditableInfo("recording-track-composer");
-    entry.genre    = createEditableInfo("recording-track-genre");
+    let detailVisible = false;
 
-    entry.artist.initialize(track.artist, "artist", "Artist");
-    entry.composer.initialize(track.composer, "composer", "Composer");
-    entry.guest.initialize(track.guest, "guest", "Guest Artist");
-    entry.genre.initialize(track.genre, "genre", "Genre");
+    let tags = { artist: "Artist", guest: "Guest Artist", composer: "Composer", genre: "Genre" };
 
-    entry.updateDetailDisplay = () => {
-        entry.artist.display.innerText = (track.artist != null) ? "Artist: " + track.artist : "Artist:";
-        entry.guest.display.innerText = (track.guest != null) ? "Guest Artist: " + track.guest : "Guest Artist:";
-        entry.composer.display.innerText = (track.composer != null) ? "Composer: " + track.composer : "Composer:";
-        entry.genre.display.innerText = (track.genre != null) ? "Genre: " + track.genre : "Genre:";
-    }
+    let taglist = createTrackTaglist(tags);
+    entry.append(taglist);
 
-    entry.toggleDetail = (detailVisible) => {
-        entry.updateDetailDisplay()
-        if (detailVisible) {
-            entry.expandTrack.remove();
-            entry.append(entry.collapseTrack);
-            entry.append(entry.artist);
-            entry.append(entry.guest);
-            entry.append(entry.composer);
-            entry.append(entry.genre);
+    for (let prop of Object.keys(tags))
+        for (let value of track[prop])
+            taglist.addProperty(prop, value);
+
+    entry.toggleDetail = (visible) => {
+        if (visible) {
+            expandTrack.remove();
+            entry.insertBefore(collapseTrack, taglist);
+            taglist.style.display = "block";
         } else {
-            entry.collapseTrack.remove();
-            entry.artist.remove();
-            entry.guest.remove();
-            entry.composer.remove();
-            entry.genre.remove();
-            entry.append(entry.expandTrack);
+            collapseTrack.remove();
+            entry.insertBefore(expandTrack, taglist);
+            taglist.style.display = "none";
         }
     }
 
     entry.toggleEdit = (editable) => {
         entry.trackTitle.toggleEdit(editable);
+        taglist.toggleEdit(editable);
         if (editable) {
-            entry.ratingContainer.remove();
-            entry.queueTrack.remove();
-            entry.append(entry.moveUp);
-            entry.append(entry.moveDown);
+            ratingContainer.remove();
+            queueTrack.remove();
+            entry.insertBefore(moveUp, taglist);
+            entry.insertBefore(moveDown, taglist);
         } else {
-            entry.moveUp.remove();
-            entry.moveDown.remove();
-            entry.append(entry.ratingContainer);
-            entry.append(entry.queueTrack);
+            moveUp.remove();
+            moveDown.remove();
+            entry.insertBefore(ratingContainer, taglist);
+            entry.insertBefore(queueTrack, taglist);
         }
-        entry.artist.toggleEdit(editable);
-        entry.guest.toggleEdit(editable);
-        entry.composer.toggleEdit(editable);
-        entry.genre.toggleEdit(editable);
-        entry.toggleDetail(entry.detailVisible);
+        entry.toggleDetail(detailVisible);
     }
 
     entry.updatePosition = (position, firstTrack, lastTrack) => {
-        entry.trackNum.innerText = position + 1;
+        trackNum.innerText = position + 1;
         entry.currentPosition = position;
         if (firstTrack) {
-            entry.moveUp.hide();
-            entry.moveDown.show();
+            moveUp.hide();
+            moveDown.show();
         } else if (lastTrack) {
-            entry.moveUp.show();
-            entry.moveDown.hide();
+            moveUp.show();
+            moveDown.hide();
         } else {
-            entry.moveUp.show();
-            entry.moveDown.show();
+            moveUp.show();
+            moveDown.show();
         }
+    }
+
+    entry.addProperty = (property, value) => {
+        let tag = taglist.findTag(property, value);
+        if (tag == null)
+            taglist.addProperty(property, value);
+    }
+
+    entry.removeProperty = (property, value) => {
+        let tag = taglist.findTag(property, value);
+        if (tag != null)
+            taglist.removeProperty(tag, property, value);
     }
 
     entry.save = () => {
         entry.trackTitle.save();
-        entry.artist.save();
-        entry.guest.save();
-        entry.composer.save();
-        entry.genre.save();
-
         entry.track.track_num = entry.currentPosition + 1;
         entry.track.title = entry.trackTitle.get();
-        entry.track.artist = entry.artist.get().split(",");
-        entry.track.guest = entry.guest.get().split(",");
-        entry.track.composer = entry.composer.get().split(",");
-        entry.track.genre = entry.genre.get().split(",");
-
-        entry.updateDetailDisplay();
+        let properties = taglist.getProperties();
+        for (let prop of Object.keys(properties))
+            entry.track[prop] = properties[prop];
     }
 
     entry.reset = () => { entry.trackTitle.reset(); }
 
     return entry;
 }
-
 
 export { createRecordingTrack };
