@@ -6,12 +6,11 @@ from . import Recording, Station
 
 class Rating(object):
 
-    def __init__(self, item_type, item_id, rated_item, value):
+    def __init__(self, item_type, item_id, value):
 
-        self.item_type  = item_type
-        self.item_id    = item_id
-        self.rated_item = rated_item
-        self.value      = value
+        self.item_type = item_type
+        self.item_id   = item_id
+        self.value     = value
 
 class RatingHandler(BaseApiHandler):
 
@@ -22,9 +21,9 @@ class RatingHandler(BaseApiHandler):
 
         try:
             rating = Rating(**self.json_body)
-            if rating.item_type == "recording":
-                self.db_action(Recording.set_rating, rating)
-            elif rating.item_type == "station":
+            if rating.item_type == "station":
                 self.db_action(Station.set_rating, rating)
+            else:
+                self.db_action(Recording.set_rating, rating)
         except Exception as exc:
             self.write_error(500, log_message = "Could update rating", exc_info = sys.exc_info())

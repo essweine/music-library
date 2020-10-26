@@ -6,7 +6,7 @@ from itertools import chain
 from ..util.db import Column, Subquery, Table, View, Query
 from ..util import BaseObject
 from .property import PropertyView, RECORDING_PROPS, RECORDING_AGGREGATE
-from .track import LibraryTrackView, LibraryTrack
+from .track import LibraryTrackView, LibraryTrack, TrackTable
 
 RECORDING_COLUMNS = [
     Column("id", "text", False, False),
@@ -103,20 +103,16 @@ class Recording(BaseObject):
     @staticmethod
     def set_rating(cursor, rating):
 
-        if rating.rated_item == "rating":
-            update = "update recording set rating=? where id=?"
-            values = (rating.value, rating.item_id)
-        elif rating.rated_item == "sound-rating":
+        if rating.item_type == "recording-rating":
+            RecordingTable.set_rating(cursor, rating.item_id, rating.value)
+        elif rating.item_type == "recording-sound-rating":
             update = "update recording set sound_rating=? where id=?"
-            values = (rating.value, rating.item_id)
+            cursor.execute(update, (rating.value, rating.item_id))
         else:
-            update = "update track set rating=? where filename=?"
-            values = (rating.value, rating.rated_item)
-
-        cursor.execute(update, values)
+            TrackTable.set_rating(cursor, rating.item_id, rating.value)
 
     @staticmethod
     def sort(recording):
 
-        return (recording.artist, recording.recording_date)
+        return (recording.artist, recording.recording_date if recording.recording_date else "")
 

@@ -19,7 +19,7 @@ function createRecordingTrack(tracklist, track) {
     entry.append(entry.trackTitle);
 
     let ratingContainer = createRatingContainer("recording-track-rating");
-    ratingContainer.configure("recording", track.recording_id, track.filename, track.rating);
+    ratingContainer.configure("track", track.filename, track.rating);
     entry.append(ratingContainer);
 
     let moveUp        = createIcon("arrow_upward", e => tracklist.shiftTrackUp(entry.currentPosition), "move-up");

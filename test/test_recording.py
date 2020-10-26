@@ -87,8 +87,8 @@ class TestRecording(unittest.TestCase):
             track.artist[0] = "Built To Spill"
         Recording.update(cursor, recording.as_dict())
 
-        album_rating = Rating("recording", self.recording_id, "rating", 5)
-        track_rating = Rating("recording", self.recording_id, recording.tracks[0].filename, 5)
+        album_rating = Rating("recording-rating", self.recording_id, 5)
+        track_rating = Rating("track", recording.tracks[0].filename, 5)
         Recording.set_rating(cursor, album_rating)
         Recording.set_rating(cursor, track_rating)
 
@@ -124,7 +124,7 @@ class TestRecording(unittest.TestCase):
         recording = self.directory_service.create_recording(directory, directory.text[0])
         recording.official = True
         Recording.create(cursor, recording.as_dict())
-        album_rating = Rating("recording", recording.id, "rating", 5)
+        album_rating = Rating("recording-rating", recording.id, 5)
         Recording.set_rating(cursor, album_rating)
 
         artist_search = self.build_search_params(match = [ { "artist": "Built To Spill" } ])

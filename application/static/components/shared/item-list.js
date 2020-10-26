@@ -29,9 +29,9 @@ function createListRow(className, parent = true) {
 
     row.addIcon = (name, action, className) => row.append(createIcon(name, action, className));
 
-    row.addRatingContainer = (itemType, itemId, ratingType, rating, className) => {
+    row.addRatingContainer = (itemType, itemId, rating, className) => {
         let ratingContainer = createRatingContainer("list-cell");
-        ratingContainer.configure(itemType, itemId, ratingType, rating);
+        ratingContainer.configure(itemType, itemId, rating);
         ratingContainer.classList.add(className);
         row.append(ratingContainer);
     }

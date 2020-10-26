@@ -18,7 +18,6 @@ function createRecordingList(app) {
     search.addCheckbox("Official", "official", "list-search-official");
     search.addCheckbox("Non-official", "nonofficial", "list-search-nonofficial");
     search.addCheckbox("Unrated Only", "unrated", "list-search-unrated");
-    search.addCheckbox("Never listened", "never_listened", "list-search-unlistened");
 
     root.append(search);
 
@@ -38,7 +37,7 @@ function createRecordingList(app) {
         row.addText("", "recording-list-artist");
         row.addText(track.title, "recording-list-title");
         row.addText("", "recording-list-date");
-        row.addRatingContainer(recordingId, track.filename, track.rating, "recording-list-rating");
+        row.addRatingContainer("track", track.filename, track.rating, "recording-list-rating");
         row.addText("", "recording-list-sound-rating");
         row.addText("", "recording-list-view");
         row.addText("", "recording-list.play");
@@ -67,8 +66,8 @@ function createRecordingList(app) {
         row.addText(entry.artist, "recording-list-artist");
         row.addText(entry.title, "recording-list-title");
         row.addText(entry.recording_date, "recording-list-date");
-        row.addRatingContainer("recording", entry.id, "rating", entry.rating, "recording-list-rating");
-        row.addRatingContainer("recording", entry.id, "sound-rating", entry.sound_rating, "recording-list-sound-rating");
+        row.addRatingContainer("recording-rating", entry.id, entry.rating, "recording-list-rating");
+        row.addRatingContainer("recording-sound-rating", entry.id, entry.sound_rating, "recording-list-sound-rating");
         row.addIcon("info", e => window.location.href = "/recording/" + entry.id, "recording-list-view");
         row.addIcon("playlist_play", e => {
             app.playerApi.clearPlaylist();

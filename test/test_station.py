@@ -64,7 +64,7 @@ class TestRecording(unittest.TestCase):
         cursor = self.conn.cursor()
         self.stations[0]["website"] = "https://weta.org/fm"
         Station.update(cursor, self.stations[0])
-        rating = Rating("station", self.stations[1]["id"], "rating", 5)
+        rating = Rating("station", self.stations[1]["id"], 5)
         Station.set_rating(cursor, rating)
         Station.get_all(cursor)
         stations = [ row for row in cursor ]

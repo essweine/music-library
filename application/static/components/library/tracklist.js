@@ -25,7 +25,7 @@ function createRecordingTracklist(container) {
     tracklist.append(tracklist.options);
 
     tracklist.toggleEdit = (editable) => {
-        for (let track of tracklist.tracks())
+        for (let track of tracklist.getItems())
             track.toggleEdit(editable);
         (editable) ? tracklist.insertBefore(tracklist.options, tracklist.rawInfo) : tracklist.options.remove();
     }
@@ -40,7 +40,7 @@ function createRecordingTracklist(container) {
         }
     }
 
-    tracklist.getTracklist = () => { return Array.from(tracklist.tracks()).map(item => item.track); }
+    tracklist.getTracklist = () => { return Array.from(tracklist.getItems()).map(item => item.track); }
 
     tracklist.getAllValues = (property) => {
         let values = new Set();
@@ -49,13 +49,13 @@ function createRecordingTracklist(container) {
     }
 
     tracklist.shiftTitlesUp = () => {
-        let original = Array.from(tracklist.tracks()).map(item => item.trackTitle.get());
+        let original = Array.from(tracklist.getItems()).map(item => item.trackTitle.get());
         let newTitles = original.slice(1, original.length).concat("");
         tracklist.setTrackTitles(newTitles);
     }
 
     tracklist.setTrackTitles = (titles) => {
-        let tracks = tracklist.tracks();
+        let tracks = tracklist.getItems();
         for (let i = 0; i < tracks.length; i++) {
             let title = (i < titles.length) ? titles[i] : "";
             tracks.item(i).trackTitle.set(title);
@@ -63,17 +63,17 @@ function createRecordingTracklist(container) {
     }
 
     tracklist.addProperty = (property, value) => {
-        for (let track of tracklist.tracks())
+        for (let track of tracklist.getItems())
             track.addProperty(property, value);
     }
 
     tracklist.removeProperty = (property, value) => {
-        for (let track of tracklist.tracks())
+        for (let track of tracklist.getItems())
             track.removeProperty(property, value);
     }
 
     tracklist.save = () => {
-        for (let track of tracklist.tracks())
+        for (let track of tracklist.getItems())
             track.save();
     }
 

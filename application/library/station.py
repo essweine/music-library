@@ -57,7 +57,7 @@ class Station(BaseObject):
     @staticmethod
     def set_rating(cursor, rating):
 
-        cursor.execute("update station set rating=? where id=?", (rating.value, rating.item_id))
+        StationTable.set_rating(cursor, rating.item_id, rating.value)
 
     @staticmethod
     def update_history(cursor, entry):

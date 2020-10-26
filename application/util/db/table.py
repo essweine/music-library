@@ -44,6 +44,10 @@ class Table(object):
 
         cursor.execute(f"delete from {self.name} where {self.identifier}=?", (item_id, ))
 
+    def set_rating(self, cursor, item_id, rating):
+
+        cursor.execute(f"update {self.name} set rating=? where {self.identifier}=?", (rating, item_id))
+
     def _convert_empty_strings(self, data):
 
         for column in self.columns:

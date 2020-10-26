@@ -7,10 +7,9 @@ function createRatingContainer(className = null) {
     if (className != null)
         container.classList.add(className);
 
-    container.configure = (itemType, itemId, ratedItem, rating, label = null) => {
-        container.itemType  = itemType;
-        container.itemId    = itemId;
-        container.ratedItem = ratedItem;
+    container.configure = (itemType, itemId, rating, label = null) => {
+        container.itemType = itemType;
+        container.itemId   = itemId;
         container.setRating(rating);
         if (label != null) {
             container.label = document.createElement("span");
@@ -42,7 +41,6 @@ function createRatingContainer(className = null) {
         let detail = { 
             item_type: container.itemType,
             item_id: container.itemId, 
-            rated_item: container.ratedItem,
             value: rating
         }
         container.dispatchEvent(new CustomEvent("update-rating", { detail: detail, bubbles: true }));

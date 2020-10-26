@@ -14,10 +14,6 @@ TRACK_SUBQUERY = Subquery([ (col.name, None) for col in TRACK_COLUMNS ], "track"
 RECORDING_SUBQUERY = Subquery([
     ("recording_id", "id"),
     ("recording", "title"),
-    ("recording_date", None),
-    ("recording_rating", "rating"),
-    ("sound_rating", None),
-    ("official", None),
     ("artwork", None),
 ], "recording", False)
 
@@ -25,7 +21,6 @@ PLAYLIST_SUBQUERY = Subquery([
     ("recording_id", None),
     ("filename", None),
     ("title", None),
-    ("rating", None),
     ("rating", None),
     ("recording", None),
     ("artwork", None),

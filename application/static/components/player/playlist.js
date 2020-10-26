@@ -96,12 +96,12 @@ function createPlaylist(app) {
             entry.updatePosition(i, i == 0, i == entries.length - 1);
             if (tracklist.currentView == "allTracks" && i == current)
                 entry.classList.add("playlist-entry-current");
-            if (tracklist.currentView == "nextTracks" && i == current) {
+            if (tracklist.currentView == "nextTracks" && i == current + 1) {
                 entry.style["font-size"] = "large";
                 entry.moveUp.hide();
             }
         }
-        let displayEntries = (tracklist.currentView == "nextTracks") ? entries.slice(tracklist.current, tracklist.length) : entries;
+        let displayEntries = (tracklist.currentView == "nextTracks") ? entries.slice(tracklist.current + 1, tracklist.length) : entries;
         tracklist._update(displayEntries);
         if (tracklist.currentView == "nextTracks") {
             tracklist.addToggle();
