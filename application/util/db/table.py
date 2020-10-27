@@ -2,11 +2,10 @@ from sqlite3 import Row
 
 class Table(object):
 
-    def __init__(self, name, columns, identifier):
+    def __init__(self, name, columns):
 
-        self.name       = name
-        self.columns    = columns
-        self.identifier = identifier
+        self.name    = name
+        self.columns = columns
 
     def initialize(self, cursor):
 
@@ -16,22 +15,36 @@ class Table(object):
         for col in filter(lambda col: col.indexed, self.columns):
             cursor.execute(f"create index if not exists {self.name}_{col.name} on {self.name} ({col.name})")
 
-    def get(self, cursor, item_id, row_factory = Row):
-
-        cursor.row_factory = row_factory
-        cursor.execute(f"select * from {self.name} where {self.identifier}=?", (item_id, ))
-
-    def get_all(self, cursor, row_factory = Row):
-
-        cursor.row_factory = row_factory
-        cursor.execute(f"select * from {self.name}")
-
     def insert(self, cursor, data):
 
         self._convert_empty_strings(data)
         values = [ data.get(col.name) for col in self.columns ]
         columns, placeholders = zip(*[ (col.name, "?") for col in self.columns ])
         cursor.execute(f"insert into {self.name} ({','.join(columns)}) values ({','.join(placeholders)})", values)
+
+    def _convert_empty_strings(self, data):
+
+        for column in self.columns:
+            if column.name in data and data[column.name] == "":
+                data[column.name] = None
+
+class ItemTable(Table):
+
+    def __init__(self, name, columns, identifier):
+
+        super(ItemTable, self).__init__(name, columns)
+        self.identifier = identifier
+
+    def get(self, cursor, item_id, row_factory = Row):
+
+        cursor.row_factory = row_factory
+        cursor.execute(f"select * from {self.name} where {self.identifier}=?", (item_id, ))
+
+    def get_all(self, cursor, row_factory = Row, order = None):
+
+        cursor.row_factory = row_factory
+        order = f"order by {order}" if order else ""
+        cursor.execute(f"select * from {self.name} {order}")
 
     def update(self, cursor, data):
 
@@ -44,13 +57,7 @@ class Table(object):
 
         cursor.execute(f"delete from {self.name} where {self.identifier}=?", (item_id, ))
 
-    def set_rating(self, cursor, item_id, rating):
+    def set_rating(self, cursor, rating):
 
-        cursor.execute(f"update {self.name} set rating=? where {self.identifier}=?", (rating, item_id))
-
-    def _convert_empty_strings(self, data):
-
-        for column in self.columns:
-            if column.name in data and data[column.name] == "":
-                data[column.name] = None
+        cursor.execute(f"update {self.name} set rating=? where {self.identifier}=?", (rating.value, rating.item_id))
 

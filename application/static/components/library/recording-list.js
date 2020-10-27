@@ -7,6 +7,8 @@ function createRecordingList(app) {
     let query = {
         match: [ ],
         exclude: [ ],
+        sort: [ "artist" ],
+        order: "asc",
         official: true,
         nonofficial: true,
         unrated: false,

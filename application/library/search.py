@@ -2,9 +2,10 @@ import sqlite3, re
 from datetime import datetime
 from dateutil.parser import parse as parsedate
 
-from ..util.db import Subquery, View, Query
+from ..util.db import Subquery, JoinedView, Query
 from .property import TRACK_PROPS
-from .recording import RecordingSummary
+from .recording import RecordingTrackView
+from .recording_summary import RecordingSummary
 from .station import Station, StationTable
 
 RECORDING_OPTIONS = {
@@ -35,9 +36,9 @@ TRACK_SEARCH_SUBQUERY = Subquery([
     ("recording_rating", None),
     ("sound_rating", None),
     ("official", None),
-], "recording_track", False)
+], RecordingTrackView, False)
 
-LibrarySearchView = View("library_search", (TRACK_SEARCH_SUBQUERY, TRACK_PROPS))
+LibrarySearchView = JoinedView("library_search", (TRACK_SEARCH_SUBQUERY, TRACK_PROPS))
 
 class Search(object):
 
@@ -67,14 +68,16 @@ class Search(object):
         if params["unrated"]:
             match.compare("recording_rating", None, "is")
 
+        order = "order by " + ", ".join(params["sort"]) + " " + params["order"]
+
         if match.conditions and exclude.conditions:
-            query = f"select * from recording_summary where id in ({match}) and id not in ({exclude})"
+            query = f"select * from recording_summary where id in ({match}) and id not in ({exclude}) {order}"
         elif match.conditions:
-            query = f"select * from recording_summary where id in ({match})"
+            query = f"select * from recording_summary where id in ({match}) {order}"
         elif exclude.conditions:
-            query = f"select * from recording_summary where id not in ({exclude})"
+            query = f"select * from recording_summary where id not in ({exclude}) {order}"
         else:
-            query = f"select * from recording_summary"
+            query = f"select * from recording_summary {order}"
 
         cursor.row_factory = RecordingSummary.row_factory
         cursor.execute(query, match.values + exclude.values)

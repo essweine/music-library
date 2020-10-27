@@ -3,10 +3,9 @@ from datetime import datetime
 from dateutil.parser import parse as parsedate
 from itertools import chain
 
-from ..util.db import Column, Subquery, Table, View, Query
+from ..util.db import Column, Subquery, ItemTable, JoinedView, Query
 from ..util import BaseObject
-from .property import PropertyView, RECORDING_PROPS, RECORDING_AGGREGATE
-from .track import LibraryTrackView, LibraryTrack, TrackTable
+from .property import PropertyAggregate, TRACK_PROPS, TRACK_AGGREGATE
 
 RECORDING_COLUMNS = [
     Column("id", "text", False, False),
@@ -21,33 +20,30 @@ RECORDING_COLUMNS = [
     Column("sound_rating", "int", False, True),
     Column("official", "bool", True, True),
 ]
+RecordingTable = ItemTable("recording", RECORDING_COLUMNS, "id")
 
-SUMMARY_SUBQUERY = Subquery([
-    ("id", None),
-    ("title", None),
+TRACK_COLUMNS = [
+    Column("recording_id", "text", False, True),
+    Column("filename", "text", False, True),
+    Column("track_num", "int", True, False),
+    Column("title", "text", True, True),
+    Column("rating", "int", True, True),
+]
+TrackTable = ItemTable("track", TRACK_COLUMNS, "filename")
+
+TRACK_SUBQUERY = Subquery([ (col.name, None) for col in TRACK_COLUMNS ], TrackTable, False)
+RECORDING_SUBQUERY = Subquery([
+    ("recording_id", "id"),
+    ("recording", "title"),
+    ("artwork", None),
     ("recording_date", None),
-    ("rating", None),
+    ("recording_rating", "rating"),
     ("sound_rating", None),
     ("official", None),
-], "recording", False)
+], RecordingTable, False)
+RecordingTrackView = JoinedView("recording_track", (TRACK_SUBQUERY, RECORDING_SUBQUERY))
 
-RecordingTable = Table("recording", RECORDING_COLUMNS, "id")
-RecordingSummaryView = View("recording_summary", (SUMMARY_SUBQUERY, RECORDING_PROPS), RECORDING_AGGREGATE)
-
-class RecordingSummary(PropertyView):
-
-    PROPERTIES = [ "artist", "genre" ]
-
-    def __init__(self, **recording):
-
-        super(RecordingSummary, self).__init__(recording)
-        for name, definition in SUMMARY_SUBQUERY.columns:
-            self.__setattr__(name, recording.get(name))
-
-    @classmethod
-    def get_all(cls, cursor):
-
-        RecordingSummaryView.get_all(cursor, cls.row_factory)
+LibraryTrackView = JoinedView("library_track", (TRACK_SUBQUERY, TRACK_PROPS), TRACK_AGGREGATE)
 
 class Recording(BaseObject):
 
@@ -103,16 +99,42 @@ class Recording(BaseObject):
     @staticmethod
     def set_rating(cursor, rating):
 
-        if rating.item_type == "recording-rating":
-            RecordingTable.set_rating(cursor, rating.item_id, rating.value)
-        elif rating.item_type == "recording-sound-rating":
-            update = "update recording set sound_rating=? where id=?"
-            cursor.execute(update, (rating.value, rating.item_id))
-        else:
-            TrackTable.set_rating(cursor, rating.item_id, rating.value)
+        RecordingTable.set_rating(cursor, rating)
+
+    @staticmethod
+    def set_sound_rating(cursor, rating):
+
+        update = "update recording set sound_rating=? where id=?"
+        cursor.execute(update, (rating.value, rating.item_id))
+
+    @staticmethod
+    def set_track_rating(cursor, rating):
+
+        TrackTable.set_rating(cursor, rating)
 
     @staticmethod
     def sort(recording):
 
         return (recording.artist, recording.recording_date if recording.recording_date else "")
 
+class LibraryTrack(PropertyAggregate):
+
+    PROPERTIES = [ "artist", "composer", "guest", "genre" ]
+
+    def __init__(self, **track):
+
+        super(LibraryTrack, self).__init__(track)
+        for name, definition in TRACK_SUBQUERY.columns:
+            self.__setattr__(name, track.get(name))
+
+    @classmethod
+    def create(cls, cursor, track):
+
+        cls._update_properties(cursor, track)
+        TrackTable.insert(cursor, track)
+
+    @classmethod
+    def update(cls, cursor, track):
+
+        cls._update_properties(cursor, track)
+        TrackTable.update(cursor, track)

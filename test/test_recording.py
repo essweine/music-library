@@ -36,6 +36,8 @@ class TestRecording(unittest.TestCase):
         return { 
             "match": params.get("match", [ ]),
             "exclude": params.get("exclude", [ ]),
+            "sort": params.get("sort", [ "artist" ]),
+            "order": params.get("order", "asc"),
             "official": params.get("official", True),
             "nonofficial": params.get("nonofficial", True),
             "unrated": params.get("unrated", False),
@@ -90,7 +92,7 @@ class TestRecording(unittest.TestCase):
         album_rating = Rating("recording-rating", self.recording_id, 5)
         track_rating = Rating("track", recording.tracks[0].filename, 5)
         Recording.set_rating(cursor, album_rating)
-        Recording.set_rating(cursor, track_rating)
+        Recording.set_track_rating(cursor, track_rating)
 
         updated = Recording.get(cursor, self.recording_id)
         self.assertEqual(updated.tracks[0].artist[0], "Built To Spill")
@@ -121,6 +123,7 @@ class TestRecording(unittest.TestCase):
 
         cursor = self.conn.cursor()
         directory = self.directory_service.get_directory("root/Edge of the Sun")
+        self.directory_service.aggregate(directory)
         recording = self.directory_service.create_recording(directory, directory.text[0])
         recording.official = True
         Recording.create(cursor, recording.as_dict())
@@ -148,7 +151,7 @@ class TestRecording(unittest.TestCase):
         rating_search = self.build_search_params(match = [ { "recording_rating": 5 } ])
         Search.recording(cursor, rating_search)
         rating_result = cursor.fetchall()
-        self.assertEqual(len(rating_result), 1)
+        self.assertEqual(len(rating_result), 2)
 
         exclude_artist = self.build_search_params(exclude = [ { "artist": "Calexico" } ])
         Search.recording(cursor, exclude_artist)
@@ -200,3 +203,27 @@ class TestRecording(unittest.TestCase):
 
         cursor.close()
 
+    def test_010_sort(self):
+
+        cursor = self.conn.cursor()
+
+        RecordingSummary.get_all(cursor)
+        summaries = cursor.fetchall()
+        first = summaries[0]
+        self.assertEqual(len(summaries), 2)
+        self.assertEqual(first.title, "Keep It Like a Secret")
+
+        search = self.build_search_params(match = [ { "recording_rating": 5 } ], sort = [ "title" ])
+        Search.recording(cursor, search)
+        result = cursor.fetchall()
+        first = result[0]
+        self.assertEqual(len(result), 2)
+        self.assertEqual(first.title, "Edge of the Sun")
+
+        search = self.build_search_params(match = [ { "recording_rating": 5 } ], order = "desc")
+        Search.recording(cursor, search)
+        result = cursor.fetchall()
+        first = result[0]
+        self.assertEqual(first.title, "Edge of the Sun")
+
+        cursor.close()

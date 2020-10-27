@@ -3,7 +3,7 @@ from datetime import datetime
 from uuid import uuid4
 
 from ..util import BaseObject
-from ..util.db import Column, Table
+from ..util.db import Column, ItemTable
 
 STATION_COLUMNS = [
     Column("id", "text", False, True),
@@ -16,7 +16,7 @@ STATION_COLUMNS = [
     Column("added_date", "date", False, False),
 ]
 
-StationTable = Table("station", STATION_COLUMNS, "id")
+StationTable = ItemTable("station", STATION_COLUMNS, "id")
 
 class Station(BaseObject):
 
@@ -57,7 +57,7 @@ class Station(BaseObject):
     @staticmethod
     def set_rating(cursor, rating):
 
-        StationTable.set_rating(cursor, rating.item_id, rating.value)
+        StationTable.set_rating(cursor, rating)
 
     @staticmethod
     def update_history(cursor, entry):

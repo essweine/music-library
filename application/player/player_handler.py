@@ -6,7 +6,8 @@ from tornado.websocket import WebSocketHandler
 from tornado import log as logger
 
 from ..util import BaseApiHandler
-from ..library import PlaylistTrack, Station
+from ..library import Station
+from .playlist_track import PlaylistTrack
 
 class PlayerDisplayHandler(RequestHandler):
 

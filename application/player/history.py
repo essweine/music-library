@@ -1,19 +1,21 @@
 from datetime import datetime
 
-from ..util.db import Column, Table, View, Subquery, Query
+from ..util.db import Column, Table, JoinedView, Subquery, Query
 from ..util import BaseObject
-from ..library.property import PropertyView
+from ..library.property import PropertyAggregate
+from .playlist_track import PlaylistTrackView
 
 HISTORY_COLUMNS = [
     Column("filename", "text", False, True),
     Column("start_time", "timestamp", False, False),
     Column("end_time", "timestamp", False, False),
 ]
+HistoryTable = Table("history", HISTORY_COLUMNS)
 
 HISTORY_SUBQUERY = Subquery([
     ("filename", None),
     ("end_time", None),
-], "history", False)
+], HistoryTable, False)
 
 PLAYLIST_SUBQUERY = Subquery([
     ("filename", None),
@@ -23,7 +25,7 @@ PLAYLIST_SUBQUERY = Subquery([
     ("rating", None),
     ("category", None),
     ("value", None),
-], "playlist_track", False)
+], PlaylistTrackView, False)
 
 HISTORY_TRACK_COLUMNS = [
     ("filename", None),
@@ -35,10 +37,9 @@ HISTORY_TRACK_COLUMNS = [
     ("last_listened", "max(end_time)"),
 ]
 
-HistoryTable = Table("history", HISTORY_COLUMNS, "filename")
-HistoryTrackView = View("history_track", (HISTORY_SUBQUERY, PLAYLIST_SUBQUERY))
+HistoryTrackView = JoinedView("history_track", (HISTORY_SUBQUERY, PLAYLIST_SUBQUERY))
 
-class HistoryTrack(PropertyView):
+class HistoryTrack(PropertyAggregate):
 
     PROPERTIES = [ "artist" ]
 
