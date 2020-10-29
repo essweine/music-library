@@ -1,39 +1,37 @@
 import { createRatingContainer } from "./rating-container.js";
 import { createIcon } from "./icons.js";
 
-function createListRow(className, parent = true) {
+function createListRow(className, childRow = false) {
 
     let row = document.createElement("div");
-    (parent) ? row.classList.add("list-row") : row.classList.add("list-row-child");
+    (childRow) ? row.classList.add("list-row-child") : row.classList.add("list-row");
     row.classList.add(className);
     row.collapsed = true;
     row.textCells = [ ];
 
-    row.addText = (text, className) => {
-        let cell = document.createElement("span");
-        cell.innerText = text;
-        cell.classList.add(className);
-        cell.classList.add("list-cell");
-        row.textCells.push(cell);
-        row.append(cell);
-    }
-
-    row.addLink = (text, url) => {
-        let link = document.createElement("a");
-        link.href = url;
-        link.innerText = text;
-        link.style["background-color"] = "inherit";
-        link.classList.add("list-cell");
-        row.append(link);
-    }
-
-    row.addIcon = (name, action, className) => row.append(createIcon(name, action, className));
-
-    row.addRatingContainer = (itemType, itemId, rating, className) => {
-        let ratingContainer = createRatingContainer("list-cell");
-        ratingContainer.configure(itemType, itemId, rating);
-        ratingContainer.classList.add(className);
-        row.append(ratingContainer);
+    row.addColumn = (value, colType, className) => {
+        if (colType == "text" || value == null) {
+            let cell = document.createElement("span");
+            cell.innerText = (value != null) ? value : "";
+            cell.classList.add(className);
+            cell.classList.add("list-cell");
+            row.textCells.push(cell);
+            row.append(cell);
+        } else if (colType == "link") {
+            let link = document.createElement("a");
+            link.href = value.url;
+            link.innerText = value.text;
+            link.style["background-color"] = "inherit";
+            link.classList.add("list-cell");
+            row.append(link);
+        } else if (colType == "rating") {
+            let ratingContainer = createRatingContainer("list-cell");
+            ratingContainer.configure(value.itemType, value.itemId, value.rating);
+            ratingContainer.classList.add(className);
+            row.append(ratingContainer);
+        } else if (colType == "icon") {
+            row.append(createIcon(value.name, value.action, className));
+        }
     }
 
     row.setExpandable = (expand, collapse) => {
@@ -47,15 +45,34 @@ function createListRow(className, parent = true) {
     return row;
 }
 
-function createListRoot(className) {
+function createListRoot(columns, className, rowClass) {
 
     let root = document.createElement("div");
     root.classList.add("list-root");
     root.classList.add(className);
 
+    root.addHeading = () => {
+        let heading = createListRow("list-heading");
+        for (let column of columns)
+            heading.addColumn(column.display, "text", column.className);
+        root.append(heading);
+    }
+
+    root.createRow = (data, childRow) => {
+        let row = createListRow(rowClass, childRow);
+        for (let idx in columns)
+            row.addColumn(data.values[idx], columns[idx].type, columns[idx].className);
+        if (data.action != null) {
+            row.id = data.action.selectId;
+            row.setExpandable(data.action.expand, data.action.collapse);
+        }
+        return row;
+    }
+
     root.addRows = (items) => {
         for (let entry of items) {
-            let row = root.addRow(entry);
+            let data = root.getData(entry);
+            let row = root.createRow(data, false);
             root.append(row);
         }
     }

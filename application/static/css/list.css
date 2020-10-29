@@ -9,16 +9,17 @@
     color: #000;
 }
 
-.list-row:nth-of-type(even) {
-    background-color: #eee;
-}
-
 .list-row:hover, .list-row-child:hover { background-color: #ccf; }
 
 .list-heading {
     font-size: large;
     font-weight: bold;
+    background-color: #eee;
     display: contents;
+}
+
+.list-row-highlighted {
+    background-color: #eee;
 }
 
 .list-cell {
@@ -69,6 +70,6 @@
 .recording-list-rating { grid-column: 4; }
 .recording-list-sound-rating { grid-column: 5; }
 .recording-list-view { grid-column: 6; }
-.recording-list-play { grid-column: 7; }
-.recording-list-queue { grid-column: 8; }
+.recording-list-queue { grid-column: 7; }
+.recording-list-play { grid-column: 8; }
 

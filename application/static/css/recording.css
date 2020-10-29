@@ -64,9 +64,7 @@
     justify-content: start;
     background-color: #ccf;
     padding: 2px 0;
-    border: 2px;
-    border-color: #aaf;
-    border-style: solid;
+    border: 2px #aaf solid;
     margin: 5px;
     width: max-content;
 }

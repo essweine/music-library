@@ -3,7 +3,19 @@ import { createSearchBar } from "../shared/item-list-search.js";
 
 function createRecordingList(app) { 
 
-    let root = createListRoot("recording-list-root");
+    let columns = [
+        { display: "Artist", className: "recording-list-artist", type: "text" },
+        { display: "Title", className: "recording-list-title", type: "text" },
+        { display: "Date", className: "recording-list-date", type: "text" },
+        { display: "Rating", className: "recording-list-rating", type: "rating" },
+        { display: "Sound Rating", className: "recording-list-sound-rating", type: "rating" },
+        { display: "", className: "recording-list-view", type: "icon" },
+        { display: "", className: "recording-list-queue", type: "icon" },
+        { display: "", className: "recording-list-play", type: "icon" },
+    ];
+
+    let root = createListRoot(columns, "recording-list-root", "recording-list-row");
+
     let query = {
         match: [ ],
         exclude: [ ],
@@ -25,64 +37,66 @@ function createRecordingList(app) {
 
     root.updateResults = (query) => app.searchApi.searchRecordings(query, root.update);
 
-    let listHeader = createListRow("list-heading");
-    for (let colName of [ "Artist", "Title", "Date", "Rating", "Sound Rating" ])
-        listHeader.addText(colName, "recording-list-" + colName.replace(" ", "-").toLowerCase());
-    listHeader.addText("", "recording-list-view");
-    listHeader.addText("", "recording-list-play");
-    listHeader.addText("", "recording-list-queue");
-    root.append(listHeader);
-
-    root.addTrack = (track, recordingId) => {
-        let row = createListRow("recording-list-track", false);
-        row.classList.add("track-" + recordingId);
-        row.addText("", "recording-list-artist");
-        row.addText(track.title, "recording-list-title");
-        row.addText("", "recording-list-date");
-        row.addRatingContainer("track", track.filename, track.rating, "recording-list-rating");
-        row.addText("", "recording-list-sound-rating");
-        row.addText("", "recording-list-view");
-        row.addText("", "recording-list.play");
-        row.addIcon("playlist_add", e => app.playerApi.queue(track));
-        return row;
-    }
-
-    root.expandRow = (recording) => {
+    let expandRow = (recording) => {
         let selected = document.getElementById(recording.id);
+        selected.classList.add("list-row-highlighted");
         let next = selected.nextElementSibling;
         for (let track of recording.tracks) {
-            let row = root.addTrack(track, recording.id);
+            let data = {
+                values: [
+                    "",
+                    track.title,
+                    "",
+                    { itemType: "track", itemId: track.filename, rating: track.rating },
+                    null,
+                    null,
+                    { name: "playlist_add", action: e => app.playerApi.queue(track) },
+                    null,
+                ],
+                action: null
+            }
+            let row = root.createRow(data, true);
+            row.classList.add("track-" + recording.id);
+            row.classList.add("list-row-highlighted");
             (next != null) ? root.insertBefore(row, next) : root.append(row);
         }
     }
 
-    root.collapseRow = (recordingId) => {
+    let collapseRow = (recordingId) => {
+        let selected = document.getElementById(recordingId);
+        selected.classList.remove("list-row-highlighted");
         let tracks = Array.from(document.getElementsByClassName("track-" + recordingId));
         for (let track of tracks)
             track.remove();
     }
 
-    root.addRow = (entry) => {
-        let row = createListRow("recording-list-row");
-        row.id = entry.id;
-        row.addText(entry.artist, "recording-list-artist");
-        row.addText(entry.title, "recording-list-title");
-        row.addText(entry.recording_date, "recording-list-date");
-        row.addRatingContainer("recording-rating", entry.id, entry.rating, "recording-list-rating");
-        row.addRatingContainer("recording-sound-rating", entry.id, entry.sound_rating, "recording-list-sound-rating");
-        row.addIcon("info", e => window.location.href = "/recording/" + entry.id, "recording-list-view");
-        row.addIcon("playlist_play", e => {
-            app.playerApi.clearPlaylist();
-            app.recordingApi.getRecording(entry.id, app.playerApi.queueRecording.bind(app.playerApi));
-            app.playerApi.start();
-        });
-        row.addIcon("playlist_add", e => app.recordingApi.getRecording(entry.id, app.playerApi.queueRecording.bind(app.playerApi)));
-        row.setExpandable(
-            e => app.recordingApi.getRecording(entry.id, app.container.expandRow),
-            e => app.container.collapseRow(entry.id)
-        );
-        return row;
+    let playRecording = (entry) => {
+        app.playerApi.clearPlaylist();
+        app.recordingApi.getRecording(entry.id, app.playerApi.queueRecording.bind(app.playerApi));
+        app.playerApi.start();
+    };
+
+    root.getData = (entry) => {
+        return {
+            values: [
+                entry.artist,
+                entry.title,
+                entry.recording_date,
+                { itemType: "recording-rating", itemId: entry.id, rating: entry.rating },
+                { itemType: "recording-sound-rating", itemId: entry.id, rating: entry.sound_rating },
+                { name: "album", action: e => window.location.href = "/recording/" + entry.id },
+                { name: "playlist_add", action: e => app.recordingApi.getRecording(entry.id, app.playerApi.queueRecording.bind(app.playerApi)) },
+                { name: "playlist_play", action: e => playRecording(entry) },
+            ],
+            action: {
+                selectId: entry.id,
+                expand: e => app.recordingApi.getRecording(entry.id, expandRow),
+                collapse: e => collapseRow(entry.id)
+            }
+        };
     }
+
+    root.addHeading();
 
     document.title = "Browse Recordings";
     app.container = root;

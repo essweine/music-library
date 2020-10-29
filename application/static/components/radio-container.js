@@ -81,7 +81,18 @@ function createStationEditor(app) {
 
 function createStationList(app, stationEditor) {
 
-    let root = createListRoot("stream-list-root");
+    let columns = [
+        { display: "Name", className: "station-list-name", type: "text" },
+        { display: "Website", className: "station-list-website", type: "link" },
+        { display: "Minutes Listened", className: "station-list-minutes-listened", type: "text" },
+        { display: "Last Listened", className: "station-list-last-listened", type: "text" },
+        { display: "Rating", className: "station-list-rating", type: "rating" },
+        { display: "", className: "station-list-edit", type: "icon" },
+        { display: "", className: "station-list-play", type: "icon" },
+        { display: "", className: "station-list-delete", type: "icon" },
+    ];
+
+    let root = createListRoot(columns, "stream-list-root");
     root.id = "radio-container";
 
     let query = { match: [ ], exclude: [ ] }
@@ -94,28 +105,27 @@ function createStationList(app, stationEditor) {
 
     root.refresh = () => app.searchApi.searchStations(search.query, root.update);
 
-    let header = createListRow("list-heading");
-    for (let colName of [ "Name", "Website", "Minutes Listened", "Last Listened", "Rating", "", "", "" ])
-        header.addText(colName, "station-list-" + colName.replace(" ", "-").toLowerCase());
-    root.append(header);
-
     root.save = (station) => app.stationApi.saveStation(station);
 
     root.deleteStation = (stationId) => app.stationApi.deleteStation(stationId, root.refresh);
 
-    root.addRow = (station) => {
-        let row = createListRow("station-list-row");
-        row.addText(station.name, "station-list-name");
-        row.addLink(station.website, station.website, "station-list-website");
-        row.addText(station.minutes_listened, "station-list-minutes-listened");
-        row.addText(station.last_listened, "station-list-last-listened");
-        row.addRatingContainer("station", station.id, station.rating, "station-list-rating");
-        row.addIcon("create", e => stationEditor.setContent(station), "station-list-edit");
-        row.addIcon("play_arrow", e => app.playerApi.streamUrl(station.url));
-        row.addIcon("clear", e => root.deleteStation(station.id), "station-list-delete");
-        return row;
+    root.getData = (station) => {
+        return {
+            values: [
+                station.name,
+                { text: station.website, url: station.website },
+                station.minutes_listened,
+                station.last_listened,
+                { itemType: "station", itemId: station.id, rating: station.rating },
+                { name: "create", action: e => stationEditor.setContent(station) },
+                { name: "play_arrow", action: e => app.playerApi.streamUrl(station.url) },
+                { name: "clear", action: e => root.deleteStation(station.id) },
+            ],
+            action: null
+        };
     }
 
+    root.addHeading();
     return root;
 }
 
