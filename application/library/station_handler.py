@@ -2,7 +2,7 @@ import sys
 import json
 from datetime import date
 
-from . import Station
+from . import Station, Search
 from ..util import BaseApiHandler
 
 class StationRootHandler(BaseApiHandler):
@@ -20,7 +20,7 @@ class StationRootHandler(BaseApiHandler):
         if self.json_body is None:
             self.write_error(400, messsages = [ "Expected json" ])
         try:
-            results = self.db_query(Station.search, self.json_body)
+            results = self.db_query(Search.station, self.json_body)
             self.write(json.dumps(sorted(results, key = Station.sort), cls = self.JsonEncoder))
         except Exception as exc:
             self.write_error(500, log_message = "Could not perform search", exc_info = sys.exc_info())

@@ -6,6 +6,7 @@ from ..util.db import Subquery, JoinedView, Query
 from .property import TRACK_PROPS
 from .recording import RecordingTrackView
 from .recording_summary import RecordingSummary
+from .playlist import Playlist, PlaylistTable, PlaylistTrack
 from .station import Station, StationTable
 
 RECORDING_OPTIONS = {
@@ -17,6 +18,21 @@ RECORDING_OPTIONS = {
     "artist": ("category", "Artist"),
     "composer": ("category", "Composer"),
     "genre": ("options", "Genre"),
+}
+
+TRACK_OPTIONS = {
+    "recording": ("text", "From Recording"),
+    "title": ("text", "Title"),
+    "rating": ("rating", "Minimum Rating"),
+    "artist": ("category", "Artist"),
+    "guest": ("category", "Guest Artist"),
+    "composer": ("category", "Composer"),
+    "genre": ("options", "Genre"),
+}
+
+PLAYLIST_OPTIONS = {
+    "name": ("text", "Name"),
+    "rating": ("rating", "Minimum Rating"),
 }
 
 STATION_OPTIONS = {
@@ -83,6 +99,61 @@ class Search(object):
         cursor.execute(query, match.values + exclude.values)
 
     @classmethod
+    def track(cls, cursor, params):
+
+        match = Query(LibrarySearchView.name, [ ("filename", None) ], True)
+        cls._parse_params(match, params["match"], TRACK_OPTIONS, True)
+
+        exclude = Query(LibrarySearchView.name, [ ("filename", None) ], True)
+        cls._parse_params(exclude, params["exclude"], TRACK_OPTIONS, False)
+
+        if not params["official"] and params["nonofficial"]:
+            match.compare("official", False, "=")
+        elif not params["nonofficial"] and params["official"]:
+            match.compare("official", True, "=")
+
+        if params["unrated"]:
+            match.compare("rating", None, "is")
+
+        if match.conditions and exclude.conditions:
+            query = f"select * from playlist_track where filename in ({match}) and filename not in ({exclude})"
+        elif match.conditions:
+            query = f"select * from playlist_track where filename in ({match})"
+        elif exclude.conditions:
+            query = f"select * from playlist_track where filename not in ({exclude})"
+        else:
+            query = f"select * from playlist_track order by rating desc limit 15"
+
+        cursor.row_factory = PlaylistTrack.row_factory
+        cursor.execute(query, match.values + exclude.values)
+
+    @classmethod
+    def playlist(cls, cursor, params):
+
+        match = Query(PlaylistTable.name, [ ("id", None) ], True)
+        cls._parse_params(match, params["match"], PLAYLIST_OPTIONS, True)
+
+        exclude = Query(PlaylistTable.name, [ ("id", None) ], True)
+        cls._parse_params(exclude, params["exclude"], PLAYLIST_OPTIONS, False)
+
+        if params["unrated"]:
+            match.compare("rating", None, "is")
+
+        order = "order by " + ", ".join(params["sort"]) + " " + params["order"]
+
+        if match.conditions and exclude.conditions:
+            query = f"select * from playlist where id in ({match}) and id not in ({exclude}) {order}"
+        elif match.conditions:
+            query = f"select * from playlist where id in ({match}) {order}"
+        elif exclude.conditions:
+            query = f"select * from playlist where id not in ({exclude}) {order}"
+        else:
+            query = f"select * from playlist {order}"
+
+        cursor.row_factory = Playlist.row_factory
+        cursor.execute(query, match.values + exclude.values)
+
+    @classmethod
     def station(cls, cursor, params):
 
         match = Query(StationTable.name, [ ("id", None) ], True)
@@ -108,6 +179,10 @@ class Search(object):
 
         if search_type == "recording":
             options = RECORDING_OPTIONS
+        elif search_type == "track":
+            options = TRACK_OPTIONS
+        elif search_type == "playlist":
+            options = PLAYLIST_OPTIONS
         elif search_type == "station":
             options = STATION_OPTIONS
         else:

@@ -1,4 +1,4 @@
-import { Importer, Recording, Player, Rating, Search, History, Station } from "/static/modules/api.js";
+import { Importer, Recording, Player, Rating, SearchConfig, History, Station } from "/static/modules/api.js";
 
 import { createDirectoryList } from "/static/components/library/directory-list.js";
 import { createRecordingList } from "/static/components/library/recording-list.js";
@@ -13,13 +13,13 @@ class Application {
 
     constructor(action, arg) {
 
-        this.importerApi  = new Importer(this.errorHandler.bind(this));
-        this.recordingApi = new Recording(this.errorHandler.bind(this));
-        this.playerApi    = new Player(this.errorHandler.bind(this));
-        this.ratingApi    = new Rating(this.errorHandler.bind(this));
-        this.searchApi    = new Search(this.errorHandler.bind(this));
-        this.historyApi   = new History(this.errorHandler.bind(this));
-        this.stationApi   = new Station(this.errorHandler.bind(this));
+        this.importerApi     = new Importer(this.errorHandler.bind(this));
+        this.recordingApi    = new Recording(this.errorHandler.bind(this));
+        this.playerApi       = new Player(this.errorHandler.bind(this));
+        this.ratingApi       = new Rating(this.errorHandler.bind(this));
+        this.searchConfigApi = new SearchConfig(this.errorHandler.bind(this));
+        this.historyApi      = new History(this.errorHandler.bind(this));
+        this.stationApi      = new Station(this.errorHandler.bind(this));
 
         this.content = document.getElementById("content");
         this.addContainer(action, arg);
@@ -41,7 +41,7 @@ class Application {
             this.recordingApi.getRecording(arg, this.container.initialize);
         } else if (action == "recording") {
             createRecordingList(this);
-            this.searchApi.getSearchConfig("recording", this.container.configureSearch);
+            this.searchConfigApi.getConfig("recording", this.container.configureSearch);
             this.recordingApi.listAll(this.container.addRows);
         } else if (action == "history") {
             let ws = this.getPlayerNotificationService();
@@ -49,7 +49,7 @@ class Application {
             this.historyApi.getRecentTracks(this.container.tracklist.period, this.container.tracklist.update);
         } else if (action == "radio") {
             createRadioContainer(this);
-            this.searchApi.getSearchConfig("station", this.container.stationList.configureSearch);
+            this.searchConfigApi.getConfig("station", this.container.stationList.configureSearch);
             this.stationApi.listAll(this.container.stationList.addRows);
         } else if (action == "log") {
             let ws = this.getLogNotificationService();

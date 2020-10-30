@@ -1,6 +1,5 @@
 import sys
 import json
-from datetime import date
 
 from . import Recording, RecordingSummary, Search
 from ..importer import DirectoryService

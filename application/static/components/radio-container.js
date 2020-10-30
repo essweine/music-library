@@ -101,9 +101,9 @@ function createStationList(app, stationEditor) {
     root.configureSearch = (config) => search.initialize(config);
     root.append(search);
 
-    root.updateResults = (query) => app.searchApi.searchStations(query, root.update);
+    root.updateResults = (query) => app.stationApi.search(query, root.update);
 
-    root.refresh = () => app.searchApi.searchStations(search.query, root.update);
+    root.refresh = () => app.stationApi.search(query, root.update);
 
     root.save = (station) => app.stationApi.saveStation(station);
 

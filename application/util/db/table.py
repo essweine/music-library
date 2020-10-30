@@ -22,6 +22,15 @@ class Table(object):
         columns, placeholders = zip(*[ (col.name, "?") for col in self.columns ])
         cursor.execute(f"insert into {self.name} ({','.join(columns)}) values ({','.join(placeholders)})", values)
 
+    def delete_where(self, cursor, conditions):
+
+        columns, values = zip(*[ (col, val) for col, val in conditions.items() ])
+        stmt = "delete from {table} where {conditions}".format(
+            table = self.name,
+            conditions = " and ".join([ f"{col}=?" for col in columns ]),
+        )
+        cursor.execute(stmt, values)
+
     def _convert_empty_strings(self, data):
 
         for column in self.columns:

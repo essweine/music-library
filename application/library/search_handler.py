@@ -1,39 +1,20 @@
+import sys
 import json
 
 from ..util import BaseApiHandler
 from . import Search
 
-class RecordingSearchHandler(BaseApiHandler):
+class SearchConfigHandler(BaseApiHandler):
 
-    def get(self):
+    def get(self, config_type):
 
-        config = self.db_action(Search.configuration, "recording")
-        self.write(json.dumps(config, cls = self.JsonEncoder))
-
-    def post(self):
-
-        if self.json_body:
-            results = self.db_query(Search.recording, self.json_body)
-        else:
-            self.logger.error(f"POST request {self.request.url}: expected json")
-
-        self.write(json.dumps(results, cls = self.JsonEncoder))
-
-class StationSearchHandler(BaseApiHandler):
-
-    def get(self):
-
-        config = self.db_action(Search.configuration, "station")
-        self.write(json.dumps(config, cls = self.JsonEncoder))
-
-    def post(self):
-
-        if self.json_body:
-            results = self.db_query(Search.station, self.json_body)
-        else:
-            self.logger.error(f"POST request {self.request.url}: expected json")
-
-        self.write(json.dumps(results, cls = self.JsonEncoder))
+        try:
+            config = self.db_action(Search.configuration, config_type)
+            self.write(json.dumps(config, cls = self.JsonEncoder))
+        except ValueError as exc:
+            self.write_error(400, messages = [ f"Invalid search type: {config_type}" ])
+        except Exception as exc:
+            self.write_error(500, log_message = f"Could not get search configuration for {config_type}", exc_info = sys.exc_info())
 
 class PropertyHandler(BaseApiHandler):
 

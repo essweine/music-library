@@ -61,10 +61,9 @@ class PropertyAggregate(BaseObject):
 
         recording_id, filename = item.get("recording_id"), item.get("filename")
         for prop in cls.PROPERTIES:
+            category = { "recording_id": recording_id, "filename": filename, "category": prop }
+            PropertyTable.delete_where(cursor, category)
+            for value in item.pop(prop, [ ]):
+                category.update({ "value": value })
+                PropertyTable.insert(cursor, category)
 
-            delete = "delete from property where recording_id=? and filename=? and category=?"
-            cursor.execute(delete, [ recording_id, filename, prop ])
-
-            insert = "insert into property (recording_id, filename, category, value) values (?, ?, ?, ?)"
-            values = [ (recording_id, filename, prop, value) for value in item.pop(prop, [ ]) if value ]
-            cursor.executemany(insert, values)

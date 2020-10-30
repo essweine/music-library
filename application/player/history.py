@@ -3,7 +3,7 @@ from datetime import datetime
 from ..util.db import Column, Table, JoinedView, Subquery, Query
 from ..util import BaseObject
 from ..library.property import PropertyAggregate
-from .playlist_track import PlaylistTrackView
+from ..library.playlist import PlaylistTrackView
 
 HISTORY_COLUMNS = [
     Column("filename", "text", False, True),

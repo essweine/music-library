@@ -43,6 +43,8 @@ class Recording extends Api {
 
     listAll(callback) { this.get("", callback); }
 
+    search(query, callback) { this.post("", query, callback); }
+
     getRecording(recordingId, callback) { this.get("/" + recordingId, callback); }
 
     addToLibrary(data) { 
@@ -151,18 +153,14 @@ class Rating extends Api {
     update(rating) { this.post("", rating, NoOp); }
 }
 
-class Search extends Api {
+class SearchConfig extends Api {
 
     constructor(errorHandler) {
         super(errorHandler);
-        this.base = "/api/search";
+        this.base = "/api/config";
     }
 
-    searchRecordings(query, callback) { this.post("/recording", query, callback); }
-
-    searchStations(query, callback) { this.post("/station", query, callback); }
-
-    getSearchConfig(configType, callback) { this.get("/" + configType, callback); }
+    getConfig(configType, callback) { this.get("/" + configType, callback); }
 }
 
 class History extends Api {
@@ -192,6 +190,8 @@ class Station extends Api {
 
     listAll(callback) { this.get("", callback); }
 
+    search(query, callback) { this.post("", query, callback); }
+
     saveStation(data, callback) { this.put("/" + data.id, data, callback); }
 
     addStation(data, callback) { this.post("/" + data.name, data, callback); }
@@ -199,4 +199,4 @@ class Station extends Api {
     deleteStation(station_id, callback) { this.httpDelete("/" + station_id, callback); }
 }
 
-export { Recording, Importer, Player, Rating, Search, History, Station };
+export { Recording, Importer, Player, Rating, SearchConfig, History, Station };

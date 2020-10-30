@@ -3,9 +3,8 @@ import logging
 
 from tornado.web import Application, StaticFileHandler
 
-from .library import RecordingHandler, RecordingRootHandler, RecordingSearchHandler
-from .library import StationHandler, StationRootHandler, StationSearchHandler
-from .library import RatingHandler, PropertyHandler
+from .library import RecordingHandler, RecordingRootHandler, PlaylistHandler, PlaylistRootHandler, StationHandler, StationRootHandler
+from .library import RatingHandler, PropertyHandler, SearchConfigHandler
 from .importer import DirectoryService, ImportHandler, ImportRootHandler
 from .player import Player, PlayerHandler, PlayerDisplayHandler, PlayerNotificationHandler, RecentlyPlayedHandler
 from .log import LogNotificationHandler
@@ -16,11 +15,12 @@ handlers = [
     (r"/api/importer", ImportRootHandler),
     (r"/api/recording/(.*?)", RecordingHandler),
     (r"/api/recording", RecordingRootHandler),
-    (r"/api/rating", RatingHandler),
+    (r"/api/playlist/(.*?)", PlaylistHandler),
+    (r"/api/playlist", PlaylistRootHandler),
     (r"/api/station/(.*?)", StationHandler),
     (r"/api/station", StationRootHandler),
-    (r"/api/search/recording", RecordingSearchHandler),
-    (r"/api/search/station", StationSearchHandler),
+    (r"/api/rating", RatingHandler),
+    (r"/api/config/(.*?)", SearchConfigHandler),
     (r"/api/property/(.*?)", PropertyHandler),
     (r"/api/player/notifications", PlayerNotificationHandler),
     (r"/api/player", PlayerHandler),

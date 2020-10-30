@@ -7,9 +7,9 @@ from .library.recording_summary import RecordingArtistView, RecordingSummaryView
 from .library.property import PropertyTable
 from .library.search import LibrarySearchView
 from .library.station import StationTable
+from .library.playlist import PlaylistTable, PlaylistEntryTable, PlaylistTrackView
 
 from .player.history import HistoryTable, HistoryTrackView
-from .player.playlist_track import PlaylistTrackView
 
 TABLES = [
     RecordingTable,
@@ -17,6 +17,8 @@ TABLES = [
     PropertyTable,
     StationTable,
     HistoryTable,
+    PlaylistTable,
+    PlaylistEntryTable,
 ]
 
 VIEWS = [

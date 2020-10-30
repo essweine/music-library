@@ -35,7 +35,7 @@ function createRecordingList(app) {
 
     root.append(search);
 
-    root.updateResults = (query) => app.searchApi.searchRecordings(query, root.update);
+    root.updateResults = (query) => app.recordingApi.search(query, root.update);
 
     let expandRow = (recording) => {
         let selected = document.getElementById(recording.id);
