@@ -1,3 +1,4 @@
+/* --- Player layout --- */
 #player-container {
     display: grid;
     justify-content: center;
@@ -5,6 +6,18 @@
     grid-row-gap: 20px;
 }
 
+#player-controls {
+    display: grid;
+    grid-auto-flow: column;
+    justify-content: center;
+}
+.control-container { width: min-content; }
+.control-icon {
+    font-size: xx-large;
+    width: min-content;
+}
+
+/* --- Player current track --- */
 #current-track {
     display: grid;
     grid-template-columns: fit-content(25%) auto;
@@ -12,41 +25,14 @@
     align-items: start;
 }
 
-#current-stream {
-    display: grid;
-}
-
-#player-controls {
-    display: grid;
-    grid-auto-flow: column;
-    justify-content: center;
-}
-
-.control-container {
-    width: min-content;
-}
-
-.control-icon {
-    font-size: xx-large;
-    width: min-content;
-}
-
-#bullshit-container-1 {
-    grid-column: 1;
-}
-
+#bullshit-container-1 { grid-column: 1; }
+#bullshit-container-1::after { padding-bottom: 100%; }
 #bullshit-container-2 {
     grid-column: 2;
     display: grid;
 }
 
-#artwork {
-    object-fit: cover;
-}
-
-#bullshit-container-1::after {
-    padding-bottom: 100%;
-}
+#artwork { object-fit: cover; }
 
 #track-title {
     grid-row: 1;
@@ -65,9 +51,17 @@
     font-style: italic;
 }
 
-#station-data {
-    justify-self: center;
+#track-artist {
+    grid-row: 3;
+    font-size: large;
 }
+
+#track-rating { padding-top: 10px; }
+
+/*  --- Player stream --- */
+#current-stream { display: grid; }
+
+#station-data { justify-self: center; }
 
 #stream-url {
     font-size: large;
@@ -94,96 +88,3 @@
     animation: stream-title-container 15s linear infinite;
 }
 
-#track-artist {
-    grid-row: 3;
-    font-size: large;
-}
-
-#track-rating {
-    padding-top: 10px;
-}
-
-#player-tracklist, #tracklist-editor {
-    display: grid;
-    grid-row-gap: 5px;
-    align-items: center;
-}
-
-#tracklist-editor {
-    background-color: #eee;
-    padding: 5px 0;
-    margin: 5px 0;
-    justify-content: start;
-    width: max-content;
-}
-#tracklist-editor > .playlist-entry:hover { background-color: #ccf }
-#editor-heading { font-size: large; font-weight: bold; }
-
-.tracklist-heading {
-    grid-column: 1 / 7;
-    display: grid;
-    grid-auto-flow: column;
-    justify-items: stretch;
-    align-items: center;
-    font-size: large;
-    font-weight: bold;
-    padding: 5px 0;
-}
-
-.tracklist-heading-option {
-    padding-right: 10px;
-}
-
-.tracklist-heading-selected, .tracklist-heading-option:hover {
-    text-decoration: underline;
-}
-
-#playlist-view {
-    align-content: center;
-}
-
-#playlist-controls {
-    display: flex;
-    justify-content: end;
-    font-size: large;
-}
-
-.list-toggle {
-    grid-column: 1 / 7;
-    display: inline-grid;
-    justify-items: center;
-    padding: 5px;
-}
-
-.playlist-entry {
-    display: contents;
-}
-
-.playlist-entry-current {
-    background-color: #ccf;
-}
-
-.playlist-title {
-    grid-column: 1;
-    font-weight: bold;
-    align-self: stretch;
-}
-
-.playlist-recording {
-    grid-column: 2;
-    font-style: italic;
-    padding: 0 15px;
-    align-self: stretch;
-}
-
-.playlist-artist {
-    grid-column: 3;
-    padding-right: 15px;
-    align-self: stretch;
-}
-
-.move-up { grid-column: 4; }
-.move-down { grid-column: 5; }
-.remove-track { grid-column: 6; } 
-
-.recent-rating { grid-column: 4 / 7; }

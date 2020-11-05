@@ -12,7 +12,7 @@ function createPlaylistEditor(app) {
     container.id = "playlist-container";
 
     let heading = document.createElement("div");
-    heading.id = "editor-heading";
+    heading.classList.add("section-heading");
     let playlistName = createEditableInfo("playlist-name");
     heading.append(playlistName);
     container.append(heading);
@@ -32,7 +32,7 @@ function createPlaylistEditor(app) {
     heading.append(cancelIcon);
 
     let tracklist = createTracklistContainer("playlist-entry");
-    tracklist.id = "tracklist-editor";
+    tracklist.id = "playlist-tracks-editor";
 
     tracklist.setTracklist = (tracks) => {
         tracklist.clear();
@@ -77,7 +77,7 @@ function createPlaylistEditor(app) {
         nonofficial: true,
         unrated: false,
     }
-    let search = createSearchBar(searchResults, query);
+    let search = createSearchBar(searchResults, query, "track-list-search");
     container.configureSearch = (config) => search.initialize(config);
     search.addCheckbox("Official", "official", "list-search-official");
     search.addCheckbox("Non-official", "nonofficial", "list-search-nonofficial");

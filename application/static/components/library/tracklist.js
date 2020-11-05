@@ -17,7 +17,7 @@ function createRecordingTracklist(container) {
     tracklist.reapply           = document.createElement("button");
     tracklist.reapply.innerText = "Reapply names";
     tracklist.reapply.onclick   = e => {
-        let original = container.source.tracks.map(item => item.title);
+        let original = container.recording.tracks.map(item => item.title);
         container.tracklist.setTrackTitles(original);
     }
     tracklist.options.append(tracklist.reapply);

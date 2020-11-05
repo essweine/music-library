@@ -6,6 +6,7 @@ import { createIcon } from "../shared/icons.js";
 function createRecordingTrack(tracklist, track) {
 
     let entry = document.createElement("div");
+    entry.classList.add("tracklist-entry");
     entry.classList.add("recording-track");
 
     entry.track = track;
@@ -22,11 +23,11 @@ function createRecordingTrack(tracklist, track) {
     ratingContainer.configure("track", track.filename, track.rating);
     entry.append(ratingContainer);
 
-    let moveUp        = createIcon("arrow_upward", e => tracklist.shiftTrackUp(entry.currentPosition), "move-up");
-    let moveDown      = createIcon("arrow_downward", e => tracklist.shiftTrackUp(entry.currentPosition + 1), "move-down");
-    let queueTrack    = createIcon("playlist_add", e => tracklist.queueTrack(entry.track), "queue-track");
-    let expandTrack   = createIcon("expand_more", e => entry.toggleDetail(true), "expand-track");
-    let collapseTrack = createIcon("expand_less", e => entry.toggleDetail(false), "collapse-track");
+    let moveUp        = createIcon("arrow_upward", e => tracklist.shiftTrackUp(entry.currentPosition), "recording-move-up");
+    let moveDown      = createIcon("arrow_downward", e => tracklist.shiftTrackUp(entry.currentPosition + 1), "recording-move-down");
+    let queueTrack    = createIcon("playlist_add", e => tracklist.queueTrack(entry.track), "recording-queue-track");
+    let expandTrack   = createIcon("expand_more", e => entry.toggleDetail(true), "recording-expand-track");
+    let collapseTrack = createIcon("expand_less", e => entry.toggleDetail(false), "recording-collapse-track");
 
     let detailVisible = false;
 

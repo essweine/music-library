@@ -14,9 +14,7 @@
     margin: 10px 0;
 }
 
-#recording-heading {
-    padding-right: 15px;
-}
+#recording-heading { padding-right: 20px; }
 
 #recording-image {
     grid-column: 1;
@@ -46,33 +44,8 @@
     font-size: large;
 }
 
-.editable-info, .recording-taglist { display: contents; }
-
-.taglist-label, 
-.recording-data > .editable-label {
-    grid-column: 1;
-    justify-self: end;
-}
-
-.taglist-values, .recording-data > .editable-input {
-    grid-column: 2;
-    justify-self: start;
-}
-
-.tag {
-    display: block;
-    justify-content: start;
-    background-color: #ccf;
-    padding: 2px 0;
-    border: 2px #aaf solid;
-    margin: 5px;
-    width: max-content;
-}
-
-.tag-property, .tag-value {
-    padding: 2px 5px;
-    font-size: medium;
-}
+.taglist-label, .recording-data > .editable-label { grid-column: 1; }
+.taglist-values, .recording-data > .editable-input { grid-column: 2; }
 
 .recording-official {
     grid-column: 1 / 3;
@@ -80,23 +53,17 @@
     padding-top: 5px;
 }
 
-.recording-rating {
-    width: max-content;
-}
-
 #recording-tracklist {
     grid-column: 2;
     grid-row: 3;
     display: grid;
     column-gap: 10px;
-    row-gap: 2px;
+    grid-row-gap: 2px;
     padding: 5px;
     justify-self: stretch;
     justify-content: start;
-    background-color: #eee;
+    background-color: var(--light-bg);
 }
-
-.recording-track { display: contents; }
 
 .recording-track-position {
     grid-column: 1;
@@ -109,37 +76,14 @@
 .recording-track-title > .editable-display {
     grid-column: 2;
     align-self: center;
-    width: max-content;
 }
+.recording-track-title > .editable-input { grid-column: 3; }
 
-.recording-track-title > .editable-input {
-    grid-column: 3;
-    justify-self: start;
-    width: max-content;
-}
-
-.recording-track-rating {
-    grid-column: 3;
-    width: max-content;
-}
-
-.queue-track { grid-column: 5; }
-
-.move-up { grid-column: 4; }
-.move-down { grid-column: 5; }
-.expand-track, .collapse-track { grid-column: 6; }
-
-.recording-track-taglist { }
-
-.update-tag {
-    padding: 2px 0;
-    font-size: medium;
-}
-
-.edit-tag {
-    padding: 2px 0;
-    font-size: 24px;
-}
+.recording-track-rating { grid-column: 3; }
+.recording-queue-track { grid-column: 4; }
+.recording-move-up { grid-column: 4; }
+.recording-move-down { grid-column: 5; }
+.recording-expand-track, .recording-collapse-track { grid-column: 6; }
 
 #recording-tracklist-options {
     grid-column: 1 / 7;

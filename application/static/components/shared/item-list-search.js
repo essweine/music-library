@@ -1,10 +1,11 @@
 import { createIcon } from "./icons.js";
 import { createRatingSelector } from "../shared/rating-container.js";
 
-function createSearchBar(root, query) {
+function createSearchBar(root, query, className) {
 
     let container = document.createElement("div");
     container.classList.add("list-search-bar");
+    container.classList.add("recording-list-search");
 
     container.query = query;
 

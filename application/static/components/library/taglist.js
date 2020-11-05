@@ -4,14 +4,14 @@ function createRecordingTag(value, taglist) {
 
     let tag = document.createElement("span");
     tag.classList.add("tag");
-    tag.classList.add("recording-tag");
+    tag.classList.add("aggregate-tag");
 
     let val = document.createElement("span");
     val.classList.add("tag-value");
     val.innerText = value;
     tag.append(val);
 
-    let removeTag = createIcon("clear", e => taglist.removeValue(tag, value), "update-tag");
+    let removeTag = createIcon("clear", e => taglist.removeValue(tag, value), "tag-action");
     tag.append(removeTag);
 
     return tag;
@@ -34,7 +34,7 @@ function createTrackTag(property, display, value, taglist) {
     val.innerText = value;
     tag.append(val);
 
-    let removeTag = createIcon("clear", e => taglist.removeProperty(tag, property, value), "update-tag");
+    let removeTag = createIcon("clear", e => taglist.removeProperty(tag, property, value), "tag-action");
     tag.append(removeTag);
 
     tag.setEditable = (editable) => (editable) ? tag.append(removeTag) : removeTag.remove();
@@ -45,10 +45,10 @@ function createTrackTag(property, display, value, taglist) {
 function createRecordingTaglist(property, propertyName, tracklist) {
 
     let taglist = document.createElement("div");
-    taglist.classList.add("recording-taglist");
+    taglist.classList.add("aggregate-taglist");
 
     taglist.clear = () => {
-        for (let tag of Array.from(tagValues.getElementsByClassName("recording-tag")))
+        for (let tag of Array.from(tagValues.getElementsByClassName("aggregate-tag")))
             tag.remove();
     }
 
@@ -163,13 +163,13 @@ function createTrackTaglist(tags) {
         cancelEdit.remove();
         newTag.append(editTag);
     }
-    let cancelEdit = createIcon("clear", e => cancel(), "edit-tag");
+    let cancelEdit = createIcon("clear", e => cancel(), "edit-tag-action");
 
     let save = () => {
         taglist.addProperty(tagProperty.value, tagValue.value);
         cancel();
     }
-    let saveTag = createIcon("done", e => save(), "edit-tag");
+    let saveTag = createIcon("done", e => save(), "edit-tag-action");
 
     let newTag = document.createElement("span");
     newTag.classList.add("tag");
@@ -183,7 +183,7 @@ function createTrackTaglist(tags) {
         newTag.append(cancelEdit);
     }
 
-    let editTag = createIcon("add", e => editNewTag(), "update-tag");
+    let editTag = createIcon("add", e => editNewTag(), "tag-action");
     newTag.append(editTag);
 
     taglist.append(newTag);

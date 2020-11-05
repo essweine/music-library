@@ -1,34 +1,28 @@
+/* -- Generic item list --- */
 .list-root {
     display: grid;
     grid-auto-flow: row;
     justify-content: center;
 }
 
-.list-row, .list-row-child {
-    display: contents;
-    color: #000;
-}
+.list-row, .list-row-child { display: contents; }
 
-.list-row:hover, .list-row-child:hover { background-color: #ccf; }
+.list-row:hover, .list-row-child:hover { background-color: var(--highlight-color); }
 
 .list-heading {
-    font-size: large;
     font-weight: bold;
-    background-color: #eee;
-    display: contents;
+    background-color: var(--dark-bg);
 }
 
-.list-row-highlighted {
-    background-color: #eee;
-}
+.list-row-expanded { background-color: var(--light-bg); }
 
 .list-cell {
     font-size: large;
     padding-right: 20px;
 }
 
+/* --- Generic list search --- */
 .list-search-bar {
-    grid-column: 1 / 9;
     padding-bottom: 10px;
     display: grid;
     grid-gap: 10px;
@@ -57,12 +51,15 @@
 .list-search-value { grid-column: 3; }
 .list-search-remove { grid-column: 5; }
 
+/* --- Import layout --- */
 .directory-list-directory { grid-column: 1; }
 .directory-list-audio { grid-column: 2; }
 .directory-list-images { grid-column: 3; }
 .directory-list-text { grid-column: 4; }
 .directory-list-add { grid-column: 5; }
 
+/* --- Recording list layout --- */
+.recording-list-search { grid-column: 1 / 9; }
 .recording-list-artist { grid-column: 1; }
 .recording-list-title { grid-column: 2; }
 .recording-list-date { grid-column: 3; }
@@ -72,11 +69,8 @@
 .recording-list-queue { grid-column: 7; }
 .recording-list-play { grid-column: 8; }
 
-.playlist-add-new {
-    font-size: large;
-    padding-right: 5px;
-}
-
+/* -- Playlist list layout --- */
+.playlist-list-search { grid-column: 1 / 7; }
 .playlist-list-name { grid-column: 1 }
 .playlist-list-tracks { grid-column: 2 }
 .playlist-list-rating { grid-column: 3 }
@@ -84,8 +78,141 @@
 .playlist-list-queue { grid-column: 5 }
 .playlist-list-play { grid-column: 6 }
 
+.playlist-add-new {
+    font-size: large;
+    padding-right: 5px;
+}
+
+/* --- Track search results layout --- */
+.track-list-search { grid-column: 1 / 6; }
 .track-list-title { grid-column: 1; width: max-content; }
 .track-list-recording { grid-column: 2; width: max-ccontent; }
 .track-list-artist { grid-column: 3; width: max-content; }
 .track-list-rating { grid-column: 4; width: max-content; }
 .track-list-add { grid-column: 5; }
+
+/* --- Station list --- */
+.station-list-search { grid-column: 1 / 9; }
+.station-list-name { grid-column: 1; }
+.station-list-website { grid-column: 2; }
+.station-list-minutes-listened { grid-column: 3; }
+.station-list-last-listened { grid-column: 4; }
+.station-list-rating { grid-column: 5; }
+.station-list-edit { grid-column: 6; }
+.station-list-play { grid-column: 7; }
+.station-list-delete { grid-column: 8; }
+
+/* --- Generic tracklist --- */
+
+.tracklist-entry { display: contents; }
+
+/* --- Generic playlist --- */
+
+#player-tracklist, #playlist-tracks-editor {
+    display: grid;
+    grid-row-gap: 5px;
+    align-items: center;
+}
+
+.playlist-title {
+    grid-column: 1;
+    font-weight: bold;
+    align-self: stretch;
+}
+
+.playlist-recording {
+    grid-column: 2;
+    font-style: italic;
+    padding: 0 15px;
+    align-self: stretch;
+}
+
+.playlist-artist {
+    grid-column: 3;
+    padding: 0 15px;
+    align-self: stretch;
+}
+
+.playlist-move-up { grid-column: 4; }
+.playlist-move-down { grid-column: 5; }
+.playlist-remove-track { grid-column: 6; }
+
+/* --- Alternate columns for recently played --- */
+
+.recent-rating { grid-column: 4; }
+.recent-count {
+    grid-column: 5;
+    padding: 0 15px;
+}
+
+/* --- Player playlist specific --- */
+
+.tracklist-heading {
+    grid-column: 1 / 7;
+    display: grid;
+    grid-auto-flow: column;
+    justify-items: stretch;
+    align-items: center;
+    font-size: large;
+    font-weight: bold;
+    padding: 5px 0;
+}
+
+.tracklist-heading-option { padding-right: 10px; }
+.tracklist-heading-selected, .tracklist-heading-option:hover { text-decoration: underline; }
+
+#playlist-view { align-content: center; }
+.playlist-entry-current { background-color: var(--highlight-color); }
+
+#playlist-controls {
+    display: flex;
+    justify-content: end;
+    font-size: large;
+}
+
+.list-toggle {
+    grid-column: 1 / 7;
+    display: inline-grid;
+    justify-items: center;
+    padding: 5px;
+}
+
+/* --- Playlist editor specific --- */
+
+#playlist-tracks-editor {
+    background-color: #eee;
+    justify-content: start;
+    width: max-content;
+}
+#playlist-tracks-editor > .playlist-entry:hover { background-color: var(--highlight-color); }
+
+/* --- Additional Recently played styles --- */
+
+#history-container {
+    display: grid;
+    justify-content: center;
+    align-items: start;
+    grid-row-gap: 20px;
+}
+
+#recent-heading {
+    grid-row: 1;
+    grid-column: 1 / 6;
+    display: inline-grid;
+    justify-items: center;
+}
+
+#recently-played {
+    grid-row: 2;
+    display: grid;
+}
+
+#recent-select {
+    grid-column: 1 / 6;
+    display: flex;
+    justify-content: center;
+    padding: 5px 0;
+}
+
+.recent-period, .recent-intro { padding: 0 3px; }
+.recent-period-selected, .recent-period:hover { text-decoration: underline; }

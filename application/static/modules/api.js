@@ -62,13 +62,15 @@ class Playlist extends Api {
 
     listAll(callback) { this.get("", callback); }
 
-    createPlaylist() { this.post("", null); }
+    createPlaylist(callback) { this.post("", null, callback); }
 
     getPlaylist(playlistId, callback) { this.get("/" + playlistId, callback); }
 
     getTracks(playlistId, callback) { this.get("/tracks/" + playlistId, callback); }
 
     savePlaylist(data) { this.put("/" + data.id, data); }
+
+    deletePlaylist(playlistId, callback) { this.httpDelete("/" + playlistId, callback); }
 }
 
 class Importer extends Api {

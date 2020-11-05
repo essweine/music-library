@@ -6,10 +6,11 @@ import { createEditableInfo } from "./shared/editable-info.js";
 function createStationEditor(app) {
 
     let editor = document.createElement("div");
-    editor.classList.add("station-edit");
+    editor.id = "station-editor";
 
     let heading = document.createElement("div");
     heading.classList.add("station-edit-heading");
+    heading.classList.add("section-heading");
 
     let headingText = document.createElement("span");
     headingText.classList.add("station-edit-text");
@@ -17,9 +18,9 @@ function createStationEditor(app) {
 
     editor.append(heading);
 
-    let name    = createEditableInfo("station-edit-name");
-    let website = createEditableInfo("station-edit-website");
-    let url     = createEditableInfo("station-edit-url");
+    let name    = createEditableInfo("station-edit-data");
+    let website = createEditableInfo("station-edit-data");
+    let url     = createEditableInfo("station-edit-data");
 
     editor.append(name);
     editor.append(website);
@@ -31,7 +32,7 @@ function createStationEditor(app) {
 
     editor.update = (context) => {
         editor.save();
-        let data = { id: editor.id, name: name.get(), website: website.get(), url: url.get() };
+        let data = { id: editor.stationId, name: name.get(), website: website.get(), url: url.get() };
         if (context == "add")
             app.stationApi.addStation(data, editor.refreshStations);
         else if (context == "save")
@@ -39,10 +40,10 @@ function createStationEditor(app) {
         editor.setContent(null);
     }
 
-    let addIcon   = createIcon("add", e => editor.update("add"), "station-edit-add");
-    let saveIcon  = createIcon("save", e => editor.update("save"), "station-edit-save");
-    let undoIcon  = createIcon("undo", e => editor.reset(), "station-edit-undo");
-    let clearIcon = createIcon("clear", e => editor.setContent(null), "station-edit-cancel");
+    let addIcon   = createIcon("add", e => editor.update("add"), "station-edit-action");
+    let saveIcon  = createIcon("save", e => editor.update("save"), "station-edit-action");
+    let undoIcon  = createIcon("undo", e => editor.reset(), "station-edit-action");
+    let clearIcon = createIcon("clear", e => editor.setContent(null), "station-edit-action");
 
     let icons = document.createElement("span");
     icons.classList.add("station-edit-icons");
@@ -53,7 +54,7 @@ function createStationEditor(app) {
 
     editor.setContent = (station) => {
         if (station == null) {
-            editor.id = "new";
+            editor.stationId = "new";
             headingText.innerText = "New Station";
             name.initialize("", "name", "Name");
             website.initialize("", "website", "Website");
@@ -62,7 +63,7 @@ function createStationEditor(app) {
             saveIcon.hide();
             undoIcon.hide();
         } else {
-            editor.id = station.id;
+            editor.stationId = station.id;
             headingText.innerText = "Editing " + station.name;
             name.set(station.name);
             website.set(station.website);
@@ -97,7 +98,7 @@ function createStationList(app, stationEditor) {
 
     let query = { match: [ ], exclude: [ ] }
     
-    let search = createSearchBar(root, query);
+    let search = createSearchBar(root, query, "station-list-search");
     root.configureSearch = (config) => search.initialize(config);
     root.append(search);
 

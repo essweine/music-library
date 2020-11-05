@@ -25,7 +25,7 @@ function createRecordingList(app) {
         nonofficial: true,
         unrated: false,
     }
-    let search = createSearchBar(root, query);
+    let search = createSearchBar(root, query, "recording-list-search");
     root.configureSearch = (config) => search.initialize(config);
 
     search.addCheckbox("Official", "official", "list-search-official");
@@ -38,7 +38,7 @@ function createRecordingList(app) {
 
     let expandRow = (recording) => {
         let selected = document.getElementById(recording.id);
-        selected.classList.add("list-row-highlighted");
+        selected.classList.add("list-row-expanded");
         let next = selected.nextElementSibling;
         for (let track of recording.tracks) {
             let data = {
@@ -56,14 +56,14 @@ function createRecordingList(app) {
             }
             let row = root.createRow(data, true);
             row.classList.add("track-" + recording.id);
-            row.classList.add("list-row-highlighted");
+            row.classList.add("list-row-expanded");
             (next != null) ? root.insertBefore(row, next) : root.append(row);
         }
     }
 
     let collapseRow = (recordingId) => {
         let selected = document.getElementById(recordingId);
-        selected.classList.remove("list-row-highlighted");
+        selected.classList.remove("list-row-expanded");
         let tracks = Array.from(document.getElementsByClassName("track-" + recordingId));
         for (let track of tracks)
             track.remove();

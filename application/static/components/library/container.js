@@ -54,7 +54,6 @@ function createRecordingDisplay() {
 
     container.heading = document.createElement("span");
     container.heading.id = "recording-heading";
-    container.heading.style["padding-right"] = "20px";
     container.overview.append(container.heading);
 
     container.addImages = (images, baseDir) => {

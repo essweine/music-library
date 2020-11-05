@@ -5,6 +5,7 @@ import { createIcon } from "/static/components/shared/icons.js";
 function createPlaylistEntry(playlist, track) {
 
     let playlistEntry = document.createElement("div");
+    playlistEntry.classList.add("tracklist-entry");
     playlistEntry.classList.add("playlist-entry");
     playlistEntry.track = track;
 
@@ -12,13 +13,13 @@ function createPlaylistEntry(playlist, track) {
     playlistEntry.append(addText(track.recording, "playlist-recording"));
     playlistEntry.append(addText(track.artist, "playlist-artist"));
 
-    playlistEntry.moveUp = createIcon("arrow_upward", e => playlist.shiftTrackUp(playlistEntry.position), "move-up");
+    playlistEntry.moveUp = createIcon("arrow_upward", e => playlist.shiftTrackUp(playlistEntry.position), "playlist-move-up");
     playlistEntry.append(playlistEntry.moveUp);
 
-    playlistEntry.moveDown = createIcon("arrow_downward", e => playlist.shiftTrackUp(playlistEntry.position + 1), "move-down");
+    playlistEntry.moveDown = createIcon("arrow_downward", e => playlist.shiftTrackUp(playlistEntry.position + 1), "playlist-move-down");
     playlistEntry.append(playlistEntry.moveDown);
 
-    playlistEntry.removeTrack = createIcon("clear", e => playlist.removeTrack(playlistEntry.position), "remove-track");
+    playlistEntry.removeTrack = createIcon("clear", e => playlist.removeTrack(playlistEntry.position), "playlist-remove-track");
     playlistEntry.append(playlistEntry.removeTrack);
 
     playlistEntry.updatePosition = (position, firstTrack, lastTrack) => {

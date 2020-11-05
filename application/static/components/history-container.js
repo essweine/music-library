@@ -4,11 +4,12 @@ import { createTracklistContainer, createTracklistOption, addText } from "/stati
 function createRecentlyPlayedEntry(track) {
 
     let entry = document.createElement("div");
+    entry.classList.add("tracklist-entry");
     entry.classList.add("recently-played-entry");
 
-    entry.append(addText(track.title, "recent-title"));
-    entry.append(addText(track.artist, "recent-artist"));
-    entry.append(addText(track.recording, "recent-recording"));
+    entry.append(addText(track.title, "playlist-title"));
+    entry.append(addText(track.recording, "playlist-recording"));
+    entry.append(addText(track.artist, "playlist-artist"));
 
     let ratingContainer = createRatingContainer("recent-rating");
     ratingContainer.configure("track", track.filename, track.rating);
@@ -31,7 +32,7 @@ function createHistoryContainer(app, ws) {
 
     let heading = document.createElement("div");
     heading.id = "recent-heading";
-    heading.classList.add("history-heading");
+    heading.classList.add("section-heading");
     heading.innerText = "Recently Played"
     container.tracklist.append(heading);
 

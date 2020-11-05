@@ -1,6 +1,23 @@
 body {
     font-family: 'Public Sans';
+    --link-color: #000;
+    --highlight-color: #ccf;
+    --tag-color: #ccf;
+    --tag-border: #aaf;
+    --action-hover: #aaf;
+    --light-bg: #eee;
+    --dark-bg: #ddd;
+    --disabled-color: #aaa;
 }
+
+span, div { background-color: inherit; }
+
+a {
+    text-decoration: none;
+    font-size: large;
+    color: var(--link-color);
+}
+a:hover { font-weight: bold; }
 
 #root-container {
     display: grid;
@@ -8,56 +25,109 @@ body {
     margin: 0 80px;
 }
 
-a {
-    text-decoration: none;
-    color: #000;
-    font-size: large;
-}
-
-a:hover {
-    font-weight: bold;
-}
-
-span, div {
-    background-color: inherit;
-}
-
 #navigation {
-    background-color: #ddd;
+    background-color: var(--dark-bg);
     padding: 5px;
     margin: 10px 0;
 }
+.navigation-item { padding-right: 15px; }
 
-.navigation-item {
-    padding-right: 15px;
+#content { justify-content: start; }
+
+.section-heading { 
+    font-size: large;
+    font-weight: bold;
+    padding: 5px 0;
+    margin: 5px 0;
 }
 
-#content {
-    justify-content: start;
-}
+.editable-info, .aggregate-taglist { display: contents; }
+.editable-display { justify-self: start; width: max-content; }
+.editable-label, .taglist-label { justify-self: end; width: max-content; }
+.editable-input, .taglist-values { justify-self: start; }
 
+/* --- Ratings --- */
+.filled { color: #ffd700; }
+.unfilled { color: #d3d3d3; }
+.rating-label { padding-right: 10px; }
+
+/* --- Icons --- */
 .material-icons {
     vertical-align: bottom;
     background-color: inherit;
     width: min-content;
 }
+.material-icons:hover { background-color: var(--action-hover); }
+.disabled-icon { color: var(--disabled-color); }
 
-.material-icons:hover {
-    background-color: #aaf;
+/* --- Tags --- */
+.tag {
+    display: block;
+    justify-content: start;
+    background-color: var(--tag-color);
+    padding: 2px 0;
+    border: 2px var(--tag-border) solid;
+    margin: 5px;
+    width: max-content;
 }
 
-.disabled-icon {
-    color: #aaa;
+.tag-property, .tag-value {
+    padding: 2px 5px;
+    font-size: medium;
 }
 
-.error-display {
-    padding: 10px 0;
+.tag-action {
+    padding: 2px 0;
+    font-size: medium;
 }
 
-.error-heading {
+.edit-tag-action {
+    padding: 2px 0;
+    font-size: 24px;
+}
+
+/* --- Errors --- */
+.error-display { padding: 10px 0; }
+.error-heading { font-size: large; }
+.error-message { padding: 5px; }
+
+/* --- Logs --- */
+#log-display {
+    background-color: #000;
+    color: #eee;
+    white-space: pre-wrap;
+    font-family: monospace;
     font-size: large;
+    padding: 10px;
+    max-height: 80em;
+    overflow: auto;
+}
+.log-error { color: red; }
+.log-warning { color: orange; }
+.log-info { color: green; }
+
+/* --- Station editor --- */
+#station-editor {
+    display: grid;
+    justify-content: start;
+    padding: 15px 0px 15px 0px;
 }
 
-.error-message {
-    padding: 5px;
+.station-edit-heading {
+    grid-column: 2;
+    width: 100%;
+    display: grid;
+    grid-auto-flow: column;
+    justify-self: stretch;
 }
+
+.station-edit-text { justify-self: start; }
+.station-edit-icons { justify-self: end; }
+.station-edit-action { width: min-content; }
+
+.station-edit-data > .editable-label {
+    grid-column: 1;
+    align-self: center;
+    padding-right: 10px;
+}
+.station-edit-data > .editable-input { grid-column: 2; }

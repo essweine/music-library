@@ -11,6 +11,7 @@ function createPlaylistList(app) {
         { display: "", className: "playlist-list-view", type: "icon" },
         { display: "", className: "playlist-list-queue", type: "icon" },
         { display: "", className: "playlist-list-play", type: "icon" },
+        { display: "", className: "playlist-list-delete", type: "icon" },
     ];
 
     let root = createListRoot(columns, "playlist-list-root", "playlist-list-row");
@@ -22,7 +23,7 @@ function createPlaylistList(app) {
         order: "asc",
         unrated: false,
     }
-    let search = createSearchBar(root, query);
+    let search = createSearchBar(root, query, "playlist-list-search");
     root.configureSearch = (config) => search.initialize(config);
 
     search.addCheckbox("Unrated Only", "unrated", "list-search-unrated");
@@ -30,6 +31,10 @@ function createPlaylistList(app) {
     root.append(search);
 
     root.updateResults = (query) => app.searchApi.query("playlist", query, root.update);
+
+    root.refresh = () => app.searchApi.query("playlist", query, root.update);
+
+    let deletePlaylist = (playlistId) => app.playlistApi.deletePlaylist(playlistId, root.refresh);
 
     let expandRow = (playlistId) => {
         return function(tracks) {
@@ -79,6 +84,7 @@ function createPlaylistList(app) {
                 { name: "create", action: e => window.location.href = "/playlist/" + entry.id },
                 { name: "playlist_add", action: e => app.playlistApi.getTracks(entry.id, app.playerApi.queueAll.bind(app.playerApi)) },
                 { name: "playlist_play", action: e => playTracks(entry) },
+                { name: "clear", action: e => deletePlaylist(entry.id) },
             ],
             action: {
                 selectId: entry.id,
@@ -96,7 +102,7 @@ function createPlaylistList(app) {
     text.classList.add("playlist-add-new");
     text.innerText = "New Playlist";
     newPlaylist.append(text);
-    let newPlaylistIcon = createIcon("add", e => app.playlistApi.createPlaylist());
+    let newPlaylistIcon = createIcon("add", e => app.playlistApi.createPlaylist(r => window.location.href = "/playlist/" + r.id));
     newPlaylist.append(newPlaylistIcon);
 
     root.append(newPlaylist);
