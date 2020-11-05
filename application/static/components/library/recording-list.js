@@ -19,12 +19,11 @@ function createRecordingList(app) {
     let query = {
         match: [ ],
         exclude: [ ],
-        sort: [ "artist" ],
+        sort: [ "artist", "recording_date" ],
         order: "asc",
         official: true,
         nonofficial: true,
         unrated: false,
-        never_listened: false,
     }
     let search = createSearchBar(root, query);
     root.configureSearch = (config) => search.initialize(config);
@@ -35,7 +34,7 @@ function createRecordingList(app) {
 
     root.append(search);
 
-    root.updateResults = (query) => app.recordingApi.search(query, root.update);
+    root.updateResults = (query) => app.searchApi.query("recording", query, root.update);
 
     let expandRow = (recording) => {
         let selected = document.getElementById(recording.id);

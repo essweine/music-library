@@ -48,7 +48,6 @@
 .list-search-official { grid-column: 7; align-content: center; }
 .list-search-nonofficial { grid-column: 8; align-content: center; }
 .list-search-unrated { grid-column: 9; align-content: center; }
-.list-search-unlistened { grid-column: 10; align-content: center; }
 
 .list-search-criterion { display: contents; }
 
@@ -73,3 +72,20 @@
 .recording-list-queue { grid-column: 7; }
 .recording-list-play { grid-column: 8; }
 
+.playlist-add-new {
+    font-size: large;
+    padding-right: 5px;
+}
+
+.playlist-list-name { grid-column: 1 }
+.playlist-list-tracks { grid-column: 2 }
+.playlist-list-rating { grid-column: 3 }
+.playlist-list-view { grid-column: 4 }
+.playlist-list-queue { grid-column: 5 }
+.playlist-list-play { grid-column: 6 }
+
+.track-list-title { grid-column: 1; width: max-content; }
+.track-list-recording { grid-column: 2; width: max-ccontent; }
+.track-list-artist { grid-column: 3; width: max-content; }
+.track-list-rating { grid-column: 4; width: max-content; }
+.track-list-add { grid-column: 5; }

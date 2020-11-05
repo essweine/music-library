@@ -1,7 +1,9 @@
-import { Importer, Recording, Player, Rating, SearchConfig, History, Station } from "/static/modules/api.js";
+import { Importer, Recording, Playlist, Player, Rating, Search, History, Station } from "/static/modules/api.js";
 
 import { createDirectoryList } from "/static/components/library/directory-list.js";
 import { createRecordingList } from "/static/components/library/recording-list.js";
+import { createPlaylistList } from "/static/components/library/playlist-list.js";
+import { createPlaylistEditor } from "/static/components/library/playlist-editor.js";
 import { createImportContainer, createRecordingContainer } from "/static/components/library/container.js";
 import { createPlayerContainer } from "/static/components/player/container.js";
 import { createHistoryContainer } from "/static/components/history-container.js";
@@ -13,13 +15,14 @@ class Application {
 
     constructor(action, arg) {
 
-        this.importerApi     = new Importer(this.errorHandler.bind(this));
-        this.recordingApi    = new Recording(this.errorHandler.bind(this));
-        this.playerApi       = new Player(this.errorHandler.bind(this));
-        this.ratingApi       = new Rating(this.errorHandler.bind(this));
-        this.searchConfigApi = new SearchConfig(this.errorHandler.bind(this));
-        this.historyApi      = new History(this.errorHandler.bind(this));
-        this.stationApi      = new Station(this.errorHandler.bind(this));
+        this.importerApi  = new Importer(this.errorHandler.bind(this));
+        this.recordingApi = new Recording(this.errorHandler.bind(this));
+        this.playlistApi  = new Playlist(this.errorHandler.bind(this));
+        this.playerApi    = new Player(this.errorHandler.bind(this));
+        this.ratingApi    = new Rating(this.errorHandler.bind(this));
+        this.searchApi    = new Search(this.errorHandler.bind(this));
+        this.historyApi   = new History(this.errorHandler.bind(this));
+        this.stationApi   = new Station(this.errorHandler.bind(this));
 
         this.content = document.getElementById("content");
         this.addContainer(action, arg);
@@ -41,15 +44,23 @@ class Application {
             this.recordingApi.getRecording(arg, this.container.initialize);
         } else if (action == "recording") {
             createRecordingList(this);
-            this.searchConfigApi.getConfig("recording", this.container.configureSearch);
+            this.searchApi.getConfig("recording", this.container.configureSearch);
             this.recordingApi.listAll(this.container.addRows);
         } else if (action == "history") {
             let ws = this.getPlayerNotificationService();
             createHistoryContainer(this, ws);
             this.historyApi.getRecentTracks(this.container.tracklist.period, this.container.tracklist.update);
+        } else if (action == "playlist" && arg != null) {
+            createPlaylistEditor(this);
+            this.searchApi.getConfig("track", this.container.configureSearch);
+            this.playlistApi.getPlaylist(arg, this.container.initialize);
+        } else if (action == "playlist") {
+            createPlaylistList(this);
+            this.searchApi.getConfig("playlist", this.container.configureSearch);
+            this.playlistApi.listAll(this.container.addRows);
         } else if (action == "radio") {
             createRadioContainer(this);
-            this.searchConfigApi.getConfig("station", this.container.stationList.configureSearch);
+            this.searchApi.getConfig("station", this.container.stationList.configureSearch);
             this.stationApi.listAll(this.container.stationList.addRows);
         } else if (action == "log") {
             let ws = this.getLogNotificationService();

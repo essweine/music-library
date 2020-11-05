@@ -1,7 +1,7 @@
 import { createTracklistControls } from "./controls.js";
-import { createPlaylistEntry } from "./playlist-entry.js";
-import { createTracklistContainer, createTracklistOption, addText } from "/static/components/shared/tracklist-container.js";
-import { createIcon } from "/static/components/shared/icons.js";
+import { createTracklistContainer, createTracklistOption, addText } from "../shared/tracklist-container.js";
+import { createPlaylistEntry } from "../shared/playlist-entry.js";
+import { createIcon } from "../shared/icons.js";
 
 function createPlaylist(app) {
 

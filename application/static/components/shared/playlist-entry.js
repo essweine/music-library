@@ -1,5 +1,4 @@
 import { createTracklistContainer, createTracklistOption, addText } from "/static/components/shared/tracklist-container.js";
-import { createTracklistControls } from "./controls.js";
 import { createRatingContainer } from "/static/components/shared/rating-container.js";
 import { createIcon } from "/static/components/shared/icons.js";
 
@@ -24,7 +23,10 @@ function createPlaylistEntry(playlist, track) {
 
     playlistEntry.updatePosition = (position, firstTrack, lastTrack) => {
         playlistEntry.position = position;
-        if (firstTrack) {
+        if (firstTrack && lastTrack) {
+            playlistEntry.moveUp.hide();
+            playlistEntry.moveDown.hide();
+        } else if (firstTrack) {
             playlistEntry.moveUp.hide();
             playlistEntry.moveDown.show();
         } else if (lastTrack) {

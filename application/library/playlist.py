@@ -10,6 +10,7 @@ PLAYLIST_COLUMNS = [
     Column("id", "text", False, True),
     Column("name", "text", True, True),
     Column("rating", "int", False, True),
+    Column("length", "int", True, True),
     Column("snippet", "bool", True, True),
     Column("added_date", "date", False, False),
 ]
@@ -38,7 +39,7 @@ class Playlist(BaseObject):
 
         for column in PLAYLIST_COLUMNS:
             self.__setattr__(column.name, playlist.get(column.name))
-        self.files = playlist.get("files", [ ])
+        self.filenames = playlist.get("filenames", [ ])
 
     @classmethod
     def get(cls, cursor, playlist_id):
@@ -46,13 +47,10 @@ class Playlist(BaseObject):
         PlaylistTable.get(cursor, playlist_id)
         playlist = cursor.fetchone()
         if playlist is not None:
-            playlist = dict(playlist)
-            query = Query(PlaylistEntryTable.name, order = "track_num").compare("playlist_id", playlist_id, "=")
-            query.execute(cursor, PlaylistEntry.row_factory)
-            playlist["files"] = cursor.fetchall()
-            return cls(**playlist)
-        else:
-            return None
+            playlist = cls(**dict(playlist))
+            PlaylistEntry.get(cursor, playlist_id)
+            playlist.filenames = cursor.fetchall()
+            return playlist
 
     @classmethod
     def get_all(cls, cursor):
@@ -60,23 +58,24 @@ class Playlist(BaseObject):
         PlaylistTable.get_all(cursor, Playlist.row_factory, "name")
 
     @staticmethod
-    def create(cursor, playlist):
+    def create(cursor):
 
-        playlist["id"] = str(uuid4())
-        playlist["added_date"] = datetime.utcnow().strftime("%Y-%m-%d")
+        playlist = {
+            "id": str(uuid4()),
+            "name": "Untitled Playlist",
+            "added_date": datetime.utcnow().strftime("%Y-%m-%d"),
+            "length": 0,
+            "filenames": [ ],
+        }
         PlaylistTable.insert(cursor, playlist)
-        for idx, filename in enumerate(playlist.get("files", [ ])):
-            entry = { "playlist_id": playlist["id"], "filename": filename, "track_num": idx }
-            PlaylistEntryTable.insert(cursor, entry)
+        return playlist["id"]
 
     @staticmethod
     def update(cursor, playlist):
 
+        playlist["length"] = len(playlist["filenames"])
         PlaylistTable.update(cursor, playlist)
-        PlaylistEntryTable.delete_where(cursor, { "playlist_id": playlist["id"] })
-        for idx, filename in enumerate(playlist.get("files", [ ])):
-            entry = { "playlist_id": playlist["id"], "filename": filename, "track_num": idx }
-            PlaylistEntryTable.insert(cursor, entry)
+        PlaylistEntry.update(cursor, playlist["id"], playlist["filenames"])
 
     @staticmethod
     def set_rating(cursor, rating):
@@ -87,6 +86,7 @@ class Playlist(BaseObject):
     def delete(cursor, playlist_id):
 
         PlaylistTable.delete(cursor, playlist_id)
+        PlaylistEntryTable.delete_where(cursor, { "playlist_id": playlist_id })
 
 class PlaylistEntry(BaseObject):
 
@@ -94,6 +94,29 @@ class PlaylistEntry(BaseObject):
 
         for column in PLAYLIST_ENTRY_COLUMNS:
             self.__setattr__(column.name, entry.get(column.name))
+
+    @classmethod
+    def get(cls, cursor, playlist_id):
+
+        Query("playlist_entry",
+            select = [ ("filename", None) ],
+            order = "track_num"
+        ).compare("playlist_id", playlist_id, "=").execute(cursor, cls.row_factory)
+
+    @staticmethod
+    def create(cursor, playlist_id, filenames):
+
+        for idx, filename in enumerate(filenames):
+            entry = { "playlist_id": playlist_id, "filename": filename, "track_num": idx }
+            PlaylistEntryTable.insert(cursor, entry)
+
+    @staticmethod
+    def update(cursor, playlist_id, filenames):
+
+        PlaylistEntryTable.delete_where(cursor, { "playlist_id": playlist_id })
+        for idx, filename in enumerate(filenames):
+            entry = { "playlist_id": playlist_id, "filename": filename, "track_num": idx }
+            PlaylistEntryTable.insert(cursor, entry)
 
 class PlaylistTrack(PropertyAggregate):
 
@@ -108,5 +131,14 @@ class PlaylistTrack(PropertyAggregate):
     @classmethod
     def from_filenames(cls, cursor, filenames):
 
+        sort = lambda track: filenames.index(track.filename)
         Query("playlist_track").compare_set("filename", filenames).execute(cursor, cls.row_factory)
+        return sorted(cursor.fetchall(), key = sort)
+
+    @classmethod
+    def from_playlist_id(cls, cursor, playlist_id):
+
+        PlaylistEntry.get(cursor, playlist_id)
+        filenames = [ entry.filename for entry in cursor.fetchall() ]
+        return cls.from_filenames(cursor, filenames)
 

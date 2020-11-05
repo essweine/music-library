@@ -15,14 +15,6 @@ class RecordingRootHandler(BaseApiHandler):
         except Exception as exc:
             self.write_error(500, log_message = "Could not get recording list", exc_info = sys.exc_info())
 
-    def post(self):
-
-        if self.json_body:
-            results = self.db_query(Search.recording, self.json_body)
-            self.write(json.dumps(results, cls = self.JsonEncoder))
-        else:
-            self.write_error(400, messsages = [ "Expected json" ])
-
 class RecordingHandler(BaseApiHandler):
 
     def get(self, recording_id):

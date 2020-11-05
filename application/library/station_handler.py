@@ -15,16 +15,6 @@ class StationRootHandler(BaseApiHandler):
         except Exception as exc:
             self.write_error(500, log_message = "Could not get station list", exc_info = sys.exc_info())
 
-    def post(self):
-
-        if self.json_body is None:
-            self.write_error(400, messsages = [ "Expected json" ])
-        try:
-            results = self.db_query(Search.station, self.json_body)
-            self.write(json.dumps(sorted(results, key = Station.sort), cls = self.JsonEncoder))
-        except Exception as exc:
-            self.write_error(500, log_message = "Could not perform search", exc_info = sys.exc_info())
-
 class StationHandler(BaseApiHandler):
 
     def get(self, station_id):

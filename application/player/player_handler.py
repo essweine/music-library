@@ -40,8 +40,7 @@ class PlayerHandler(BaseApiHandler):
         filenames = [ entry.filename for entry in state.playlist ]
         if state.stream:
             state.stream.station = self.db_action(Station.from_url, state.stream.url)
-        tracks = self.db_query(PlaylistTrack.from_filenames, filenames)
-        state.playlist = sorted(tracks, key = lambda t: filenames.index(t.filename))
+        state.playlist = self.db_action(PlaylistTrack.from_filenames, filenames)
         return state
 
 class PlayerNotificationHandler(WebSocketHandler):

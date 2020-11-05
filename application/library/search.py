@@ -68,6 +68,20 @@ class Search(object):
     }
 
     @classmethod
+    def search(cls, cursor, item_type, params):
+
+        if item_type == "recording":
+            cls.recording(cursor, params)
+        elif item_type == "track":
+            cls.track(cursor, params)
+        elif item_type == "playlist":
+            cls.playlist(cursor, params)
+        elif item_type == "station":
+            cls.station(cursor, params)
+        else:
+            raise ValueError(f"Invalid search type")
+
+    @classmethod
     def recording(cls, cursor, params):
 
         match = Query(LibrarySearchView.name, [ ("recording_id", None) ], True)
@@ -122,7 +136,7 @@ class Search(object):
         elif exclude.conditions:
             query = f"select * from playlist_track where filename not in ({exclude})"
         else:
-            query = f"select * from playlist_track order by rating desc limit 15"
+            query = f"select * from playlist_track limit 0"
 
         cursor.row_factory = PlaylistTrack.row_factory
         cursor.execute(query, match.values + exclude.values)
@@ -205,7 +219,7 @@ class Search(object):
     @classmethod
     def property_values(cls, cursor, prop_name):
 
-        cursor.execute("select distinct value from property where category=?", (prop_name, ))
+        cursor.execute("select distinct value from property where category=? order by value", (prop_name, ))
         return { prop_name: [ val for (val, ) in cursor.fetchall() ] }
 
     @classmethod

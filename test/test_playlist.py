@@ -8,7 +8,7 @@ from datetime import date
 from application.importer import DirectoryService
 from application.library import Recording, Playlist, PlaylistTrack
 from application.library.rating_handler import Rating
-from application.library.search import Search
+from application.library.search import Search, PLAYLIST_OPTIONS, TRACK_OPTIONS
 from application.config import TABLES, VIEWS
 from . import ROOT_PATH, DEFAULT_INDEX, DB_NAME
 
@@ -69,16 +69,8 @@ class TestPlaylist(unittest.TestCase):
 
     def test_001_create_playlist(self):
 
-        playlist = Playlist(**{ })
-        playlist.name = "Test Playlist"
-        files = [
-            self.get_filename(self.kilas, 0),
-            self.get_filename(self.edge, 0),
-        ]
-        playlist.files = files
-
         cursor = self.conn.cursor()
-        Playlist.create(cursor, playlist.as_dict())
+        playlist_id = Playlist.create(cursor)
         cursor.close()
 
     def test_002_get_all_playlists(self):
@@ -97,9 +89,9 @@ class TestPlaylist(unittest.TestCase):
         playlists = cursor.fetchall()
         playlist = Playlist.get(cursor, playlists[0].id)
 
-        self.assertEqual(playlist.name, "Test Playlist")
-        self.assertEqual(len(playlist.files), 2)
-        self.assertEqual(playlist.files[0].filename, self.get_filename(self.kilas, 0))
+        self.assertEqual(playlist.name, "Untitled Playlist")
+        self.assertEqual(playlist.length, 0)
+        self.assertEqual(len(playlist.filenames), 0)
 
         cursor.close()
 
@@ -110,65 +102,88 @@ class TestPlaylist(unittest.TestCase):
         Playlist.get_all(cursor)
         playlists = cursor.fetchall()
         playlist = Playlist.get(cursor, playlists[0].id)
-        playlist.name = "Updated Playlist"
-        files = [
-            self.get_filename(self.kilas, 1),
-            self.get_filename(self.edge, 1),
+        playlist.name = "Test Playlist"
+        filenames = [
+            self.get_filename(self.kilas, 0),
+            self.get_filename(self.edge, 0),
         ]
-        playlist.files = files
+        playlist.filenames = filenames
 
         Playlist.update(cursor, playlist.as_dict())
         rating = Rating("playlist", playlist.id, 5)
         Playlist.set_rating(cursor, rating)
 
         playlist = Playlist.get(cursor, playlists[0].id)
-        self.assertEqual(playlist.name, "Updated Playlist")
-        self.assertEqual(len(playlist.files), 2)
-        self.assertEqual(playlist.files[0].filename, files[0])
+        self.assertEqual(playlist.name, "Test Playlist")
+        self.assertEqual(playlist.length, 2)
+
+        entries = PlaylistTrack.from_playlist_id(cursor, playlists[0].id)
+        self.assertEqual(len(entries), 2)
+        self.assertEqual(entries[0].filename, filenames[0])
         self.assertEqual(playlist.rating, 5)
 
         cursor.close()
 
-    def test_005_search_playlists(self):
-
-        playlist = Playlist(**{ })
-        playlist.name = "New Playlist"
-        files = [
-            self.get_filename(self.kilas, 0),
-            self.get_filename(self.edge, 0),
-        ]
-        playlist.files = files
+    def test_005_playlist_search_config(self):
 
         cursor = self.conn.cursor()
-        Playlist.create(cursor, playlist.as_dict())
+        config = Search.configuration(cursor, "playlist")
 
-        name_search = self.build_playlist_search_params(match = [ { "name": playlist.name } ])
-        Search.playlist(cursor, name_search)
+        order = sorted(PLAYLIST_OPTIONS, key = lambda k: PLAYLIST_OPTIONS[k][1])
+        self.assertListEqual(order, list(config.keys()))
+
+        self.assertEqual(config["name"]["type"], PLAYLIST_OPTIONS["name"][0])
+        self.assertEqual(config["name"]["display"], PLAYLIST_OPTIONS["name"][1])
+        self.assertEqual(len(config["name"]["values"]), 0)
+        
+    def test_006_search_playlists(self):
+
+        cursor = self.conn.cursor()
+        playlist_id = Playlist.create(cursor)
+
+        name_search = self.build_playlist_search_params(match = [ { "name": "Untitled Playlist" } ])
+        Search.search(cursor, "playlist", name_search)
         name_result = cursor.fetchall()
         self.assertEqual(len(name_result), 1)
-        self.assertEqual(name_result[0].name, playlist.name)
+        self.assertEqual(name_result[0].name, "Untitled Playlist")
 
-        rating = Rating("playlist", name_result[0].id, 5)
+        rating = Rating("playlist", playlist_id, 5)
         Playlist.set_rating(cursor, rating)
 
         rating_search = self.build_playlist_search_params(match = [ { "rating": 5 } ])
-        Search.playlist(cursor, rating_search)
+        Search.search(cursor, "playlist", rating_search)
         rating_result = cursor.fetchall()
         self.assertEqual(len(rating_result), 2)
 
         cursor.close()
 
-    def test_006_search_tracks(self):
+    def test_007_track_search_config(self):
+
+        cursor = self.conn.cursor()
+        config = Search.configuration(cursor, "track")
+
+        order = sorted(TRACK_OPTIONS, key = lambda k: TRACK_OPTIONS[k][1])
+        self.assertListEqual(order, list(config.keys()))
+
+        self.assertEqual(config["recording"]["type"], TRACK_OPTIONS["recording"][0])
+        self.assertEqual(config["recording"]["display"], TRACK_OPTIONS["recording"][1])
+        self.assertEqual(len(config["recording"]["values"]), 0)
+        self.assertEqual(config["artist"]["type"], "text")
+        self.assertListEqual(config["genre"]["values"], [ ])
+        
+        cursor.close()
+
+    def test_008_search_tracks(self):
 
         cursor = self.conn.cursor()
 
         title_search = self.build_track_search_params(match = [ { "title": "The Plan" } ])
-        Search.track(cursor, title_search)
+        Search.search(cursor, "track", title_search)
         title_results = cursor.fetchall()
         self.assertEqual(len(title_results), 1)
 
         recording_search = self.build_track_search_params(match = [ { "recording": "Keep It Like a Secret" } ])
-        Search.track(cursor, recording_search)
+        Search.search(cursor, "track", recording_search)
         recording_results = cursor.fetchall()
         self.assertEqual(len(recording_results), 3)
 
@@ -176,7 +191,7 @@ class TestPlaylist(unittest.TestCase):
             Recording.set_track_rating(cursor, Rating("track", track.filename, 5))
 
         rating_search = self.build_track_search_params(match = [ { "rating": 5 } ])
-        Search.track(cursor, rating_search)
+        Search.search(cursor, "track", rating_search)
         rating_results = cursor.fetchall()
         self.assertEqual(len(rating_results), 3)
 
@@ -186,32 +201,32 @@ class TestPlaylist(unittest.TestCase):
         Recording.update(cursor, recording.as_dict())
 
         official_search = self.build_track_search_params(nonofficial = False)
-        Search.track(cursor, official_search)
+        Search.search(cursor, "track", official_search)
         official_results = cursor.fetchall()
         self.assertEqual(len(official_results), 3)
 
         unrated_search = self.build_track_search_params(unrated = True)
-        Search.track(cursor, unrated_search)
+        Search.search(cursor, "track", unrated_search)
         unrated_results = cursor.fetchall()
         self.assertEqual(len(unrated_results), 6)
 
         artist_search = self.build_track_search_params(match = [ { "artist": "Built To Spill" } ])
-        Search.track(cursor, artist_search)
+        Search.search(cursor, "track", artist_search)
         artist_results = cursor.fetchall()
         self.assertEqual(len(artist_results), 3)
 
         exclude_search = self.build_track_search_params(exclude = [ { "artist": "Built To Spill" } ])
-        Search.track(cursor, exclude_search)
+        Search.search(cursor, "track", exclude_search)
         exclude_results = cursor.fetchall()
         self.assertEqual(len(exclude_results), 6)
 
         cursor.close()
 
-    def test_007_delete_playlist(self):
+    def test_009_delete_playlist(self):
 
         cursor = self.conn.cursor()
-        name_search = self.build_playlist_search_params(match = [ { "name": "Updated Playlist" } ])
-        Search.playlist(cursor, name_search)
+        name_search = self.build_playlist_search_params(match = [ { "name": "Untitled Playlist" } ])
+        Search.search(cursor, "playlist", name_search)
         name_result = cursor.fetchall()
         Playlist.delete(cursor, name_result[0].id)
         Playlist.get_all(cursor)

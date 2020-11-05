@@ -8,11 +8,11 @@ from datetime import date
 from application.importer import DirectoryService
 from application.library.station import Station
 from application.library.rating_handler import Rating
-from application.library.search import Search
+from application.library.search import Search, STATION_OPTIONS
 from application.config import TABLES, VIEWS
 from . import ROOT_PATH, DEFAULT_INDEX, DB_NAME
 
-class TestRecording(unittest.TestCase):
+class TestStation(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
@@ -72,12 +72,25 @@ class TestRecording(unittest.TestCase):
         self.assertEqual(stations[1].rating, 5)
         cursor.close()
 
-    def test_003_search_stations(self):
+    def test_003_search_config(self):
+
+        cursor = self.conn.cursor()
+        config = Search.configuration(cursor, "station")
+
+        order = sorted(STATION_OPTIONS, key = lambda k: STATION_OPTIONS[k][1])
+        self.assertListEqual(order, list(config.keys()))
+
+        self.assertEqual(config["name"]["type"], STATION_OPTIONS["name"][0])
+        self.assertEqual(config["name"]["display"], STATION_OPTIONS["name"][1])
+        self.assertEqual(len(config["name"]["values"]), 0)
+        cursor.close()
+        
+    def test_004_search_stations(self):
 
         cursor = self.conn.cursor()
 
         name_search = self.build_search_params(match = [ { "name": "Bluegrass Country" } ])
-        Search.station(cursor, name_search)
+        Search.search(cursor, "station", name_search)
         name_result = [ row for row in cursor ]
         self.assertEqual(len(name_result), 1)
         self.assertEqual(name_result[0].name, "Bluegrass Country")
@@ -89,7 +102,7 @@ class TestRecording(unittest.TestCase):
 
         cursor.close()
 
-    def test_004_delete_station(self):
+    def test_005_delete_station(self):
 
         cursor = self.conn.cursor()
         Station.delete(cursor, self.stations[1]["id"])

@@ -1,7 +1,7 @@
 import sys
 import json
 
-from . import Playlist, Search
+from . import Playlist, PlaylistTrack
 from ..importer import DirectoryService
 from ..util import BaseApiHandler
 
@@ -17,11 +17,11 @@ class PlaylistRootHandler(BaseApiHandler):
 
     def post(self):
 
-        if self.json_body:
-            results = self.db_query(Search.playlist, self.json_body)
-            self.write(json.dumps(results, cls = self.JsonEncoder))
-        else:
-            self.write_error(400, messsages = [ "Expected json" ])
+        try:
+            playlist_id = self.db_action(Playlist.create)
+            self.redirect(f"/playlist/{playlist_id}")
+        except Exception as exc:
+            self.write_error(500, log_message = "Could not create playlist", exc_info = sys.exc_info())
 
 class PlaylistHandler(BaseApiHandler):
 
@@ -46,12 +46,12 @@ class PlaylistHandler(BaseApiHandler):
         except:
             self.write_error(500, log_message = f"Could not update playlist {playlist_id}", exc_info = sys.exc_info())
 
-    def post(self, playlist_id):
+class PlaylistTrackHandler(BaseApiHandler):
 
-        if self.json_body is None:
-            self.write_error(400, messsages = [ "Expected json" ])
+    def get(self, playlist_id):
 
         try:
-            self.db_action(Playlist.create, self.json_body)
+            tracks = self.db_action(PlaylistTrack.from_playlist_id, playlist_id)
+            self.write(json.dumps(tracks, cls = self.JsonEncoder))
         except:
-            self.write_error(500, log_message = f"Could not create playlist {playlist_id}", exc_info = sys.exc_info())
+            self.write_error(500, log_message = f"Could not retrieve tracks for {playlist_id}", exc_info = sys.exc_info())

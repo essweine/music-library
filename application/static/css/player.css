@@ -103,11 +103,21 @@
     padding-top: 10px;
 }
 
-#player-tracklist {
+#player-tracklist, #tracklist-editor {
     display: grid;
     grid-row-gap: 5px;
     align-items: center;
 }
+
+#tracklist-editor {
+    background-color: #eee;
+    padding: 5px 0;
+    margin: 5px 0;
+    justify-content: start;
+    width: max-content;
+}
+#tracklist-editor > .playlist-entry:hover { background-color: #ccf }
+#editor-heading { font-size: large; font-weight: bold; }
 
 .tracklist-heading {
     grid-column: 1 / 7;
@@ -177,5 +187,3 @@
 .remove-track { grid-column: 6; } 
 
 .recent-rating { grid-column: 4 / 7; }
-
-

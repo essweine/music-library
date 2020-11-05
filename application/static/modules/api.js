@@ -43,8 +43,6 @@ class Recording extends Api {
 
     listAll(callback) { this.get("", callback); }
 
-    search(query, callback) { this.post("", query, callback); }
-
     getRecording(recordingId, callback) { this.get("/" + recordingId, callback); }
 
     addToLibrary(data) { 
@@ -53,6 +51,24 @@ class Recording extends Api {
     }
 
     saveRecording(data) { this.put("/" + data.id, data, NoOp); }
+}
+
+class Playlist extends Api {
+
+    constructor(errorHandler) {
+        super(errorHandler);
+        this.base = "/api/playlist";
+    }
+
+    listAll(callback) { this.get("", callback); }
+
+    createPlaylist() { this.post("", null); }
+
+    getPlaylist(playlistId, callback) { this.get("/" + playlistId, callback); }
+
+    getTracks(playlistId, callback) { this.get("/tracks/" + playlistId, callback); }
+
+    savePlaylist(data) { this.put("/" + data.id, data); }
 }
 
 class Importer extends Api {
@@ -153,14 +169,16 @@ class Rating extends Api {
     update(rating) { this.post("", rating, NoOp); }
 }
 
-class SearchConfig extends Api {
+class Search extends Api {
 
     constructor(errorHandler) {
         super(errorHandler);
-        this.base = "/api/config";
+        this.base = "/api/search";
     }
 
-    getConfig(configType, callback) { this.get("/" + configType, callback); }
+    getConfig(itemType, callback) { this.get("/" + itemType, callback); }
+
+    query(itemType, query, callback) { this.post("/" + itemType, query, callback); }
 }
 
 class History extends Api {
@@ -190,8 +208,6 @@ class Station extends Api {
 
     listAll(callback) { this.get("", callback); }
 
-    search(query, callback) { this.post("", query, callback); }
-
     saveStation(data, callback) { this.put("/" + data.id, data, callback); }
 
     addStation(data, callback) { this.post("/" + data.name, data, callback); }
@@ -199,4 +215,4 @@ class Station extends Api {
     deleteStation(station_id, callback) { this.httpDelete("/" + station_id, callback); }
 }
 
-export { Recording, Importer, Player, Rating, SearchConfig, History, Station };
+export { Recording, Importer, Playlist, Player, Rating, Search, History, Station };
