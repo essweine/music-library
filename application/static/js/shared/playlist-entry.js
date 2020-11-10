@@ -1,6 +1,5 @@
-import { createTracklistContainer, createTracklistOption, addText } from "/static/components/shared/tracklist-container.js";
-import { createRatingContainer } from "/static/components/shared/rating-container.js";
-import { createIcon } from "/static/components/shared/icons.js";
+import { createTracklistContainer, createTracklistOption, addText } from "./tracklist-container.js";
+import { createIcon } from "./icons.js";
 
 function createPlaylistEntry(playlist, track) {
 

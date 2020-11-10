@@ -2,8 +2,9 @@ import { createListRoot, createListRow } from "./shared/item-list.js";
 import { createSearchBar } from "./shared/item-list-search.js";
 import { createIcon } from "./shared/icons.js";
 import { createEditableInfo } from "./shared/editable-info.js";
+import { Rating } from "./api.js";
 
-function createStationEditor(app) {
+function createStationEditor(api) {
 
     let editor = document.createElement("div");
     editor.id = "station-editor";
@@ -34,9 +35,9 @@ function createStationEditor(app) {
         editor.save();
         let data = { id: editor.stationId, name: name.get(), website: website.get(), url: url.get() };
         if (context == "add")
-            app.stationApi.addStation(data, editor.refreshStations);
+            api.addStation(data, editor.refreshStations);
         else if (context == "save")
-            app.stationApi.saveStation(data, editor.refreshStations);
+            api.saveStation(data, editor.refreshStations);
         editor.setContent(null);
     }
 
@@ -80,7 +81,7 @@ function createStationEditor(app) {
     return editor;
 }
 
-function createStationList(app, stationEditor) {
+function createStationList(api, stationEditor) {
 
     let columns = [
         { display: "Name", className: "station-list-name", type: "text" },
@@ -102,13 +103,13 @@ function createStationList(app, stationEditor) {
     root.configureSearch = (config) => search.initialize(config);
     root.append(search);
 
-    root.updateResults = (query) => app.searchApi.query("station", query, root.update);
+    root.updateResults = (query) => api.query("station", query, root.update);
 
-    root.refresh = () => app.searchApi.query("station", query, root.update);
+    root.refresh = () => api.query("station", query, root.update);
 
-    root.save = (station) => app.stationApi.saveStation(station);
+    root.save = (station) => api.saveStation(station);
 
-    root.deleteStation = (stationId) => app.stationApi.deleteStation(stationId, root.refresh);
+    root.deleteStation = (stationId) => api.deleteStation(stationId, root.refresh);
 
     root.getData = (station) => {
         return {
@@ -117,9 +118,9 @@ function createStationList(app, stationEditor) {
                 { text: station.website, url: station.website },
                 station.minutes_listened,
                 station.last_listened,
-                { itemType: "station", itemId: station.id, rating: station.rating },
+                new Rating("station", station.id, station.rating),
                 { name: "create", action: e => stationEditor.setContent(station) },
-                { name: "play_arrow", action: e => app.playerApi.streamUrl(station.url) },
+                { name: "play_arrow", action: e => api.streamUrl(station.url) },
                 { name: "clear", action: e => root.deleteStation(station.id) },
             ],
             action: null
@@ -130,17 +131,19 @@ function createStationList(app, stationEditor) {
     return root;
 }
 
-function createRadioContainer(app) {
+function createRadioContainer(api) {
 
     let container = document.createElement("div");
-    let stationEditor = createStationEditor(app);
-    container.stationList = createStationList(app, stationEditor);
+    let stationEditor = createStationEditor(api);
+    container.stationList = createStationList(api, stationEditor);
     stationEditor.setContent(null);
     stationEditor.refreshStations = container.stationList.refresh;
     container.append(stationEditor);
     container.append(container.stationList);
-    app.container = container;
     document.title = "Internet Radio"
+    api.getSearchConfig("station", container.stationList.configureSearch);
+    api.getAllStations(container.stationList.addRows);
+    return container;
 }
 
 export { createRadioContainer };

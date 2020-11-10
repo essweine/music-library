@@ -2,11 +2,12 @@ import { createEditableInfo } from "../shared/editable-info.js";
 import { createListRoot, createListRow } from "../shared/item-list.js";
 import { createSearchBar } from "../shared/item-list-search.js";
 import { createPlaylistEntry } from "../shared/playlist-entry.js";
-import { createTracklistContainer } from "/static/components/shared/tracklist-container.js";
-import { createRatingContainer } from "/static/components/shared/rating-container.js";
-import { createIcon } from "/static/components/shared/icons.js";
+import { createTracklistContainer } from "../shared/tracklist-container.js";
+import { createRatingContainer } from "../shared/rating-container.js";
+import { createIcon } from "../shared/icons.js";
+import { Rating } from "../api.js";
 
-function createPlaylistEditor(app) {
+function createPlaylistEditor(api, playlistId) {
 
     let container = document.createElement("div");
     container.id = "playlist-container";
@@ -21,7 +22,7 @@ function createPlaylistEditor(app) {
         playlistName.save()
         container.playlist.name = playlistName.get();
         container.playlist.filenames = tracklist.getFilenames();
-        app.playlistApi.savePlaylist(container.playlist);
+        api.savePlaylist(container.playlist);
     }
 
     let reset = () => window.location.href = "/playlist";
@@ -84,14 +85,14 @@ function createPlaylistEditor(app) {
     search.addCheckbox("Unrated Only", "unrated", "list-search-unrated");
     searchResults.append(search);
 
-    searchResults.updateResults = (query) => app.searchApi.query("track", query, searchResults.update);
+    searchResults.updateResults = (query) => api.query("track", query, searchResults.update);
     searchResults.getData = (track) => {
         return {
             values: [
                 track.title,
                 track.recording,
                 track.artist,
-                { itemType: "track", itemId: track.filename, rating: track.rating },
+                new Rating("track", track.filename, track.rating),
                 { name: "playlist_add", action: e => tracklist.addTrack(track) },
             ],
             action: null,
@@ -104,10 +105,12 @@ function createPlaylistEditor(app) {
         container.playlist = playlist;
         playlistName.initialize(playlist.name, "name", "Name");
         playlistName.toggleEdit(true);
-        app.playlistApi.getTracks(playlist.id, tracklist.setTracklist);
+        api.getPlaylistTracks(playlist.id, tracklist.setTracklist);
     }
 
-    app.container = container;
+    api.getSearchConfig("track", container.configureSearch);
+    api.getPlaylist(playlistId, container.initialize);
+    return container;
 }
 
 export { createPlaylistEditor };

@@ -1,6 +1,6 @@
 import { createListRoot, createListRow } from "../shared/item-list.js";
 
-function createDirectoryList(app) {
+function createDirectoryList(api) {
 
     let columns = [
         { display: "Directory", className: "directory-list-directory", type: "text" },
@@ -28,7 +28,8 @@ function createDirectoryList(app) {
     root.addHeading();
 
     document.title = "Unindexed Directory List";
-    app.container = root;
+    api.getAllDirectories(root.addRows);
+    return root;
 }
 
 export { createDirectoryList };

@@ -2,6 +2,7 @@ import { createEditableInfo } from "../shared/editable-info.js";
 import { createTrackTaglist } from "./taglist.js";
 import { createRatingContainer } from "../shared/rating-container.js";
 import { createIcon } from "../shared/icons.js";
+import { Rating } from "../api.js";
 
 function createRecordingTrack(tracklist, track) {
 
@@ -19,8 +20,8 @@ function createRecordingTrack(tracklist, track) {
     entry.trackTitle.initialize(track.title, track.filename, track.filename);
     entry.append(entry.trackTitle);
 
-    let ratingContainer = createRatingContainer("recording-track-rating");
-    ratingContainer.configure("track", track.filename, track.rating);
+    let rating = new Rating("track", track.filename, track.rating);
+    let ratingContainer = createRatingContainer(rating, "recording-track-rating");
     entry.append(ratingContainer);
 
     let moveUp        = createIcon("arrow_upward", e => tracklist.shiftTrackUp(entry.currentPosition), "recording-move-up");

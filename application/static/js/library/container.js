@@ -1,10 +1,11 @@
 import { createRecordingImage } from "./recording-image.js";
-import { createEditableInfo } from "../shared/editable-info.js";
 import { createRecordingTaglist } from "./taglist.js";
-import { createRecordingTracklist } from "./tracklist.js";
 import { createRawInfo } from "./raw-info.js";
-import { createRatingContainer } from "/static/components/shared/rating-container.js";
-import { createIcon } from "/static/components/shared/icons.js";
+import { createRecordingTracklist } from "./tracklist.js";
+import { createEditableInfo } from "../shared/editable-info.js";
+import { createRatingContainer } from "../shared/rating-container.js";
+import { createIcon } from "../shared/icons.js";
+import { Rating } from "../api.js";
 
 function createRecordingDisplay() {
 
@@ -146,7 +147,7 @@ function createRecordingDisplay() {
     return container;
 }
 
-function createImportContainer(app) {
+function createImportContainer(api, dirname) {
 
     let container = createRecordingDisplay();
 
@@ -174,19 +175,19 @@ function createImportContainer(app) {
 
     container.addToLibrary = () => {
         container.update();
-        app.recordingApi.addToLibrary(container.recording);
+        api.addToLibrary(container.recording);
     }
 
     container.cancel = () => { window.location.href = "/importer"; }
-
-    app.container = container;
+    api.getDirectoryListing(dirname, container.initialize);
+    return container;
 }
 
-function createRecordingContainer(app) {
+function createRecordingContainer(api, recordingId) {
 
     let container = createRecordingDisplay();
 
-    container.tracklist.queueTrack = (track) => app.playerApi.queue(track);
+    container.tracklist.queueTrack = (track) => app.api.queue(track);
 
     container.initialize = (recording) => {
 
@@ -201,22 +202,22 @@ function createRecordingContainer(app) {
         container.addFiles(files, recording.directory);
         container.addInfoFromSource(recording);
 
-        container.recordingRating = createRatingContainer("recording-rating", "Rating");
-        container.recordingRating.configure("recording-rating", recording.id, recording.rating, "Rating");
+        let rating = new Rating("recording-rating", recording.id, recording.rating);
+        container.recordingRating = createRatingContainer(rating, "recording-rating", "Rating");
 
-        container.soundRating = createRatingContainer("recording-rating");
-        container.soundRating.configure("recording-sound-rating", recording.id, recording.sound_rating, "Sound Rating");
+        let sound = new Rating("recording-sound-rating", recording.id, recording.sound_rating);
+        container.soundRating = createRatingContainer(sound, "recording-rating", "Sound Rating");
 
         container.editIcon = createIcon("create", e => container.selectContext(true));
         container.saveIcon = createIcon("save", e => container.save());
         container.cancelIcon = createIcon("clear", e => container.cancel());
 
         container.playIcon = createIcon("play_arrow", e => {
-            app.playerApi.clearPlaylist();
-            app.playerApi.queueAll(container.recording.tracks)
-            app.playerApi.start();
+            api.clearCurrentPlaylist();
+            api.queueTracks(container.recording.tracks)
+            api.start();
         });
-        container.queueIcon = createIcon("playlist_play", e => app.playerApi.queueAll(container.recording.tracks));
+        container.queueIcon = createIcon("playlist_play", e => api.queueTracks(container.recording.tracks));
 
         container.selectContext(false);
         document.title = recording.title;
@@ -225,7 +226,7 @@ function createRecordingContainer(app) {
     container.selectContext = (editable) => {
 
         if (editable && container.data == null) {
-            app.importerApi.getDirectoryListing(encodeURIComponent(container.recording.directory), container.updateFiles.bind(container));
+            api.getDirectoryListing(encodeURIComponent(container.recording.directory), container.updateFiles.bind(container));
         }
 
         (editable) ? container.editIcon.remove() : container.overview.append(container.editIcon);
@@ -242,12 +243,13 @@ function createRecordingContainer(app) {
 
     container.save = () => {
         container.update();
-        app.recordingApi.saveRecording(container.recording);
+        api.saveRecording(container.recording);
     }
 
     container.cancel = () => container.reset();
 
-    app.container = container;
+    api.getRecording(recordingId, container.initialize);
+    return container;
 }
 
 export { createImportContainer, createRecordingContainer };

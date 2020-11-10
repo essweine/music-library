@@ -1,4 +1,4 @@
-import { createTracklistContainer } from "/static/components/shared/tracklist-container.js";
+import { createTracklistContainer } from "../shared/tracklist-container.js";
 import { createRecordingTrack } from "./tracklist-entry.js";
 
 function createRecordingTracklist(container) {

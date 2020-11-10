@@ -1,4 +1,5 @@
-import { createRatingContainer } from "/static/components/shared/rating-container.js";
+import { createRatingContainer } from "../shared/rating-container.js";
+import { Rating } from "../api.js";
 
 function createCurrentTrack() {
 
@@ -36,7 +37,7 @@ function createCurrentTrack() {
     container.artist.id = "track-artist";
     container.bullshitTextContainer.append(container.artist);
 
-    container.ratingContainer = createRatingContainer();
+    container.ratingContainer = createRatingContainer(null);
     container.ratingContainer.id = "track-rating";
 
     container.bullshitTextContainer.append(container.ratingContainer);
@@ -51,7 +52,7 @@ function createCurrentTrack() {
             container.img.src = "/file/" + encodeURIComponent(track.artwork);
         else
             container.img.remove();
-        container.ratingContainer.configure("track", track.filename, track.rating);
+        container.ratingContainer.setRating(new Rating("track", track.filename, track.rating));
     }
 
     return container;

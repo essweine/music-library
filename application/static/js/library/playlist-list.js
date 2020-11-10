@@ -1,8 +1,9 @@
 import { createListRoot, createListRow } from "../shared/item-list.js";
 import { createSearchBar } from "../shared/item-list-search.js";
 import { createIcon } from "../shared/icons.js";
+import { Rating } from "../api.js";
 
-function createPlaylistList(app) { 
+function createPlaylistList(api) { 
 
     let columns = [
         { display: "Name", className: "playlist-list-name", type: "text" },
@@ -30,11 +31,11 @@ function createPlaylistList(app) {
 
     root.append(search);
 
-    root.updateResults = (query) => app.searchApi.query("playlist", query, root.update);
+    root.updateResults = (query) => api.query("playlist", query, root.update);
 
-    root.refresh = () => app.searchApi.query("playlist", query, root.update);
+    root.refresh = () => api.query("playlist", query, root.update);
 
-    let deletePlaylist = (playlistId) => app.playlistApi.deletePlaylist(playlistId, root.refresh);
+    let deletePlaylist = (playlistId) => api.deletePlaylist(playlistId, root.refresh);
 
     let expandRow = (playlistId) => {
         return function(tracks) {
@@ -46,7 +47,7 @@ function createPlaylistList(app) {
                     values: [
                         track.title,
                         "",
-                        { itemType: "track", itemId: track.filename, rating: track.rating },
+                        new Rating("track", track.filename, track.rating),
                         null,
                         null,
                         null
@@ -70,9 +71,9 @@ function createPlaylistList(app) {
     }
 
     let playTracks = (entry) => {
-        app.playerApi.clearPlaylist();
-        app.playlistApi.getTracks(entry.id, app.playerApi.queueAll.bind(app.playerApi));
-        app.playerApi.start();
+        api.clearCurrentPlaylist();
+        api.getPlaylistTracks(entry.id, api.queueTracks.bind(api));
+        api.start();
     };
 
     root.getData = (entry) => {
@@ -80,15 +81,15 @@ function createPlaylistList(app) {
             values: [
                 entry.name,
                 entry.length,
-                { itemType: "playlist", itemId: entry.id, rating: entry.rating },
+                new Rating("playlist", entry.id, entry.rating),
                 { name: "create", action: e => window.location.href = "/playlist/" + entry.id },
-                { name: "playlist_add", action: e => app.playlistApi.getTracks(entry.id, app.playerApi.queueAll.bind(app.playerApi)) },
+                { name: "playlist_add", action: e => api.getPlaylistTracks(entry.id, api.queueTracks.bind(api)) },
                 { name: "playlist_play", action: e => playTracks(entry) },
                 { name: "clear", action: e => deletePlaylist(entry.id) },
             ],
             action: {
                 selectId: entry.id,
-                expand: e => app.playlistApi.getTracks(entry.id, expandRow(entry.id)),
+                expand: e => api.getPlaylistTracks(entry.id, expandRow(entry.id)),
                 collapse: e => collapseRow(entry.id)
             }
         }
@@ -102,13 +103,15 @@ function createPlaylistList(app) {
     text.classList.add("playlist-add-new");
     text.innerText = "New Playlist";
     newPlaylist.append(text);
-    let newPlaylistIcon = createIcon("add", e => app.playlistApi.createPlaylist(r => window.location.href = "/playlist/" + r.id));
+    let newPlaylistIcon = createIcon("add", e => api.createPlaylist(r => window.location.href = "/playlist/" + r.id));
     newPlaylist.append(newPlaylistIcon);
 
     root.append(newPlaylist);
 
     document.title = "Browse Playlists";
-    app.container = root;
+    api.getSearchConfig("playlist", root.configureSearch);
+    api.getAllPlaylists(root.addRows);
+    return root;
 }
 
 export { createPlaylistList };

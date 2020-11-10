@@ -1,9 +1,8 @@
 import { createPlaylist } from "./playlist.js";
 import { createCurrentTrack, createCurrentStream } from "./current-item.js";
 import { createPlayerControls } from "./controls.js";
-import { createRatingContainer } from "/static/components/shared/rating-container.js";
 
-function createPlayerContainer(app, ws) {
+function createPlayerContainer(api, ws) {
 
     let container = document.createElement("div");
     container.id = "player-container";
@@ -11,8 +10,8 @@ function createPlayerContainer(app, ws) {
 
     container.currentTrack = createCurrentTrack();
     container.currentStream = createCurrentStream();
-    container.playerControls = createPlayerControls(app);
-    container.playlist = createPlaylist(app);
+    container.playerControls = createPlayerControls(api);
+    container.playlist = createPlaylist(api);
 
     for (let elem of [ container.currentTrack, container.playerControls, container.playlist ])
         container.append(elem);
@@ -38,10 +37,10 @@ function createPlayerContainer(app, ws) {
         container.playlist.update(state.playlist, state.current, state.shuffle, state.repeat);
     }
 
-    ws.addEventListener("message", e => app.playerApi.getCurrentState(app.container.update));
+    ws.addEventListener("message", e => api.getCurrentState(container.update));
 
     document.title = "Now Playing";
-    app.container = container;
+    return container;
 }
 
 export { createPlayerContainer };

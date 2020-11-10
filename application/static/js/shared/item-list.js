@@ -25,8 +25,7 @@ function createListRow(className, childRow = false) {
             link.classList.add("list-cell");
             row.append(link);
         } else if (colType == "rating") {
-            let ratingContainer = createRatingContainer("list-cell");
-            ratingContainer.configure(value.itemType, value.itemId, value.rating);
+            let ratingContainer = createRatingContainer(value, "list-cell");
             ratingContainer.classList.add(className);
             row.append(ratingContainer);
         } else if (colType == "icon") {

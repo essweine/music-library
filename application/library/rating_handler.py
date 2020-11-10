@@ -30,6 +30,6 @@ class RatingHandler(BaseApiHandler):
             elif rating.item_type == "playlist":
                 self.db_action(Playlist.set_rating, rating)
             elif rating.item_type == "station":
-                self.db_action(StationTable.set_rating, rating)
+                self.db_action(Station.set_rating, rating)
         except Exception as exc:
             self.write_error(500, log_message = "Could not update rating", exc_info = sys.exc_info())

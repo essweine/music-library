@@ -1,5 +1,6 @@
-import { createRatingContainer } from "/static/components/shared/rating-container.js";
-import { createTracklistContainer, createTracklistOption, addText } from "/static/components/shared/tracklist-container.js";
+import { createRatingContainer } from "./shared/rating-container.js";
+import { createTracklistContainer, createTracklistOption, addText } from "./shared/tracklist-container.js";
+import { Rating } from "./api.js";
 
 function createRecentlyPlayedEntry(track) {
 
@@ -11,8 +12,8 @@ function createRecentlyPlayedEntry(track) {
     entry.append(addText(track.recording, "playlist-recording"));
     entry.append(addText(track.artist, "playlist-artist"));
 
-    let ratingContainer = createRatingContainer("recent-rating");
-    ratingContainer.configure("track", track.filename, track.rating);
+    let rating = new Rating("track", track.filename, track.rating);
+    let ratingContainer = createRatingContainer(rating, "recent-rating");
     entry.append(ratingContainer);
 
     let count = (track.count > 1) ? "x " + track.count : "";
@@ -21,7 +22,7 @@ function createRecentlyPlayedEntry(track) {
     return entry;
 }
 
-function createHistoryContainer(app, ws) {
+function createHistoryContainer(api, ws) {
 
     let container = document.createElement("div");
     container.id = "history-container";
@@ -51,7 +52,7 @@ function createHistoryContainer(app, ws) {
     }
 
     let updateHistory = (period) => function() { 
-        app.historyApi.getRecentTracks(period, container.tracklist.update);
+        api.getRecentTracks(period, container.tracklist.update);
         container.tracklist.period = period
     }
 
@@ -64,11 +65,12 @@ function createHistoryContainer(app, ws) {
     options.append(createTracklistOption("1 day", "recent-period", "recent-period-selected", updateHistory(86400)));
 
     ws.addEventListener("message", e => 
-        app.historyApi.getRecentTracks(container.tracklist.period, container.tracklist.update));
+        api.getRecentTracks(container.tracklist.period, container.tracklist.update));
 
     container.append(container.tracklist);
     document.title = "Player History";
-    app.container = container;
+    api.getRecentTracks(container.tracklist.period, container.tracklist.update);
+    return container;
 }
 
 export { createHistoryContainer };

@@ -2,8 +2,9 @@ import { createTracklistControls } from "./controls.js";
 import { createTracklistContainer, createTracklistOption, addText } from "../shared/tracklist-container.js";
 import { createPlaylistEntry } from "../shared/playlist-entry.js";
 import { createIcon } from "../shared/icons.js";
+import { Task } from "../api.js";
 
-function createPlaylist(app) {
+function createPlaylist(api) {
 
     let tracklist = createTracklistContainer("playlist-entry");
     tracklist.id = "player-tracklist";
@@ -37,7 +38,7 @@ function createPlaylist(app) {
 
     heading.append(view);
 
-    let controls = createTracklistControls(app);
+    let controls = createTracklistControls(api);
     heading.append(controls);
 
     tracklist.append(heading);
@@ -50,13 +51,13 @@ function createPlaylist(app) {
     };
 
     tracklist.shiftTrackUp = (position) => {
-        app.playerApi.sendTasks([ app.playerApi.moveTask(position, position - 1) ]);
+        api.sendTasks([ new Task("move", { original: position, destination: position - 1 }) ]);
         tracklist._shiftTrackUp(position);
         tracklist.addToggle();
     }
 
     tracklist.removeTrack = (position) => {
-        app.playerApi.sendTasks([ app.playerApi.removeTask(position) ]);
+        api.sendTasks([ new Task("remove", { position: position }) ]);
         tracklist._removeTrack(position);
         tracklist.addToggle();
     }

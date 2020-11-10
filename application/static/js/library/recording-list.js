@@ -1,7 +1,8 @@
 import { createListRoot, createListRow } from "../shared/item-list.js";
 import { createSearchBar } from "../shared/item-list-search.js";
+import { Rating } from "../api.js";
 
-function createRecordingList(app) { 
+function createRecordingList(api) { 
 
     let columns = [
         { display: "Artist", className: "recording-list-artist", type: "text" },
@@ -34,7 +35,7 @@ function createRecordingList(app) {
 
     root.append(search);
 
-    root.updateResults = (query) => app.searchApi.query("recording", query, root.update);
+    root.updateResults = (query) => api.query("recording", query, root.update);
 
     let expandRow = (recording) => {
         let selected = document.getElementById(recording.id);
@@ -46,10 +47,10 @@ function createRecordingList(app) {
                     "",
                     track.title,
                     "",
-                    { itemType: "track", itemId: track.filename, rating: track.rating },
+                    new Rating("track", track.filename, track.rating),
                     null,
                     null,
-                    { name: "playlist_add", action: e => app.playerApi.queue(track) },
+                    { name: "playlist_add", action: e => api.queue(track) },
                     null,
                 ],
                 action: null
@@ -70,9 +71,9 @@ function createRecordingList(app) {
     }
 
     let playRecording = (entry) => {
-        app.playerApi.clearPlaylist();
-        app.recordingApi.getRecording(entry.id, app.playerApi.queueRecording.bind(app.playerApi));
-        app.playerApi.start();
+        api.clearCurrentPlaylist();
+        api.getRecording(entry.id, api.queueRecording.bind(api));
+        api.start();
     };
 
     root.getData = (entry) => {
@@ -81,15 +82,15 @@ function createRecordingList(app) {
                 entry.artist,
                 entry.title,
                 entry.recording_date,
-                { itemType: "recording-rating", itemId: entry.id, rating: entry.rating },
-                { itemType: "recording-sound-rating", itemId: entry.id, rating: entry.sound_rating },
+                new Rating("recording-rating", entry.id, entry.rating),
+                new Rating("recording-sound-rating", entry.id, entry.sound_rating),
                 { name: "album", action: e => window.location.href = "/recording/" + entry.id },
-                { name: "playlist_add", action: e => app.recordingApi.getRecording(entry.id, app.playerApi.queueRecording.bind(app.playerApi)) },
+                { name: "playlist_add", action: e => api.getRecording(entry.id, api.queueRecording.bind(api)) },
                 { name: "playlist_play", action: e => playRecording(entry) },
             ],
             action: {
                 selectId: entry.id,
-                expand: e => app.recordingApi.getRecording(entry.id, expandRow),
+                expand: e => api.getRecording(entry.id, expandRow),
                 collapse: e => collapseRow(entry.id)
             }
         };
@@ -98,7 +99,9 @@ function createRecordingList(app) {
     root.addHeading();
 
     document.title = "Browse Recordings";
-    app.container = root;
+    api.getSearchConfig("recording", root.configureSearch);
+    api.getAllRecordings(root.addRows);
+    return root;
 }
 
 export { createRecordingList };
