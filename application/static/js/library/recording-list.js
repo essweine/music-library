@@ -1,8 +1,8 @@
-import { createListRoot, createListRow } from "../shared/item-list.js";
-import { createSearchBar } from "../shared/item-list-search.js";
+import { Container, ContainerDefinition } from "../application.js";
+import { ListRoot, SearchBar } from "../shared/list.js";
 import { Rating } from "../api.js";
 
-function createRecordingList(api) { 
+function RecordingList() { 
 
     let columns = [
         { display: "Artist", className: "recording-list-artist", type: "text" },
@@ -14,28 +14,7 @@ function createRecordingList(api) {
         { display: "", className: "recording-list-queue", type: "icon" },
         { display: "", className: "recording-list-play", type: "icon" },
     ];
-
-    let root = createListRoot(columns, "recording-list-root", "recording-list-row");
-
-    let query = {
-        match: [ ],
-        exclude: [ ],
-        sort: [ "artist", "recording_date" ],
-        order: "asc",
-        official: true,
-        nonofficial: true,
-        unrated: false,
-    }
-    let search = createSearchBar(root, query, "recording-list-search");
-    root.configureSearch = (config) => search.initialize(config);
-
-    search.addCheckbox("Official", "official", "list-search-official");
-    search.addCheckbox("Non-official", "nonofficial", "list-search-nonofficial");
-    search.addCheckbox("Unrated Only", "unrated", "list-search-unrated");
-
-    root.append(search);
-
-    root.updateResults = (query) => api.query("recording", query, root.update);
+    ListRoot.call(this, columns, [ "recording-list-root" ]);
 
     let expandRow = (recording) => {
         let selected = document.getElementById(recording.id);
@@ -55,10 +34,8 @@ function createRecordingList(api) {
                 ],
                 action: null
             }
-            let row = root.createRow(data, true);
-            row.classList.add("track-" + recording.id);
-            row.classList.add("list-row-expanded");
-            (next != null) ? root.insertBefore(row, next) : root.append(row);
+            let row = this.createRow(data, [ "track-" + recording.id, "list-row-expanded" ]);
+            (next != null) ? this.root.insertBefore(row.root, next) : this.root.append(row.root);
         }
     }
 
@@ -71,13 +48,14 @@ function createRecordingList(api) {
     }
 
     let playRecording = (entry) => {
-        api.clearCurrentPlaylist();
-        api.getRecording(entry.id, api.queueRecording.bind(api));
-        api.start();
+        this.api.clearCurrentPlaylist();
+        this.api.getRecording(entry.id, this.api.queueRecording);
+        this.api.start();
     };
 
-    root.getData = (entry) => {
+    this.getData = (entry) => {
         return {
+            id: entry.id,
             values: [
                 entry.artist,
                 entry.title,
@@ -85,23 +63,40 @@ function createRecordingList(api) {
                 new Rating("recording-rating", entry.id, entry.rating),
                 new Rating("recording-sound-rating", entry.id, entry.sound_rating),
                 { name: "album", action: e => window.location.href = "/recording/" + entry.id },
-                { name: "playlist_add", action: e => api.getRecording(entry.id, api.queueRecording.bind(api)) },
+                { name: "playlist_add", action: e => this.api.getRecording(entry.id, this.api.queueRecording) },
                 { name: "playlist_play", action: e => playRecording(entry) },
             ],
             action: {
-                selectId: entry.id,
-                expand: e => api.getRecording(entry.id, expandRow),
+                expand: e => this.api.getRecording(entry.id, expandRow),
                 collapse: e => collapseRow(entry.id)
             }
         };
     }
 
-    root.addHeading();
+    this.refresh = function(query) { this.api.query("recording", query, this.update.bind(this)); }
+
+    let query = {
+        match: [ ],
+        exclude: [ ],
+        sort: [ "artist", "recording_date" ],
+        order: "asc",
+        official: true,
+        nonofficial: true,
+        unrated: false,
+    }
+    let search = new SearchBar(query, [ "recording-list-search" ], this.refresh.bind(this));
+    search.addCheckbox("Official", "official", "list-search-official");
+    search.addCheckbox("Non-official", "nonofficial", "list-search-nonofficial");
+    search.addCheckbox("Unrated Only", "unrated", "list-search-unrated");
+    this.root.append(search.root);
+
+    this.addHeading();
 
     document.title = "Browse Recordings";
-    api.getSearchConfig("recording", root.configureSearch);
-    api.getAllRecordings(root.addRows);
-    return root;
+    this.api.getAllRecordings(this.addRows.bind(this));
+    this.api.getSearchConfig("recording", search.configureOptions);
 }
+RecordingList.prototype = new Container;
 
-export { createRecordingList };
+export { RecordingList };
+

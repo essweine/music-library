@@ -96,7 +96,7 @@ function Api(errorHandler) {
 
     this.shuffleCurrentPlaylist = () => { this.sendTasks([ new Task("shuffle") ]); }
 
-    this.queue = (track) => { this.sendTasks([ new Task("add", { filename: track.filename }) ]); }
+    this.queue = (track) => { this.sendTasks([ new Task("add", { filename: track.filename, position: null }) ]); }
 
     this.queueRecording = (recording) => { this.queueTracks(recording.tracks); }
 

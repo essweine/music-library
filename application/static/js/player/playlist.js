@@ -1,20 +1,38 @@
-import { createTracklistControls } from "./controls.js";
-import { createTracklistContainer, createTracklistOption, addText } from "../shared/tracklist-container.js";
-import { createPlaylistEntry } from "../shared/playlist-entry.js";
-import { createIcon } from "../shared/icons.js";
+import { Container, ContainerDefinition } from "../application.js";
+import { Playlist } from "../shared/tracklist.js";
+import { Icon } from "../shared/widgets.js";
 import { Task } from "../api.js";
 
-function createPlaylist(api) {
+function TracklistControls() {
 
-    let tracklist = createTracklistContainer("playlist-entry");
-    tracklist.id = "player-tracklist";
+    let def = new ContainerDefinition("div", [ ], "playlist-controls");
+    let data = {
+        shuffle: null,
+        repeat: null,
+    };
+    Container.call(this, data, def);
 
-    tracklist.current = 0;
-    tracklist.currentView = "nextTracks";
-    tracklist.tracklistHidden = true;
-    tracklist.tracks = [ ];
-    tracklist.shuffle = null;
-    tracklist.repeat = null;
+    let shuffleIcon = new Icon("shuffle", e => this.api.shuffleCurrentPlaylist(), [ "control-icon" ]);
+    let repeatIcon  = new Icon("loop", e => this.api.repeatCurrentPlaylist(), [ "control-icon" ]);
+    let clearIcon   = new Icon("clear", e => this.api.clearCurrentPlaylist(), [ "control-icon" ]);
+
+    for (let icon of [ shuffleIcon, repeatIcon, clearIcon ])
+        this.root.append(icon.root);
+
+    this.update = (shuffle, repeat) => {
+        (shuffle) ? shuffleIcon.root.classList.remove("disabled-icon") : shuffleIcon.root.classList.add("disabled-icon");
+        (repeat) ? repeatIcon.root.classList.remove("disabled-icon") : repeatIcon.root.classList.add("disabled-icon");
+    }
+}
+TracklistControls.prototype = new Container;
+
+function CurrentPlaylist() {
+
+    Playlist.call(this, "player-tracklist");
+
+    this.data.current = 0;
+    this.data.currentView = "nextTracks";
+    this.data.tracklistHidden = true;
 
     let heading = document.createElement("div");
     heading.classList.add("tracklist-heading");
@@ -22,97 +40,80 @@ function createPlaylist(api) {
     let view = document.createElement("div");
     view.id = "playlist-view";
 
+    let updateView = (view) => function() {
+        this.data.currentView = view;
+        this.updateDisplay();
+    };
+
     let headingClass = "tracklist-heading-option";
     let selectedClass = "tracklist-heading-selected";
-    let updateView = (view) => function() {
-        tracklist.currentView = view;
-        tracklist.update(tracklist.tracks, tracklist.current, tracklist.shuffle, tracklist.repeat);
-    };
-
-    let nextTracksView = createTracklistOption("Next Tracks", headingClass, selectedClass, updateView("nextTracks"));
+    let nextTracksView = this.createOption("Next Tracks", headingClass, selectedClass, updateView("nextTracks").bind(this));
     nextTracksView.classList.add("tracklist-heading-selected");
     view.append(nextTracksView);
-
-    let playlistView = createTracklistOption("All Tracks", headingClass, selectedClass, updateView("allTracks"));
+    let playlistView = this.createOption("All Tracks", headingClass, selectedClass, updateView("allTracks").bind(this));
     view.append(playlistView);
-
     heading.append(view);
 
-    let controls = createTracklistControls(api);
-    heading.append(controls);
+    let controls = new TracklistControls();
+    heading.append(controls.root);
+    this.root.append(heading);
 
-    tracklist.append(heading);
-
-    tracklist.listToggle = document.createElement("div");
-    tracklist.listToggle.classList.add("list-toggle");
-    tracklist.listToggle.onclick = e => {
-        tracklist.tracklistHidden = !tracklist.tracklistHidden;
-        tracklist.updateToggle();
+    let listToggle = document.createElement("div");
+    listToggle.classList.add("list-toggle");
+    listToggle.onclick = e => {
+        this.data.tracklistHidden = !this.data.tracklistHidden;
+        this.updateDisplay();
     };
 
-    tracklist.shiftTrackUp = (position) => {
-        api.sendTasks([ new Task("move", { original: position, destination: position - 1 }) ]);
-        tracklist._shiftTrackUp(position);
-        tracklist.addToggle();
-    }
-
-    tracklist.removeTrack = (position) => {
-        api.sendTasks([ new Task("remove", { position: position }) ]);
-        tracklist._removeTrack(position);
-        tracklist.addToggle();
-    }
-
-    tracklist.addToggle = () => {
-        tracklist.listToggle.remove();
-        let children = tracklist.getElementsByClassName(tracklist.childClass);
-        if (children.length > 1)
-            tracklist.insertBefore(tracklist.listToggle, children.item(1));
-    }
-
-    tracklist.updateToggle = () => {
-        let entries = tracklist.getElementsByClassName(tracklist.childClass);
-        let action = (tracklist.tracklistHidden) ? "Expand" : "Collapse";
-        let more = entries.length - 1
-        if (more > 1)
-            tracklist.listToggle.innerText = action + " (" + more + " more tracks)";
-        else if (more == 1)
-            tracklist.listToggle.innerText = action + " (" + more + " more track)";
-        else
-            tracklist.listToggle.remove();
-        
-        if (entries.length > 1)
-            for (let i = 1; i < entries.length; i++)
-                entries.item(i).style.display = (tracklist.tracklistHidden) ? "none" : "contents";
-    }
-
-    tracklist.update = (tracks, current, shuffle, repeat) => {
-        tracklist.tracks = tracks;
-        tracklist.current = current;
-        tracklist.shuffle = shuffle;
-        tracklist.repeat = repeat;
-        controls.updateIcons(shuffle, repeat);
-        let entries = tracklist.tracks.map(track => createPlaylistEntry(tracklist, track));
-        for (let i = 0; i < entries.length; i++) {
-            let entry = entries[i];
-            entry.updatePosition(i, i == 0, i == entries.length - 1);
-            if (tracklist.currentView == "allTracks" && i == current)
-                entry.classList.add("playlist-entry-current");
-            if (tracklist.currentView == "nextTracks" && i == current + 1) {
-                entry.style["font-size"] = "large";
-                entry.moveUp.hide();
+    this.updateDisplay = function() {
+        for (let track of this.data.tracks) {
+            if (this.data.currentView == "allTracks") {
+                track.show();
+                track.root.style["font-size"] = "medium";
+                if (track.data.position == this.data.current)
+                    track.root.classList.add("playlist-entry-current");
+                if (track.data.position != 0)
+                    track.moveUp.show();
+            } else {
+                if (track.data.position <= this.data.current) {
+                    track.hide();
+                } else if (track.data.position == this.data.current + 1) {
+                    track.root.style["font-size"] = "large";
+                    track.moveUp.hide();
+                } else {
+                    (this.data.tracklistHidden) ? track.hide() : track.show();
+                }
             }
         }
-        let displayEntries = (tracklist.currentView == "nextTracks") ? entries.slice(tracklist.current + 1, tracklist.length) : entries;
-        tracklist._update(displayEntries);
-        if (tracklist.currentView == "nextTracks") {
-            tracklist.addToggle();
-            tracklist.updateToggle();
-        } else {
-            tracklist.listToggle.remove();
-        }
+        if (this.data.currentView == "nextTracks") {
+            let more = this.data.tracks.length - this.data.current - 1;
+            if (more > 0) {
+                let action = (this.data.tracklistHidden) ? "Expand" : "Collapse";
+                if (more > 1)
+                    listToggle.innerText = action + " (" + more + " more tracks)";
+                else if (more == 1)
+                    listToggle.innerText = action + " (" + more + " more track)";
+                this.root.insertBefore(listToggle, this.data.tracks[this.data.current + 2].root);
+            }
+        } else { listToggle.remove(); }
     }
 
-    return tracklist;
-}
+    this.update = function(state) {
+        this.clear();
+        this.data.current = state.current;
+        this.setTracklist(state.playlist);
+        this.updateDisplay();
+        controls.update(state.shuffle, state.repeat);
+    }
 
-export { createPlaylist };
+    this.shiftTrackUp = (position) => {
+        this.api.sendTasks([ new Task("move", { original: position, destination: position - 1 }) ]);
+    }
+
+    this.removeTrack = (position) => {
+        this.api.sendTasks([ new Task("remove", { position: position }) ]);
+    }
+}
+CurrentPlaylist.prototype = new Container;
+
+export { CurrentPlaylist };

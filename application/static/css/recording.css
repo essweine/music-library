@@ -47,6 +47,9 @@
 .taglist-label, .recording-data > .editable-label { grid-column: 1; }
 .taglist-values, .recording-data > .editable-input { grid-column: 2; }
 
+.recording-track-taglist { grid-column: 2; }
+.recording-track-taglist.editable-taglist { grid-column: 3; }
+
 .recording-official {
     grid-column: 1 / 3;
     display: flex;

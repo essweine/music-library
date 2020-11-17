@@ -1,63 +1,78 @@
 import { Api } from "./api.js";
 
-import { createDirectoryList } from "./library/directory-list.js";
-import { createRecordingList } from "./library/recording-list.js";
-import { createPlaylistList } from "./library/playlist-list.js";
-import { createPlaylistEditor } from "./library/playlist-editor.js";
-import { createImportContainer, createRecordingContainer } from "./library/container.js";
-import { createPlayerContainer } from "./player/container.js";
-import { createHistoryContainer } from "./history-container.js";
-import { createRadioContainer } from "./radio-container.js";
-import { createLogManager } from "./log-manager.js";
-import { createErrorDisplay } from "./error-display.js";
+import { ErrorDisplay, LogManager } from "./errors.js";
+import { DirectoryList } from "./library/directory.js";
+import { RecordingList } from "./library/recording-list.js";
+import { RecordingDisplay, ImportDisplay } from "./library/recording.js";
+import { PlaylistList, PlaylistEditor } from "./library/playlist.js";
+import { RadioContainer } from "./library/radio.js";
+import { Player } from "./player/container.js";
+import { RecentlyPlayedTracklist } from "./player/history.js";
+
+function ContainerDefinition(type = "div", classes = [ ], id = null) {
+    this.type    = type;
+    this.classes = classes;
+    this.id      = id;
+}
+
+function Container(data = { }, container = new ContainerDefinition) {
+    this.data = data;
+    this.root = document.createElement(container.type);
+    container.classes.map(name => this.root.classList.add(name));
+    if (container.id != null)
+        this.root.id = container.id;
+}
 
 function Application(action, arg) {
 
     this.addContainer = (action, arg) => {
+        let container;
         if (action == "importer" && arg != null) {
-            this.container = createImportContainer(this.api, arg);
+            container = new ImportDisplay(arg);
         } else if (action == "importer") {
-            this.container = createDirectoryList(this.api);
+            container = new DirectoryList();
         } else if (action == "recording" && arg != null) {
-            this.container = createRecordingContainer(this.api, arg);
+            container = new RecordingDisplay(arg);
         } else if (action == "recording") {
-            this.container = createRecordingList(this.api);
+            container = new RecordingList();
         } else if (action == "history") {
-            let ws = this.getNotificationService(this.api.playerNotification);
-            this.container = createHistoryContainer(this.api, ws);
+            container = new RecentlyPlayedTracklist();
         } else if (action == "playlist" && arg != null) {
-            this.container = createPlaylistEditor(this.api, arg);
+            container = new PlaylistEditor(arg);
         } else if (action == "playlist") {
-            this.container = createPlaylistList(this.api);
+            container = new PlaylistList();
         } else if (action == "radio") {
-            this.container = createRadioContainer(this.api);
+            container = new RadioContainer();
         } else if (action == "log") {
-            let ws = this.getNotificationService(this.api.logNotification);
-            this.container = createLogManager(ws);
+            container = new LogManager();
         } else {
-            let ws = this.getNotificationService(this.api.playerNotification);
-            this.container = createPlayerContainer(this.api, ws);
+            container = new Player();
         }
+        this.container = container.root;
+        this.content.append(this.container);
     }
 
-    this.errorHandler = (messages) => {
-        let container = createErrorDisplay(messages);
-        this.content.replaceChild(container, this.container);
+    this.content = document.getElementById("content");
+
+    this.errorHandler = function(messages) {
+        let container = new ErrorDisplay(messages);
+        this.content.replaceChild(container.root, this.container);
     }
 
-    this.getNotificationService = (path) => {
+    Container.prototype.api = new Api(this.errorHandler.bind(this));
+
+    Container.prototype.getNotificationService = function(path) {
         let wsUrl = "ws://" + location.host + path;
         let ws = new WebSocket(wsUrl);
         ws.addEventListener("open", e => { });
         return ws;
     }
 
-    this.api = new Api(this.errorHandler.bind(this));
-    this.content = document.getElementById("content");
     this.addContainer(action, arg);
     this.content.addEventListener("update-rating", ev => this.api.updateRating(ev.detail))
-    this.content.append(this.container);
 }
+
+export { Container, ContainerDefinition };
 
 window.onload = e => {
     let path = window.location.pathname.split("/");

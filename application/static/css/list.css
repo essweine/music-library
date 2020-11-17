@@ -70,13 +70,14 @@
 .recording-list-play { grid-column: 8; }
 
 /* -- Playlist list layout --- */
-.playlist-list-search { grid-column: 1 / 7; }
+.playlist-list-search { grid-column: 1 / 8; }
 .playlist-list-name { grid-column: 1 }
 .playlist-list-tracks { grid-column: 2 }
 .playlist-list-rating { grid-column: 3 }
 .playlist-list-view { grid-column: 4 }
 .playlist-list-queue { grid-column: 5 }
 .playlist-list-play { grid-column: 6 }
+.playlist-list-delete { grid-column: 7 }
 
 .playlist-add-new {
     font-size: large;
