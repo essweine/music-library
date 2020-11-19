@@ -2,12 +2,11 @@ AUDIO_FILETYPES = [ "flac", "shn" ]
 TEXT_FILETYPES = [ "txt" ]
 IMAGE_FILETYPES = [ "png", "jpeg", "jpg", "gif" ]
 
-from .library.recording import RecordingTable, TrackTable, RecordingTrackView, LibraryTrackView
-from .library.recording_summary import RecordingArtistView, RecordingSummaryView
+from .library.recording import RecordingTable, TrackTable, LibraryTrackView
+from .library.search import RecordingArtistView, RecordingSummaryView, RecordingTrackView, LibrarySearchView, PlaylistTrackView
 from .library.property import PropertyTable
-from .library.search import LibrarySearchView
 from .library.station import StationTable
-from .library.playlist import PlaylistTable, PlaylistEntryTable, PlaylistTrackView
+from .library.playlist import PlaylistTable, PlaylistEntryTable
 
 from .player.history import HistoryTable, HistoryTrackView
 

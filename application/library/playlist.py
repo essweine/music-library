@@ -1,10 +1,8 @@
 from datetime import datetime
 from uuid import uuid4
 
-from ..util import BaseObject
-from ..util.db import Column, Subquery, Table, ItemTable, JoinedView, Query
-from .property import PropertyAggregate, TRACK_PROPS, TRACK_AGGREGATE
-from .recording import RecordingTrackView
+from ..util import BaseObject, Search
+from ..util.db import Column, Table, ItemTable, Query
 
 PLAYLIST_COLUMNS = [
     Column("id", "text", False, True),
@@ -23,17 +21,14 @@ PLAYLIST_ENTRY_COLUMNS = [
 ]
 PlaylistEntryTable = Table("playlist_entry", PLAYLIST_ENTRY_COLUMNS)
 
-PLAYLIST_SUBQUERY = Subquery([
-    ("recording_id", None),
-    ("filename", None),
-    ("title", None),
-    ("rating", None),
-    ("recording", None),
-    ("artwork", None),
-], RecordingTrackView, False)
-PlaylistTrackView = JoinedView("playlist_track", (PLAYLIST_SUBQUERY, TRACK_PROPS), TRACK_AGGREGATE)
+PLAYLIST_SEARCH_OPTIONS = {
+    "name": ("text", "Name"),
+    "rating": ("rating", "Minimum Rating"),
+}
 
 class Playlist(BaseObject):
+
+    Search = Search(PLAYLIST_SEARCH_OPTIONS, PlaylistTable, ("id", None), [ "name" ])
 
     def __init__(self, **playlist):
 
@@ -55,7 +50,18 @@ class Playlist(BaseObject):
     @classmethod
     def get_all(cls, cursor):
 
-        PlaylistTable.get_all(cursor, Playlist.row_factory, "name")
+        PlaylistTable.get_all(cursor, cls.row_factory, "name")
+
+    @classmethod
+    def search(cls, cursor, params):
+
+        query = Query(PlaylistTable, distinct = True)
+        cls.Search.get_items(cursor, query, "id", params, cls.row_factory)
+
+    @classmethod
+    def search_configuration(cls, cursor):
+
+        return cls.Search.get_configuration(cursor)
 
     @staticmethod
     def create(cursor):
@@ -98,7 +104,7 @@ class PlaylistEntry(BaseObject):
     @classmethod
     def get(cls, cursor, playlist_id):
 
-        Query("playlist_entry",
+        Query(PlaylistEntryTable,
             select = [ ("filename", None) ],
             order = "track_num"
         ).compare("playlist_id", playlist_id, "=").execute(cursor, cls.row_factory)
@@ -118,27 +124,4 @@ class PlaylistEntry(BaseObject):
             entry = { "playlist_id": playlist_id, "filename": filename, "track_num": idx }
             PlaylistEntryTable.insert(cursor, entry)
 
-class PlaylistTrack(PropertyAggregate):
-
-    PROPERTIES = [ "artist" ]
-
-    def __init__(self, **track):
-
-        super(PlaylistTrack, self).__init__(track)
-        for name, definition in PLAYLIST_SUBQUERY.columns:
-            self.__setattr__(name, track.get(name))
-
-    @classmethod
-    def from_filenames(cls, cursor, filenames):
-
-        sort = lambda track: filenames.index(track.filename)
-        Query("playlist_track").compare_set("filename", filenames).execute(cursor, cls.row_factory)
-        return sorted(cursor.fetchall(), key = sort)
-
-    @classmethod
-    def from_playlist_id(cls, cursor, playlist_id):
-
-        PlaylistEntry.get(cursor, playlist_id)
-        filenames = [ entry.filename for entry in cursor.fetchall() ]
-        return cls.from_filenames(cursor, filenames)
 

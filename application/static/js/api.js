@@ -17,10 +17,10 @@ function Api(errorHandler) {
 
     this.importer  = "/api/importer";
     this.recording = "/api/recording";
+    this.track     = "/api/track";
     this.playlist  = "/api/playlist";
     this.station   = "/api/station";
     this.rating    = "/api/rating";
-    this.search    = "/api/search";
     this.history   = "/api/history";
     this.player    = "/api/player";
 
@@ -35,13 +35,17 @@ function Api(errorHandler) {
 
     /* --- Library requests --- */
 
+    this.getSearchConfig = (base, callback) => { this.get(base + "/search", callback); }
+
+    this.query = (base, query, callback) => { this.post(base + "/search", query, callback); }
+
     this.getAllRecordings = (callback) => { this.get(this.recording, callback); }
 
     this.getRecording = (recordingId, callback) => { this.get(this.recording + "/" + recordingId, callback); }
 
     this.addToLibrary = (data) => { 
-        let callback = response => window.location = "/recording/" + data.id;
-        this.post(this.recording + "/" + data.id, data, callback);
+        let callback = response => window.location = "/recording/" + response.id;
+        this.post(this.recording, data, callback);
     }
 
     this.saveRecording = (data) => { this.put(this.recording + "/" + data.id, data, NoOp); }
@@ -52,7 +56,7 @@ function Api(errorHandler) {
 
     this.getPlaylist = (playlistId, callback) => { this.get(this.playlist + "/" + playlistId, callback); }
 
-    this.getPlaylistTracks = (playlistId, callback) => { this.get(this.playlist + "/tracks/" + playlistId, callback); }
+    this.getPlaylistTracks = (playlistId, callback) => { this.get(this.playlist + "/" + playlistId + "/tracks", callback); }
 
     this.savePlaylist = (data) => { this.put(this.playlist + "/" + data.id, data); }
 
@@ -62,15 +66,11 @@ function Api(errorHandler) {
 
     this.saveStation = (data, callback) => { this.put(this.station + "/" + data.id, data, callback); }
 
-    this.addStation = (data, callback) => { this.post(this.station + "/" + data.name, data, callback); }
+    this.createStation = (data, callback) => { this.post(this.station, data, callback); }
 
     this.deleteStation = (station_id, callback) => { this.httpDelete(this.station + "/" + station_id, callback); }
 
     this.updateRating = (rating) => { this.post(this.rating, rating, NoOp); }
-
-    this.getSearchConfig = (itemType, callback) => { this.get(this.search + "/" + itemType, callback); }
-
-    this.query = (itemType, query, callback) => { this.post(this.search + "/" + itemType, query, callback); }
 
     this.getRecentTracks = (period, callback) => {
         let end = new Date(Date.now());

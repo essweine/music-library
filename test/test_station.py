@@ -4,11 +4,12 @@ import os
 
 from uuid import uuid4
 from datetime import date
+from copy import deepcopy
 
 from application.importer import DirectoryService
-from application.library.station import Station
+from application.library.station import Station, STATION_SEARCH_OPTIONS
+from application.util.search import DEFAULT_QUERY
 from application.library.rating_handler import Rating
-from application.library.search import Search, STATION_OPTIONS
 from application.config import TABLES, VIEWS
 from . import ROOT_PATH, DEFAULT_INDEX, DB_NAME
 
@@ -22,6 +23,8 @@ class TestStation(unittest.TestCase):
             { "name": "Viva la Voce", "website": "", "url": "https://16803.live.streamtheworld.com/WETAVLV.mp3" },
             { "name": "Bluegrass Country", "website": "https://bluegrasscountry.org", "url": "https://ice24.securenetsystems.net/WAMU" },
         ]
+        cls.default_query = DEFAULT_QUERY
+        cls.default_query["sort"] = [ "name" ]
 
     @classmethod
     def tearDownClass(cls):
@@ -37,13 +40,6 @@ class TestStation(unittest.TestCase):
             item.initialize(cursor)
         self.conn.commit()
         cursor.close()
-
-    def build_search_params(self, **params):
-
-        return { 
-            "match": params.get("match", [ ]),
-            "exclude": params.get("exclude", [ ]),
-        }
 
     def test_001_create_station(self):
 
@@ -75,27 +71,34 @@ class TestStation(unittest.TestCase):
     def test_003_search_config(self):
 
         cursor = self.conn.cursor()
-        config = Search.configuration(cursor, "station")
+        config = Station.search_configuration(cursor)
 
-        order = sorted(STATION_OPTIONS, key = lambda k: STATION_OPTIONS[k][1])
-        self.assertListEqual(order, list(config.keys()))
+        default_query = config["default_query"]
+        self.assertEqual(default_query, self.default_query)
 
-        self.assertEqual(config["name"]["type"], STATION_OPTIONS["name"][0])
-        self.assertEqual(config["name"]["display"], STATION_OPTIONS["name"][1])
-        self.assertEqual(len(config["name"]["values"]), 0)
+        search_options = config["search_options"]
+
+        order = sorted(STATION_SEARCH_OPTIONS, key = lambda k: STATION_SEARCH_OPTIONS[k][1])
+        self.assertListEqual(order, list(search_options.keys()))
+
+        self.assertEqual(search_options["name"]["type"], STATION_SEARCH_OPTIONS["name"][0])
+        self.assertEqual(search_options["name"]["display"], STATION_SEARCH_OPTIONS["name"][1])
+        self.assertEqual(len(search_options["name"]["values"]), 0)
         cursor.close()
         
     def test_004_search_stations(self):
 
         cursor = self.conn.cursor()
 
-        name_search = self.build_search_params(match = [ { "name": "Bluegrass Country" } ])
-        Search.search(cursor, "station", name_search)
+        name_search = deepcopy(self.default_query)
+        name_search["match"].append({ "name": "Bluegrass Country" })
+        Station.search(cursor, name_search)
         name_result = [ row for row in cursor ]
         self.assertEqual(len(name_result), 1)
         self.assertEqual(name_result[0].name, "Bluegrass Country")
 
-        rating_search = self.build_search_params(match = [ { "rating": 5 } ])
+        rating_search = deepcopy(self.default_query)
+        rating_search["match"].append({ "rating": 5 })
         rating_result = [ row for row in cursor ]
         self.assertEqual(len(name_result), 1)
         self.assertEqual(name_result[0].name, "Bluegrass Country")

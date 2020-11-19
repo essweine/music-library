@@ -1,7 +1,5 @@
-import sqlite3, re
 from datetime import datetime
 from dateutil.parser import parse as parsedate
-from itertools import chain
 
 from ..util.db import Column, Subquery, ItemTable, JoinedView, Query
 from ..util import BaseObject
@@ -30,19 +28,9 @@ TRACK_COLUMNS = [
     Column("rating", "int", True, True),
 ]
 TrackTable = ItemTable("track", TRACK_COLUMNS, "filename")
-
 TRACK_SUBQUERY = Subquery([ (col.name, None) for col in TRACK_COLUMNS ], TrackTable, False)
-RECORDING_SUBQUERY = Subquery([
-    ("recording_id", "id"),
-    ("recording", "title"),
-    ("artwork", None),
-    ("recording_date", None),
-    ("recording_rating", "rating"),
-    ("sound_rating", None),
-    ("official", None),
-], RecordingTable, False)
-RecordingTrackView = JoinedView("recording_track", (TRACK_SUBQUERY, RECORDING_SUBQUERY))
 
+# This view adds one-to-many properties stored in the property table to the tracks
 LibraryTrackView = JoinedView("library_track", (TRACK_SUBQUERY, TRACK_PROPS), TRACK_AGGREGATE)
 
 class Recording(BaseObject):
@@ -59,7 +47,7 @@ class Recording(BaseObject):
         RecordingTable.get(cursor, recording_id)
         recording = cursor.fetchone()
         if recording is not None:
-            query = Query(LibraryTrackView.name).compare("recording_id", recording_id, "=")
+            query = Query(LibraryTrackView, order = "track_num").compare("recording_id", recording_id, "=")
             query.execute(cursor, LibraryTrack.row_factory)
             recording = dict(recording)
             recording["tracks"] = cursor.fetchall()
@@ -72,10 +60,10 @@ class Recording(BaseObject):
 
         recording["added_date"] = datetime.utcnow().strftime("%Y-%m-%d")
         RecordingTable.insert(cursor, recording)
-
         for track in recording.get("tracks", [ ]):
             track["recording_id"] = recording["id"]
             LibraryTrack.create(cursor, track)
+        return recording["id"]
 
     @staticmethod
     def update(cursor, recording):

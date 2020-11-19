@@ -102,10 +102,10 @@ function SearchParam(data, remove) {
 }
 SearchParam.prototype = new Container;
 
-function SearchBar(query, classes, updateResults) {
+function SearchBar(classes, updateResults) {
 
     let def = new ContainerDefinition("div", classes.concat([ "list-search-bar" ]))
-    Container.call(this, query, def);
+    Container.call(this, { }, def);
 
     this.currentQuery = function() { return this.data; }
 
@@ -155,7 +155,10 @@ function SearchBar(query, classes, updateResults) {
     let select = new SearchOptions(this.addParam);
     this.root.append(select.root);
 
-    this.configureOptions = function (config) { select.configure(config); }
+    this.configure = (config) => {
+        this.data = config.default_query;
+        select.configure(config.search_options); 
+    }
 
     let showIcon = new Icon("visibility", e => this.addParam(false), [ "list-search-show" ]);
     this.root.append(showIcon.root);

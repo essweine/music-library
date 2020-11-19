@@ -1,47 +1,55 @@
-import sqlite3, re
-from datetime import datetime
-from dateutil.parser import parse as parsedate
-
+from ..util import BaseObject, Search
 from ..util.db import Subquery, JoinedView, Query
-from .property import TRACK_PROPS
-from .recording import RecordingTrackView
-from .recording_summary import RecordingSummary
-from .playlist import Playlist, PlaylistTable, PlaylistTrack
-from .station import Station, StationTable
+from .property import PropertyAggregate, PropertyView, TRACK_AGGREGATE, TRACK_PROPS
+from .recording import RecordingTable, TrackTable
+from .playlist import PlaylistEntry
 
-RECORDING_OPTIONS = {
-    "recording": ("text", "Title"),
-    "recording_rating": ("rating", "Minimum Rating"),
-    "sound_rating": ("rating", "Minimum Sound Rating"),
-    "recording_date": ("date_search", "Date"),
-    "title": ("text", "Contains Track"),
-    "artist": ("category", "Artist"),
-    "composer": ("category", "Composer"),
-    "genre": ("options", "Genre"),
-}
+SUMMARY_SUBQUERY = Subquery([
+    ("id", None),
+    ("title", None),
+    ("recording_date", None),
+    ("rating", None),
+    ("sound_rating", None),
+    ("official", None),
+], RecordingTable, False)
 
-TRACK_OPTIONS = {
-    "recording": ("text", "From Recording"),
-    "title": ("text", "Title"),
-    "rating": ("rating", "Minimum Rating"),
-    "artist": ("category", "Artist"),
-    "guest": ("category", "Guest Artist"),
-    "composer": ("category", "Composer"),
-    "genre": ("options", "Genre"),
-}
+RecordingArtistView = PropertyView("artist", "recording_id")
 
-PLAYLIST_OPTIONS = {
-    "name": ("text", "Name"),
-    "rating": ("rating", "Minimum Rating"),
-}
+ARTIST_SUBQUERY = Subquery([
+    ("id", "recording_id"),
+    ("artist", "value"),
+], RecordingArtistView, False)
 
-STATION_OPTIONS = {
-    "name": ("text", "Name"),
-    "rating": ("rating", "Minimum Rating"),
-    "minutes_listened": ("number", "Minutes Listened"),
-    "last_listened": ("date", "Listened Since"),
-}
+# This view links the track data stored with the artist to the recording
+RecordingSummaryView = JoinedView("recording_summary", (SUMMARY_SUBQUERY, ARTIST_SUBQUERY))
 
+# This view links data stored with the track to data stored with the recording
+TRACK_SUBQUERY = Subquery([ (col.name, None) for col in TrackTable.columns ], TrackTable, False)
+RECORDING_SUBQUERY = Subquery([
+    ("recording_id", "id"),
+    ("recording", "title"),
+    ("artwork", None),
+    ("recording_date", None),
+    ("recording_rating", "rating"),
+    ("sound_rating", None),
+    ("official", None),
+], RecordingTable, False)
+RecordingTrackView = JoinedView("recording_track", (TRACK_SUBQUERY, RECORDING_SUBQUERY))
+
+# This view adds aggregated property data to the combined recording/track data
+# There is one row per filename, which contains all the data the player needs to display the track
+PLAYLIST_SUBQUERY = Subquery([
+    ("recording_id", None),
+    ("filename", None),
+    ("title", None),
+    ("rating", None),
+    ("recording", None),
+    ("artwork", None),
+], RecordingTrackView, False)
+PlaylistTrackView = JoinedView("playlist_track", (PLAYLIST_SUBQUERY, TRACK_PROPS), TRACK_AGGREGATE)
+
+# This view adds unaggregated property data to the combined recording/track data
+# There is one row per property per filename, which allows searching for tracks by property value
 TRACK_SEARCH_SUBQUERY = Subquery([
     ("recording_id", None),
     ("filename", None),
@@ -53,218 +61,89 @@ TRACK_SEARCH_SUBQUERY = Subquery([
     ("sound_rating", None),
     ("official", None),
 ], RecordingTrackView, False)
-
 LibrarySearchView = JoinedView("library_search", (TRACK_SEARCH_SUBQUERY, TRACK_PROPS))
 
-class Search(object):
+RECORDING_SEARCH_OPTIONS = {
+    "recording": ("text", "Title"),
+    "recording_rating": ("rating", "Minimum Rating"),
+    "sound_rating": ("rating", "Minimum Sound Rating"),
+    "recording_date": ("date_search", "Date"),
+    "title": ("text", "Contains Track"),
+    "artist": ("category", "Artist"),
+    "composer": ("category", "Composer"),
+    "genre": ("options", "Genre"),
+}
 
-    OPERATORS = {
-        "text": "like",
-        "rating": ">=",
-        "category": "like",
-        "options": "like",
-        "timestamp": ">=",
-        "number": ">=",
-    }
+TRACK_SEARCH_OPTIONS = {
+    "recording": ("text", "From Recording"),
+    "title": ("text", "Title"),
+    "rating": ("rating", "Minimum Rating"),
+    "artist": ("category", "Artist"),
+    "guest": ("category", "Guest Artist"),
+    "composer": ("category", "Composer"),
+    "genre": ("options", "Genre"),
+}
 
-    @classmethod
-    def search(cls, cursor, item_type, params):
+class RecordingSummary(BaseObject):
 
-        if item_type == "recording":
-            cls.recording(cursor, params)
-        elif item_type == "track":
-            cls.track(cursor, params)
-        elif item_type == "playlist":
-            cls.playlist(cursor, params)
-        elif item_type == "station":
-            cls.station(cursor, params)
-        else:
-            raise ValueError(f"Invalid search type")
+    Search = Search(RECORDING_SEARCH_OPTIONS, LibrarySearchView, ("recording_id", None), [ "artist", "recording_date" ])
 
-    @classmethod
-    def recording(cls, cursor, params):
+    def __init__(self, **recording):
 
-        match = Query(LibrarySearchView.name, [ ("recording_id", None) ], True)
-        cls._parse_params(match, params["match"], RECORDING_OPTIONS, True)
-
-        exclude = Query(LibrarySearchView.name, [ ("recording_id", None) ], True)
-        cls._parse_params(exclude, params["exclude"], RECORDING_OPTIONS, False)
-
-        if not params["official"] and params["nonofficial"]:
-            match.compare("official", False, "=")
-        elif not params["nonofficial"] and params["official"]:
-            match.compare("official", True, "=")
-
-        if params["unrated"]:
-            match.compare("recording_rating", None, "is")
-
-        order = "order by " + ", ".join(params["sort"]) + " " + params["order"]
-
-        if match.conditions and exclude.conditions:
-            query = f"select * from recording_summary where id in ({match}) and id not in ({exclude}) {order}"
-        elif match.conditions:
-            query = f"select * from recording_summary where id in ({match}) {order}"
-        elif exclude.conditions:
-            query = f"select * from recording_summary where id not in ({exclude}) {order}"
-        else:
-            query = f"select * from recording_summary {order}"
-
-        cursor.row_factory = RecordingSummary.row_factory
-        cursor.execute(query, match.values + exclude.values)
+        for name, definition in SUMMARY_SUBQUERY.columns + ARTIST_SUBQUERY.columns:
+            self.__setattr__(name, recording.get(name))
+        self.artist = sorted(self.artist.split("::"))
 
     @classmethod
-    def track(cls, cursor, params):
+    def get_all(cls, cursor):
 
-        match = Query(LibrarySearchView.name, [ ("filename", None) ], True)
-        cls._parse_params(match, params["match"], TRACK_OPTIONS, True)
-
-        exclude = Query(LibrarySearchView.name, [ ("filename", None) ], True)
-        cls._parse_params(exclude, params["exclude"], TRACK_OPTIONS, False)
-
-        if not params["official"] and params["nonofficial"]:
-            match.compare("official", False, "=")
-        elif not params["nonofficial"] and params["official"]:
-            match.compare("official", True, "=")
-
-        if params["unrated"]:
-            match.compare("rating", None, "is")
-
-        if match.conditions and exclude.conditions:
-            query = f"select * from playlist_track where filename in ({match}) and filename not in ({exclude})"
-        elif match.conditions:
-            query = f"select * from playlist_track where filename in ({match})"
-        elif exclude.conditions:
-            query = f"select * from playlist_track where filename not in ({exclude})"
-        else:
-            query = f"select * from playlist_track limit 0"
-
-        cursor.row_factory = PlaylistTrack.row_factory
-        cursor.execute(query, match.values + exclude.values)
+        RecordingSummaryView.get_all(cursor, cls.row_factory, "artist")
 
     @classmethod
-    def playlist(cls, cursor, params):
+    def search(cls, cursor, params):
 
-        match = Query(PlaylistTable.name, [ ("id", None) ], True)
-        cls._parse_params(match, params["match"], PLAYLIST_OPTIONS, True)
-
-        exclude = Query(PlaylistTable.name, [ ("id", None) ], True)
-        cls._parse_params(exclude, params["exclude"], PLAYLIST_OPTIONS, False)
-
-        if params["unrated"]:
-            match.compare("rating", None, "is")
-
-        order = "order by " + ", ".join(params["sort"]) + " " + params["order"]
-
-        if match.conditions and exclude.conditions:
-            query = f"select * from playlist where id in ({match}) and id not in ({exclude}) {order}"
-        elif match.conditions:
-            query = f"select * from playlist where id in ({match}) {order}"
-        elif exclude.conditions:
-            query = f"select * from playlist where id not in ({exclude}) {order}"
-        else:
-            query = f"select * from playlist {order}"
-
-        cursor.row_factory = Playlist.row_factory
-        cursor.execute(query, match.values + exclude.values)
+        query = Query(RecordingSummaryView, distinct = True)
+        cls.Search.get_items(cursor, query, "id", params, cls.row_factory)
 
     @classmethod
-    def station(cls, cursor, params):
+    def search_configuration(cls, cursor):
 
-        match = Query(StationTable.name, [ ("id", None) ], True)
-        cls._parse_params(match, params["match"], STATION_OPTIONS, True)
+        return cls.Search.get_configuration(cursor)
 
-        exclude = Query(StationTable.name, [ ("id", None) ], True)
-        cls._parse_params(exclude, params["exclude"], STATION_OPTIONS, True)
+class PlaylistTrack(PropertyAggregate):
 
-        if match.conditions and exclude.conditions:
-            query = f"select * from station where id in ({match}) and id not in ({exclude})"
-        elif match.conditions:
-            query = f"select * from station where id in ({match})"
-        elif exclude.conditions:
-            query = f"select * from station where id not in ({exclude})"
-        else:
-            query = f"select * from station"
+    PROPERTIES = [ "artist" ]
 
-        cursor.row_factory = Station.row_factory
-        cursor.execute(query, match.values + exclude.values)
-    
-    @classmethod
-    def configuration(cls, cursor, search_type):
+    Search = Search(TRACK_SEARCH_OPTIONS, LibrarySearchView, ("filename", None), [ "title" ])
 
-        if search_type == "recording":
-            options = RECORDING_OPTIONS
-        elif search_type == "track":
-            options = TRACK_OPTIONS
-        elif search_type == "playlist":
-            options = PLAYLIST_OPTIONS
-        elif search_type == "station":
-            options = STATION_OPTIONS
-        else:
-            raise ValueError("Invalid search type")
+    def __init__(self, **track):
 
-        config = { }
-        # Sort this by display name
-        for param, details in sorted(options.items(), key = lambda v: v[1][1]):
-            param_type, display = details
-            config[param] = {
-                "display": display,
-                "type": param_type if param_type in [ "options", "rating", "date_search" ] else "text",
-                "values": [ ],
-            }
-            if param_type == "options":
-                values = cls.property_values(cursor, param)
-                config[param]["values"] = values[param]
-        return config
+        super(PlaylistTrack, self).__init__(track)
+        for name, definition in PLAYLIST_SUBQUERY.columns:
+            self.__setattr__(name, track.get(name))
 
     @classmethod
-    def property_values(cls, cursor, prop_name):
+    def search(cls, cursor, params):
 
-        cursor.execute("select distinct value from property where category=? order by value", (prop_name, ))
-        return { prop_name: [ val for (val, ) in cursor.fetchall() ] }
+        query = Query(PlaylistTrackView, distinct = True)
+        cls.Search.get_items(cursor, query, "filename", params, cls.row_factory)
 
     @classmethod
-    def _parse_params(cls, query, params, options, cond_type):
+    def search_configuration(cls, cursor):
 
-        for item in params:
-            param, val = item.popitem()
-            param_type, display = options[param]
-            if param_type == "date_search":
-                cls._parse_date(query, val, cond_type)
-            elif param_type in [ "category", "options" ]:
-                op = cls.OPERATORS[param_type]
-                query.compare("category", param, "=")
-                if param_type == "options":
-                    query.compare("value", val, "=")
-                else:
-                    query.contains("value", val)
-            elif param_type == "text":
-                query.contains(param, val)
-            else:
-                query.compare(param, val, cls.OPERATORS[param_type])
+        return cls.Search.get_configuration(cursor)
 
-    @staticmethod
-    def _parse_date(query, val, match):
+    @classmethod
+    def from_filenames(cls, cursor, filenames):
 
-        if "*" in val:
-            try:
-                year, month, day = re.split("[-/]", re.sub("\*+", "%", val))
-                month = month.zfill(2) if month != "%" else month
-                day = day.zfill(2) if day != "%" else day
-            except:
-                raise Exception(f"Invalid date query: {val}")
+        sort = lambda track: filenames.index(track.filename)
+        Query(PlaylistTrackView).compare_set("filename", filenames).execute(cursor, cls.row_factory)
+        return sorted(cursor.fetchall(), key = sort)
 
-            if year != "%":
-                if "%" in year:
-                    op = "like" if match else "not like"
-                else:
-                    op = "=" if match else "!="
-                query.compare(f"strftime('%Y', recording_date)", year, op)
+    @classmethod
+    def from_playlist_id(cls, cursor, playlist_id):
 
-            if month != "%":
-                query.compare(f"strftime('%m', recording_date)", month, "=" if match else "!=")
+        PlaylistEntry.get(cursor, playlist_id)
+        filenames = [ entry.filename for entry in cursor.fetchall() ]
+        return cls.from_filenames(cursor, filenames)
 
-            if day != "%":
-                query.compare(f"strftime('%d', recording_date)", day, "=" if match else "!=")
-
-        else:
-            query.compare("recording_date", val, "=" if match else "!=")

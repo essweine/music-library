@@ -55,7 +55,7 @@ function PlaylistList() {
         this.api.start();
     };
 
-    let deletePlaylist = (playlistId) => this.api.deletePlaylist(playlistId, this.refresh.bind(this));
+    let deletePlaylist = (playlistId) => this.api.deletePlaylist(playlistId, this.refresh.bind(this, this.search.currentQuery()));
 
     this.getData = (entry) => {
         return {
@@ -76,19 +76,12 @@ function PlaylistList() {
         }
     }
 
-    this.refresh = function(query = this.currentQuery()) { this.api.query("playlist", query, this.update.bind(this)); }
+    this.refresh = function(query = this.currentQuery()) { this.api.query(this.api.playlist, query, this.update.bind(this)); }
 
-    let query = {
-        match: [ ],
-        exclude: [ ],
-        sort: [ "name" ],
-        order: "asc",
-        unrated: false,
-    }
-    let search = new SearchBar(query, [ "playlist-list-search" ], this.refresh.bind(this));
-    search.addCheckbox("Unrated Only", "unrated", "list-search-unrated");
+    this.search = new SearchBar([ "playlist-list-search" ], this.refresh.bind(this));
+    this.search.addCheckbox("Unrated Only", "unrated", "list-search-unrated");
 
-    this.root.append(search.root);
+    this.root.append(this.search.root);
 
     this.addHeading();
 
@@ -105,7 +98,7 @@ function PlaylistList() {
 
     document.title = "Browse Playlists";
     this.api.getAllPlaylists(this.addRows.bind(this));
-    this.api.getSearchConfig("playlist", search.configureOptions);
+    this.api.getSearchConfig(this.api.playlist, this.search.configure);
 }
 PlaylistList.prototype = new Container;
 
@@ -148,19 +141,18 @@ function PlaylistEditor(playlistId) {
     ];
     let searchResults = new ListRoot(columns, [ ]);
 
-    let query = {
-        match: [ ],
-        exclude: [ ],
-        sort: [ "title", "artist" ],
-        order: "asc",
-        official: true,
-        nonofficial: true,
-        unrated: false,
+    let cleared = function(query) {
+        return query.match.length == 0 && query.exclude.length == 0 && query.official && query.nonofficial && !query.unrated;
     }
 
-    searchResults.refresh = (query = search.currentQuery()) => this.api.query("track", query, searchResults.update.bind(searchResults));
+    searchResults.refresh = (query = search.currentQuery()) => {
+        if (!cleared(query))
+            this.api.query(this.api.track, query, searchResults.update.bind(searchResults));
+        else
+            searchResults.update([ ]);
+    }
 
-    let search = new SearchBar(query, [ "track-list-search" ], searchResults.refresh);
+    let search = new SearchBar([ "track-list-search" ], searchResults.refresh);
     search.addCheckbox("Official", "official", "list-search-official");
     search.addCheckbox("Non-official", "nonofficial", "list-search-nonofficial");
     search.addCheckbox("Unrated Only", "unrated", "list-search-unrated");
@@ -190,7 +182,7 @@ function PlaylistEditor(playlistId) {
         document.title = playlist.name;
     }
 
-    this.api.getSearchConfig("track", search.configureOptions);
+    this.api.getSearchConfig(this.api.track, search.configure);
     this.api.getPlaylist(playlistId, this.initialize);
 }
 PlaylistEditor.prototype = new Container;

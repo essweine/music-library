@@ -1,9 +1,9 @@
 import sys
 import json
 
-from . import Recording, RecordingSummary, Search
+from . import Recording, RecordingSummary
 from ..importer import DirectoryService
-from ..util import BaseApiHandler
+from ..util import BaseApiHandler, BaseSearchHandler
 
 class RecordingRootHandler(BaseApiHandler):
 
@@ -14,6 +14,31 @@ class RecordingRootHandler(BaseApiHandler):
             self.write(json.dumps(summaries, cls = self.JsonEncoder))
         except Exception as exc:
             self.write_error(500, log_message = "Could not get recording list", exc_info = sys.exc_info())
+
+    def post(self):
+
+        if self.json_body is None:
+            self.write_error(400, messsages = [ "Expected json" ])
+
+        try:
+            errors = Recording.validate(self.json_body)
+            if errors:
+                self.write_error(400, messages = errors)
+            recording_id = self.db_action(Recording.create, self.json_body)
+            self.write(json.dumps({ "id": recording_id }))
+            self.application.directory_service.add_directory_to_index(self.json_body["directory"])
+        except:
+            self.write_error(500, log_message = f"Could not create recording", exc_info = sys.exc_info())
+
+class RecordingSearchHandler(BaseSearchHandler):
+
+    SearchType = "recording"
+
+    def get_configuration(self):
+        return self.db_action(RecordingSummary.search_configuration)
+
+    def search(self):
+        return self.db_query(RecordingSummary.search, self.json_body)
 
 class RecordingHandler(BaseApiHandler):
 
@@ -40,18 +65,4 @@ class RecordingHandler(BaseApiHandler):
             self.db_action(Recording.update, self.json_body)
         except:
             self.write_error(500, log_message = f"Could not update recording {recording_id}", exc_info = sys.exc_info())
-
-    def post(self, recording_id):
-
-        if self.json_body is None:
-            self.write_error(400, messsages = [ "Expected json" ])
-
-        try:
-            errors = Recording.validate(self.json_body)
-            if errors:
-                self.write_error(400, messages = errors)
-            self.db_action(Recording.create, self.json_body)
-            self.application.directory_service.add_directory_to_index(self.json_body["directory"])
-        except:
-            self.write_error(500, log_message = f"Could not create recording {recording_id}", exc_info = sys.exc_info())
 

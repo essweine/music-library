@@ -4,11 +4,14 @@ import os
 
 from uuid import uuid4
 from datetime import date
+from copy import deepcopy
 
 from application.importer import DirectoryService
 from application.library import Recording, Playlist, PlaylistTrack
 from application.library.rating_handler import Rating
-from application.library.search import Search, PLAYLIST_OPTIONS, TRACK_OPTIONS
+from application.library.search import TRACK_SEARCH_OPTIONS
+from application.library.playlist import PLAYLIST_SEARCH_OPTIONS
+from application.util.search import DEFAULT_QUERY
 from application.config import TABLES, VIEWS
 from . import ROOT_PATH, DEFAULT_INDEX, DB_NAME
 
@@ -16,6 +19,11 @@ class TestPlaylist(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+
+        cls.default_playlist_query = deepcopy(DEFAULT_QUERY)
+        cls.default_playlist_query["sort"] = [ "name" ]
+        cls.default_track_query = deepcopy(DEFAULT_QUERY)
+        cls.default_track_query["sort"] = [ "title" ]
 
         cls.conn = sqlite3.connect(DB_NAME, detect_types = sqlite3.PARSE_DECLTYPES)
 
@@ -46,26 +54,6 @@ class TestPlaylist(unittest.TestCase):
     def get_filename(self, recording, track_num):
 
         return [ track.filename for track in recording.tracks ][track_num]
-
-    def build_playlist_search_params(self, **params):
-
-        return {
-            "match": params.get("match", [ ]),
-            "exclude": params.get("exclude", [ ]),
-            "unrated": params.get("unrated", False),
-            "sort": [ "name" ],
-            "order": "asc",
-        }
-
-    def build_track_search_params(self, **params):
-
-        return { 
-            "match": params.get("match", [ ]),
-            "exclude": params.get("exclude", [ ]),
-            "official": params.get("official", True),
-            "nonofficial": params.get("nonofficial", True),
-            "unrated": params.get("unrated", False),
-        }
 
     def test_001_create_playlist(self):
 
@@ -127,22 +115,28 @@ class TestPlaylist(unittest.TestCase):
     def test_005_playlist_search_config(self):
 
         cursor = self.conn.cursor()
-        config = Search.configuration(cursor, "playlist")
+        config = Playlist.search_configuration(cursor)
 
-        order = sorted(PLAYLIST_OPTIONS, key = lambda k: PLAYLIST_OPTIONS[k][1])
-        self.assertListEqual(order, list(config.keys()))
+        default_query = config["default_query"]
+        self.assertEqual(default_query, self.default_playlist_query)
 
-        self.assertEqual(config["name"]["type"], PLAYLIST_OPTIONS["name"][0])
-        self.assertEqual(config["name"]["display"], PLAYLIST_OPTIONS["name"][1])
-        self.assertEqual(len(config["name"]["values"]), 0)
+        search_options = config["search_options"]
+
+        order = sorted(PLAYLIST_SEARCH_OPTIONS, key = lambda k: PLAYLIST_SEARCH_OPTIONS[k][1])
+        self.assertListEqual(order, list(search_options.keys()))
+
+        self.assertEqual(search_options["name"]["type"], PLAYLIST_SEARCH_OPTIONS["name"][0])
+        self.assertEqual(search_options["name"]["display"], PLAYLIST_SEARCH_OPTIONS["name"][1])
+        self.assertEqual(len(search_options["name"]["values"]), 0)
         
     def test_006_search_playlists(self):
 
         cursor = self.conn.cursor()
         playlist_id = Playlist.create(cursor)
 
-        name_search = self.build_playlist_search_params(match = [ { "name": "Untitled Playlist" } ])
-        Search.search(cursor, "playlist", name_search)
+        name_search = deepcopy(self.default_playlist_query)
+        name_search["match"].append({ "name": "Untitled Playlist" })
+        Playlist.search(cursor, name_search)
         name_result = cursor.fetchall()
         self.assertEqual(len(name_result), 1)
         self.assertEqual(name_result[0].name, "Untitled Playlist")
@@ -150,8 +144,9 @@ class TestPlaylist(unittest.TestCase):
         rating = Rating("playlist", playlist_id, 5)
         Playlist.set_rating(cursor, rating)
 
-        rating_search = self.build_playlist_search_params(match = [ { "rating": 5 } ])
-        Search.search(cursor, "playlist", rating_search)
+        rating_search = deepcopy(self.default_playlist_query)
+        rating_search["match"].append({ "rating": 5 })
+        Playlist.search(cursor, rating_search)
         rating_result = cursor.fetchall()
         self.assertEqual(len(rating_result), 2)
 
@@ -160,16 +155,21 @@ class TestPlaylist(unittest.TestCase):
     def test_007_track_search_config(self):
 
         cursor = self.conn.cursor()
-        config = Search.configuration(cursor, "track")
+        config = PlaylistTrack.search_configuration(cursor)
 
-        order = sorted(TRACK_OPTIONS, key = lambda k: TRACK_OPTIONS[k][1])
-        self.assertListEqual(order, list(config.keys()))
+        default_query = config["default_query"]
+        self.assertEqual(default_query, self.default_track_query)
 
-        self.assertEqual(config["recording"]["type"], TRACK_OPTIONS["recording"][0])
-        self.assertEqual(config["recording"]["display"], TRACK_OPTIONS["recording"][1])
-        self.assertEqual(len(config["recording"]["values"]), 0)
-        self.assertEqual(config["artist"]["type"], "text")
-        self.assertListEqual(config["genre"]["values"], [ ])
+        search_options = config["search_options"]
+
+        order = sorted(TRACK_SEARCH_OPTIONS, key = lambda k: TRACK_SEARCH_OPTIONS[k][1])
+        self.assertListEqual(order, list(search_options.keys()))
+
+        self.assertEqual(search_options["recording"]["type"], TRACK_SEARCH_OPTIONS["recording"][0])
+        self.assertEqual(search_options["recording"]["display"], TRACK_SEARCH_OPTIONS["recording"][1])
+        self.assertEqual(len(search_options["recording"]["values"]), 0)
+        self.assertEqual(search_options["artist"]["type"], "text")
+        self.assertListEqual(search_options["genre"]["values"], [ ])
         
         cursor.close()
 
@@ -177,21 +177,24 @@ class TestPlaylist(unittest.TestCase):
 
         cursor = self.conn.cursor()
 
-        title_search = self.build_track_search_params(match = [ { "title": "The Plan" } ])
-        Search.search(cursor, "track", title_search)
+        title_search = deepcopy(self.default_track_query)
+        title_search["match"].append({ "title": "The Plan" })
+        PlaylistTrack.search(cursor, title_search)
         title_results = cursor.fetchall()
         self.assertEqual(len(title_results), 1)
 
-        recording_search = self.build_track_search_params(match = [ { "recording": "Keep It Like a Secret" } ])
-        Search.search(cursor, "track", recording_search)
+        recording_search = deepcopy(self.default_track_query)
+        recording_search["match"].append({ "recording": "Keep It Like a Secret" })
+        PlaylistTrack.search(cursor, recording_search)
         recording_results = cursor.fetchall()
         self.assertEqual(len(recording_results), 3)
 
         for track in recording_results:
             Recording.set_track_rating(cursor, Rating("track", track.filename, 5))
 
-        rating_search = self.build_track_search_params(match = [ { "rating": 5 } ])
-        Search.search(cursor, "track", rating_search)
+        rating_search = deepcopy(self.default_track_query)
+        rating_search["match"].append({ "rating": 5 })
+        PlaylistTrack.search(cursor, rating_search)
         rating_results = cursor.fetchall()
         self.assertEqual(len(rating_results), 3)
 
@@ -200,23 +203,27 @@ class TestPlaylist(unittest.TestCase):
         recording.official = True
         Recording.update(cursor, recording.as_dict())
 
-        official_search = self.build_track_search_params(nonofficial = False)
-        Search.search(cursor, "track", official_search)
+        official_search = deepcopy(self.default_track_query)
+        official_search["nonofficial"] = False
+        PlaylistTrack.search(cursor, official_search)
         official_results = cursor.fetchall()
         self.assertEqual(len(official_results), 3)
 
-        unrated_search = self.build_track_search_params(unrated = True)
-        Search.search(cursor, "track", unrated_search)
+        unrated_search = deepcopy(self.default_track_query)
+        unrated_search["unrated"] = True
+        PlaylistTrack.search(cursor, unrated_search)
         unrated_results = cursor.fetchall()
         self.assertEqual(len(unrated_results), 6)
 
-        artist_search = self.build_track_search_params(match = [ { "artist": "Built To Spill" } ])
-        Search.search(cursor, "track", artist_search)
+        artist_search = deepcopy(self.default_track_query)
+        artist_search["match"].append({ "artist": "Built To Spill" })
+        PlaylistTrack.search(cursor, artist_search)
         artist_results = cursor.fetchall()
         self.assertEqual(len(artist_results), 3)
 
-        exclude_search = self.build_track_search_params(exclude = [ { "artist": "Built To Spill" } ])
-        Search.search(cursor, "track", exclude_search)
+        exclude_search = deepcopy(self.default_track_query)
+        exclude_search["exclude"].append({ "artist": "Built To Spill" })
+        PlaylistTrack.search(cursor, exclude_search)
         exclude_results = cursor.fetchall()
         self.assertEqual(len(exclude_results), 6)
 
@@ -225,8 +232,9 @@ class TestPlaylist(unittest.TestCase):
     def test_009_delete_playlist(self):
 
         cursor = self.conn.cursor()
-        name_search = self.build_playlist_search_params(match = [ { "name": "Untitled Playlist" } ])
-        Search.search(cursor, "playlist", name_search)
+        name_search = deepcopy(self.default_playlist_query)
+        name_search["match"].append({ "name": "Untitled Playlist" })
+        Playlist.search(cursor, name_search)
         name_result = cursor.fetchall()
         Playlist.delete(cursor, name_result[0].id)
         Playlist.get_all(cursor)

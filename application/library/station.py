@@ -1,9 +1,8 @@
-import sqlite3
 from datetime import datetime
 from uuid import uuid4
 
-from ..util import BaseObject
-from ..util.db import Column, ItemTable
+from ..util import BaseObject, Search
+from ..util.db import Column, ItemTable, Query
 
 STATION_COLUMNS = [
     Column("id", "text", False, True),
@@ -18,7 +17,16 @@ STATION_COLUMNS = [
 
 StationTable = ItemTable("station", STATION_COLUMNS, "id")
 
+STATION_SEARCH_OPTIONS = {
+    "name": ("text", "Name"),
+    "rating": ("rating", "Minimum Rating"),
+    "minutes_listened": ("number", "Minutes Listened"),
+    "last_listened": ("date", "Listened Since"),
+}
+
 class Station(BaseObject):
+
+    Search = Search(STATION_SEARCH_OPTIONS, StationTable, ("id", None), [ "name" ])
 
     def __init__(self, **station):
 
@@ -36,6 +44,17 @@ class Station(BaseObject):
 
         StationTable.get_all(cursor, cls.row_factory)
 
+    @classmethod
+    def search(cls, cursor, params):
+
+        query = Query(StationTable, distinct = True)
+        cls.Search.get_items(cursor, query, "id", params, cls.row_factory)
+
+    @classmethod
+    def search_configuration(cls, cursor):
+
+        return cls.Search.get_configuration(cursor)
+
     @staticmethod
     def create(cursor, station):
 
@@ -43,6 +62,7 @@ class Station(BaseObject):
         station["added_date"] = datetime.utcnow().strftime("%Y-%m-%d")
         station["minutes_listened"] = 0
         StationTable.insert(cursor, station)
+        return station["id"]
 
     @staticmethod
     def delete(cursor, station_id):

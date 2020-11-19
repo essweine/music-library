@@ -33,3 +33,4 @@ class RatingHandler(BaseApiHandler):
                 self.db_action(Station.set_rating, rating)
         except Exception as exc:
             self.write_error(500, log_message = "Could not update rating", exc_info = sys.exc_info())
+

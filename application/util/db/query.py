@@ -3,13 +3,14 @@ import re
 
 class Query(object):
 
-    def __init__(self, table, select = None, distinct = False, group = None, order = None):
+    def __init__(self, table, select = None, distinct = False, group = None, order = None, limit = None):
 
         self.table    = table
         self.select   = self._build_select(select)
         self.distinct = distinct
         self.group    = group
         self.order    = order
+        self.limit    = limit
 
         self.conditions, self.values = [ ], [ ]
 
@@ -30,7 +31,14 @@ class Query(object):
         op = "in" if contained_in else "not in"
         escape = lambda val: re.sub("'", "''", val)
         vals = ", ".join([ f"'{escape(val)}'" for val in values ])
-        self.conditions.append(f"{column} in ({vals})")
+        self.conditions.append(f"{column} {op} ({vals})")
+        return self
+
+    def compare_subquery(self, column, query, contained_in = True):
+
+        op = "in" if contained_in else "not in"
+        self.values.extend(query.values)
+        self.conditions.append(f"{column} {op} ({query})")
         return self
 
     def execute(self, cursor, row_factory = Row):
@@ -54,6 +62,7 @@ class Query(object):
         conditions = "where " + " and ".join([ cond for cond in self.conditions ]) if self.conditions else ""
         group = f"group by {self.group}" if self.group else ""
         order = f"order by {self.order}" if self.order else ""
-        return f"select {distinct} {select} from {self.table} {conditions} {group} {order}"
+        limit = f"limit {self.limit}" if self.limit is not None else ""
+        return f"select {distinct} {select} from {self.table.name} {conditions} {group} {order}"
 
 

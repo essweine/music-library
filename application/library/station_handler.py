@@ -2,8 +2,8 @@ import sys
 import json
 from datetime import date
 
-from . import Station, Search
-from ..util import BaseApiHandler
+from . import Station
+from ..util import BaseApiHandler, BaseSearchHandler
 
 class StationRootHandler(BaseApiHandler):
 
@@ -14,6 +14,24 @@ class StationRootHandler(BaseApiHandler):
             self.write(json.dumps(sorted(stations, key = Station.sort), cls = self.JsonEncoder))
         except Exception as exc:
             self.write_error(500, log_message = "Could not get station list", exc_info = sys.exc_info())
+
+    def post(self):
+
+        try:
+            station_id = self.db_action(Station.create, self.json_body)
+            self.write(json.dumps({ "id": station_id }))
+        except:
+            self.write_error(500, log_message = f"Could not create station", exc_info = sys.exc_info())
+
+class StationSearchHandler(BaseSearchHandler):
+
+    SearchType = "station"
+
+    def get_configuration(self):
+        return self.db_action(Station.search_configuration)
+
+    def search(self):
+        return self.db_query(Station.search, self.json_body)
 
 class StationHandler(BaseApiHandler):
 
@@ -36,15 +54,6 @@ class StationHandler(BaseApiHandler):
             self.db_action(Station.update, self.json_body)
         except:
             self.write_error(500, log_message = f"Could not update station {station_id}", exc_info = sys.exc_info())
-
-    def post(self, name):
-
-        if self.json_body is None:
-            self.write_error(400, messsages = [ "Expected json" ])
-        try:
-            self.db_action(Station.create, self.json_body)
-        except:
-            self.write_error(500, log_message = f"Could not create station {name}", exc_info = sys.exc_info())
 
     def delete(self, station_id):
 

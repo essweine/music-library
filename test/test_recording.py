@@ -5,11 +5,13 @@ import re
 
 from uuid import uuid4
 from datetime import date
+from copy import deepcopy
 
 from application.importer import DirectoryService
 from application.library import Recording, RecordingSummary
 from application.library.rating_handler import Rating
-from application.library.search import Search, RECORDING_OPTIONS
+from application.library.search import RECORDING_SEARCH_OPTIONS
+from application.util.search import DEFAULT_QUERY
 from application.config import TABLES, VIEWS
 from . import ROOT_PATH, DEFAULT_INDEX, DB_NAME
 
@@ -20,6 +22,8 @@ class TestRecording(unittest.TestCase):
 
         cls.conn = sqlite3.connect(DB_NAME, detect_types = sqlite3.PARSE_DECLTYPES)
         cls.recording_id = str(uuid4())
+        cls.default_query = DEFAULT_QUERY
+        cls.default_query["sort"] = [ "artist", "recording_date" ]
 
     @classmethod
     def tearDownClass(cls):
@@ -30,18 +34,6 @@ class TestRecording(unittest.TestCase):
     def setUp(self):
 
         self.directory_service = DirectoryService(ROOT_PATH, DEFAULT_INDEX)
-
-    def build_search_params(self, **params):
-
-        return { 
-            "match": params.get("match", [ ]),
-            "exclude": params.get("exclude", [ ]),
-            "sort": params.get("sort", [ "artist" ]),
-            "order": params.get("order", "asc"),
-            "official": params.get("official", True),
-            "nonofficial": params.get("nonofficial", True),
-            "unrated": params.get("unrated", False),
-        }
 
     def test_001_initialize_tables(self):
 
@@ -123,16 +115,21 @@ class TestRecording(unittest.TestCase):
     def test_007_search_config(self):
 
         cursor = self.conn.cursor()
-        config = Search.configuration(cursor, "recording")
+        config = RecordingSummary.search_configuration(cursor)
 
-        order = sorted(RECORDING_OPTIONS, key = lambda k: RECORDING_OPTIONS[k][1])
-        self.assertListEqual(order, list(config.keys()))
+        default_query = config["default_query"]
+        self.assertEqual(default_query, self.default_query)
 
-        self.assertEqual(config["recording"]["type"], RECORDING_OPTIONS["recording"][0])
-        self.assertEqual(config["recording"]["display"], RECORDING_OPTIONS["recording"][1])
-        self.assertEqual(len(config["recording"]["values"]), 0)
-        self.assertEqual(config["artist"]["type"], "text")
-        self.assertListEqual(config["genre"]["values"], [ "Rock" ])
+        search_options = config["search_options"]
+
+        order = sorted(RECORDING_SEARCH_OPTIONS, key = lambda k: RECORDING_SEARCH_OPTIONS[k][1])
+        self.assertListEqual(order, list(search_options.keys()))
+
+        self.assertEqual(search_options["recording"]["type"], RECORDING_SEARCH_OPTIONS["recording"][0])
+        self.assertEqual(search_options["recording"]["display"], RECORDING_SEARCH_OPTIONS["recording"][1])
+        self.assertEqual(len(search_options["recording"]["values"]), 0)
+        self.assertEqual(search_options["artist"]["type"], "text")
+        self.assertListEqual(search_options["genre"]["values"], [ "Rock" ])
         
         cursor.close()
 
@@ -147,44 +144,51 @@ class TestRecording(unittest.TestCase):
         album_rating = Rating("recording-rating", recording.id, 5)
         Recording.set_rating(cursor, album_rating)
 
-        artist_search = self.build_search_params(match = [ { "artist": "Built To Spill" } ])
-        Search.search(cursor, "recording", artist_search)
+        artist_search = deepcopy(self.default_query)
+        artist_search["match"].append({ "artist": "Built To Spill" })
+        RecordingSummary.search(cursor, artist_search)
         artist_result = cursor.fetchall()
         self.assertEqual(len(artist_result), 1)
         self.assertEqual(artist_result[0].id, self.recording_id)
 
-        title_search = self.build_search_params(match = [ { "recording": "Keep It Like A Secret" } ])
-        Search.search(cursor, "recording", title_search)
+        title_search = deepcopy(self.default_query)
+        title_search["match"].append({ "recording": "Keep It Like A Secret" })
+        RecordingSummary.search(cursor, title_search)
         title_result = cursor.fetchall()
         self.assertEqual(len(title_result), 1)
         self.assertEqual(title_result[0].id, self.recording_id)
 
-        track_search = self.build_search_params(match = [ { "title": "Carry the Zero" } ])
-        Search.search(cursor, "recording", track_search)
+        track_search = deepcopy(self.default_query)
+        track_search["match"].append({ "title": "Carry the Zero" })
+        RecordingSummary.search(cursor, track_search)
         track_result = cursor.fetchall()
         self.assertEqual(len(track_result), 1)
         self.assertEqual(track_result[0].id, self.recording_id)
 
-        rating_search = self.build_search_params(match = [ { "recording_rating": 5 } ])
-        Search.search(cursor, "recording", rating_search)
+        rating_search = deepcopy(self.default_query)
+        rating_search["match"].append({ "recording_rating": 5 })
+        RecordingSummary.search(cursor, rating_search)
         rating_result = cursor.fetchall()
         self.assertEqual(len(rating_result), 2)
 
-        exclude_artist = self.build_search_params(exclude = [ { "artist": "Calexico" } ])
-        Search.search(cursor, "recording", exclude_artist)
+        exclude_artist = deepcopy(self.default_query)
+        exclude_artist["exclude"].append({ "artist": "Calexico" })
+        RecordingSummary.search(cursor, exclude_artist)
         exclude_artist_result = cursor.fetchall()
         self.assertEqual(len(exclude_artist_result), 1)
         self.assertEqual(artist_result[0].id, self.recording_id)
 
-        rating_search = self.build_search_params(exclude = [ { "recording_rating": 3 } ])
-        Search.search(cursor, "recording", rating_search)
+        rating_search = deepcopy(self.default_query)
+        rating_search["exclude"].append({ "recording_rating": 3 })
+        RecordingSummary.search(cursor, rating_search)
         rating_result = cursor.fetchall()
         self.assertEqual(len(rating_result), 0)
 
-        rating_search = self.build_search_params(unrated = True)
-        Search.search(cursor, "recording", rating_search)
+        rating_search = deepcopy(self.default_query)
+        rating_search["unrated"] = True
+        RecordingSummary.search(cursor, rating_search)
         rating_result = cursor.fetchall()
-        self.assertEqual(len(rating_result), 0)
+        self.assertEqual(len(rating_result), 2)
 
         cursor.close()
 
@@ -198,23 +202,24 @@ class TestRecording(unittest.TestCase):
         partial_year = re.sub("19", "*", date.strftime(recording.recording_date, "%Y-%m-%d"))
         year_and_month = date.strftime(recording.recording_date, "%Y-%m-*")
 
-        search = self.build_search_params(match = [ { "recording_date": exact_date } ])
-        Search.search(cursor, "recording", search)
+        search = deepcopy(self.default_query)
+        search["match"].append({ "recording_date": exact_date })
+        RecordingSummary.search(cursor, search)
         result = cursor.fetchall()
         self.assertEqual(len(result), 1)
 
         search["match"][0]["recording_date"] = any_year
-        Search.search(cursor, "recording", search)
+        RecordingSummary.search(cursor, search)
         result = cursor.fetchall()
         self.assertEqual(len(result), 1)
 
         search["match"][0]["recording_date"] = partial_year
-        Search.search(cursor, "recording", search)
+        RecordingSummary.search(cursor, search)
         result = cursor.fetchall()
         self.assertEqual(len(result), 1)
 
         search["match"][0]["recording_date"] = year_and_month
-        Search.search(cursor, "recording", search)
+        RecordingSummary.search(cursor, search)
         result = cursor.fetchall()
         self.assertEqual(len(result), 1)
 
@@ -230,17 +235,18 @@ class TestRecording(unittest.TestCase):
         self.assertEqual(len(summaries), 2)
         self.assertEqual(first.title, "Keep It Like a Secret")
 
-        search = self.build_search_params(match = [ { "recording_rating": 5 } ], sort = [ "title" ])
-        Search.search(cursor, "recording", search)
+        search = deepcopy(self.default_query)
+        search["sort"] = [ "title" ]
+        RecordingSummary.search(cursor, search)
         result = cursor.fetchall()
         first = result[0]
         self.assertEqual(len(result), 2)
         self.assertEqual(first.title, "Edge of the Sun")
 
-        search = self.build_search_params(match = [ { "recording_rating": 5 } ], order = "desc")
-        Search.search(cursor, "recording", search)
+        search["order"] = "desc"
+        RecordingSummary.search(cursor, search)
         result = cursor.fetchall()
         first = result[0]
-        self.assertEqual(first.title, "Edge of the Sun")
+        self.assertEqual(first.title, "Keep It Like a Secret")
 
         cursor.close()

@@ -73,18 +73,9 @@ function RecordingList() {
         };
     }
 
-    this.refresh = function(query) { this.api.query("recording", query, this.update.bind(this)); }
+    this.refresh = function(query) { this.api.query(this.api.recording, query, this.update.bind(this)); }
 
-    let query = {
-        match: [ ],
-        exclude: [ ],
-        sort: [ "artist", "recording_date" ],
-        order: "asc",
-        official: true,
-        nonofficial: true,
-        unrated: false,
-    }
-    let search = new SearchBar(query, [ "recording-list-search" ], this.refresh.bind(this));
+    let search = new SearchBar([ "recording-list-search" ], this.refresh.bind(this));
     search.addCheckbox("Official", "official", "list-search-official");
     search.addCheckbox("Non-official", "nonofficial", "list-search-nonofficial");
     search.addCheckbox("Unrated Only", "unrated", "list-search-unrated");
@@ -94,7 +85,7 @@ function RecordingList() {
 
     document.title = "Browse Recordings";
     this.api.getAllRecordings(this.addRows.bind(this));
-    this.api.getSearchConfig("recording", search.configureOptions);
+    this.api.getSearchConfig(this.api.recording, search.configure);
 }
 RecordingList.prototype = new Container;
 

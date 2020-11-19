@@ -1,3 +1,4 @@
+import sys
 import json
 import traceback
 from tornado.web import RequestHandler
@@ -50,3 +51,30 @@ class BaseApiHandler(RequestHandler):
 
         self.set_status(status_code)
         self.write(json.dumps(payload))
+
+class BaseSearchHandler(BaseApiHandler):
+
+    SearchType = None
+
+    def get_configuration(self):
+        raise NotImplementedError
+
+    def search(self):
+        raise NotImplementedError
+
+    def get(self):
+
+        try:
+            self.write(json.dumps(self.get_configuration(), cls = self.JsonEncoder))
+        except Exception as exc:
+            self.write_error(500, log_message = f"Could not get search configuration for {self.SearchType}", exc_info = sys.exc_info())
+
+    def post(self):
+
+        if not self.json_body:
+            self.write_error(400, messsages = [ "Expected json" ])
+
+        try:
+            self.write(json.dumps(self.search(), cls = self.JsonEncoder))
+        except Exception as exc:
+            self.write_error(500, log_message = f"Could not execute query for {self.SearchType}", exc_info = sys.exc_info())

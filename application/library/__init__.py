@@ -1,13 +1,30 @@
 # Classes
 from .recording import Recording, LibraryTrack
-from .recording_summary import RecordingSummary
-from .playlist import Playlist, PlaylistTrack
+from .search import RecordingSummary, PlaylistTrack
+from .aggregate import TrackAggregation
+from .playlist import Playlist
 from .station import Station
-from .search import Search
 
 # Handlers
-from .recording_handler import RecordingHandler, RecordingRootHandler
-from .station_handler import StationHandler, StationRootHandler
-from .playlist_handler import PlaylistRootHandler, PlaylistHandler, PlaylistTrackHandler
+from .recording_handler import RecordingHandler, RecordingRootHandler, RecordingSearchHandler
+from .track_handler import TrackSearchHandler, TrackAggregationHandler
+from .station_handler import StationHandler, StationRootHandler, StationSearchHandler
+from .playlist_handler import PlaylistHandler, PlaylistRootHandler, PlaylistSearchHandler, PlaylistTrackHandler
 from .rating_handler import RatingHandler
-from .search_handler import SearchHandler, PropertyHandler
+
+LIBRARY_HANDLERS = [
+    (r"/api/recording/search", RecordingSearchHandler),
+    (r"/api/recording/(.*)", RecordingHandler),
+    (r"/api/recording", RecordingRootHandler),
+    (r"/api/track/search", TrackSearchHandler),
+    (r"/api/track/aggregate/(.*)", TrackAggregationHandler),
+    (r"/api/playlist/search", PlaylistSearchHandler),
+    (r"/api/playlist/(.*)/tracks", PlaylistTrackHandler),
+    (r"/api/playlist/(.*)", PlaylistHandler),
+    (r"/api/playlist", PlaylistRootHandler),
+    (r"/api/station/search", StationSearchHandler),
+    (r"/api/station/(.*)", StationHandler),
+    (r"/api/station", StationRootHandler),
+    (r"/api/rating", RatingHandler),
+]
+

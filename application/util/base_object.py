@@ -1,4 +1,5 @@
 import json
+from sqlite3 import Row
 from enum import Enum
 from datetime import datetime, date
 
@@ -65,4 +66,6 @@ class JsonEncoder(json.JSONEncoder):
             return obj.value
         elif isinstance(obj, set):
             return list(obj)
+        elif isinstance(obj, Row):
+            return dict(obj)
         return json.JSONEncoder.default(self, obj)

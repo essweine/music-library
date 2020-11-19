@@ -2,8 +2,9 @@ import sys
 import json
 
 from . import Playlist, PlaylistTrack
+#from .search import PlaylistTrack
 from ..importer import DirectoryService
-from ..util import BaseApiHandler
+from ..util import BaseApiHandler, BaseSearchHandler
 
 class PlaylistRootHandler(BaseApiHandler):
 
@@ -22,6 +23,16 @@ class PlaylistRootHandler(BaseApiHandler):
             self.write(json.dumps({ "id": playlist_id }))
         except Exception as exc:
             self.write_error(500, log_message = "Could not create playlist", exc_info = sys.exc_info())
+
+class PlaylistSearchHandler(BaseSearchHandler):
+
+    SearchType = "playlist"
+
+    def get_configuration(self):
+        return self.db_action(Playlist.search_configuration)
+
+    def search(self):
+        return self.db_query(Playlist.search, self.json_body)
 
 class PlaylistHandler(BaseApiHandler):
 
@@ -52,7 +63,6 @@ class PlaylistHandler(BaseApiHandler):
             self.db_action(Playlist.delete, playlist_id)
         except:
             self.write_error(500, log_message = f"Could not update delete {playlist_id}", exc_info = sys.exc_info())
-
 
 class PlaylistTrackHandler(BaseApiHandler):
 

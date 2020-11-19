@@ -35,7 +35,7 @@ function StationEditor() {
         this.save();
         let data = { id: this.data.stationId, name: name.data, website: website.data, url: url.data };
         if (context == "add")
-            this.api.addStation(data, this.refreshStations);
+            this.api.createStation(data, this.refreshStations);
         else if (context == "save")
             this.api.saveStation(data, this.refreshStations);
         this.setContent(null);
@@ -94,12 +94,6 @@ function StationList(stationEditor) {
     ];
     ListRoot.call(this, columns, [ "stream-list-root" ]);
 
-    this.refresh = function(query) { this.api.query("station", query, this.update.bind(this)); }
-
-    this.deleteStation = function(stationId) { this.api.deleteStation(stationId, this.refresh.bind(this)); }
-
-    this.save = function(station) { this.api.saveStation(station); }
-
     this.getData = function(station) {
         return {
             id: null,
@@ -117,14 +111,17 @@ function StationList(stationEditor) {
         };
     }
 
-    let query = { match: [ ], exclude: [ ] };
-    this.search = new SearchBar(query, [ "station-list-search" ], this.refresh.bind(this));
+    this.refresh = function(query) { this.api.query(this.api.station, query, this.update.bind(this)); }
+
+    this.deleteStation = function(stationId) { this.api.deleteStation(stationId, this.refresh.bind(this, this.search.currentQuery())); }
+
+    this.search = new SearchBar([ "station-list-search" ], this.refresh.bind(this));
     this.root.append(this.search.root);
 
     this.addHeading();
 
     this.api.getAllStations(this.addRows.bind(this));
-    this.api.getSearchConfig("station", this.search.configureOptions);
+    this.api.getSearchConfig(this.api.station, this.search.configure);
 }
 StationList.prototype = new Container;
 

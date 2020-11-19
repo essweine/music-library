@@ -3,7 +3,7 @@ from datetime import datetime
 from ..util.db import Column, Table, JoinedView, Subquery, Query
 from ..util import BaseObject
 from ..library.property import PropertyAggregate
-from ..library.playlist import PlaylistTrackView
+from ..library.search import PlaylistTrackView
 
 HISTORY_COLUMNS = [
     Column("filename", "text", False, True),
@@ -64,7 +64,7 @@ class History(BaseObject):
     @classmethod
     def tracks_from_period(cls, cursor, start, end):
 
-        query = Query("history_track",
+        query = Query(HistoryTrackView,
             HISTORY_TRACK_COLUMNS + [ ("category", None), ("value", None) ],
             group = "filename", 
             order = "last_listened desc"
