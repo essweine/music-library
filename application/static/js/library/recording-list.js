@@ -76,9 +76,6 @@ function RecordingList() {
     this.refresh = function(query) { this.api.query(this.api.recording, query, this.update.bind(this)); }
 
     let search = new SearchBar([ "recording-list-search" ], this.refresh.bind(this));
-    search.addCheckbox("Official", "official", "list-search-official");
-    search.addCheckbox("Non-official", "nonofficial", "list-search-nonofficial");
-    search.addCheckbox("Unrated Only", "unrated", "list-search-unrated");
     this.root.append(search.root);
 
     this.addHeading();

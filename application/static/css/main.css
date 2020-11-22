@@ -131,3 +131,55 @@ a:hover { font-weight: bold; }
     padding-right: 10px;
 }
 .station-edit-data > .editable-input { grid-column: 2; }
+
+/* --- Charts --- */
+.bar-chart {
+    display: grid;
+    grid-auto-columns: max-content 1fr;
+    grid-auto-rows: minmax(40px, auto);
+    justify-content: start;
+    border-bottom: solid 1px #333;
+    margin-bottom: 10px;
+}
+
+.bar { display: contents }
+
+.bar-label {
+    grid-column: 1;
+    justify-self: end;
+    align-self: center;
+    padding-right: 10px;
+    font-weight: bold;
+}
+
+.bar-data {
+    grid-column: 2;
+    display: flex;
+    align-items: center;
+    border-left: solid 1px #333;
+}
+
+.bar-rect {
+    display: inline-block;
+    background-color: #ccf;
+    height: 90%;
+}
+
+.bar-text {
+    padding-left: 10px;
+}
+
+#rating-bar-unrated > .bar-data > .bar-rect { background-color: #aac; }
+
+.aggregate-query-options {
+    display: flex;
+    justify-content: center;
+    padding: 5px 0;
+}
+
+.aggregate-query-option {
+    padding: 0 5px;
+    text-decoration: underline;
+}
+
+.aggregate-query-option:hover { font-weight: bold; }

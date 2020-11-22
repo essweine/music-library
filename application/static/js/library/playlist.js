@@ -79,7 +79,6 @@ function PlaylistList() {
     this.refresh = function(query = this.currentQuery()) { this.api.query(this.api.playlist, query, this.update.bind(this)); }
 
     this.search = new SearchBar([ "playlist-list-search" ], this.refresh.bind(this));
-    this.search.addCheckbox("Unrated Only", "unrated", "list-search-unrated");
 
     this.root.append(this.search.root);
 
@@ -153,9 +152,6 @@ function PlaylistEditor(playlistId) {
     }
 
     let search = new SearchBar([ "track-list-search" ], searchResults.refresh);
-    search.addCheckbox("Official", "official", "list-search-official");
-    search.addCheckbox("Non-official", "nonofficial", "list-search-nonofficial");
-    search.addCheckbox("Unrated Only", "unrated", "list-search-unrated");
     searchResults.root.append(search.root);
 
     searchResults.getData = (track) => {

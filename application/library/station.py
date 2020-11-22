@@ -24,9 +24,11 @@ STATION_SEARCH_OPTIONS = {
     "last_listened": ("date", "Listened Since"),
 }
 
+STATION_CHECKBOXES = { "unrated": "Unrated Only" }
+
 class Station(BaseObject):
 
-    Search = Search(STATION_SEARCH_OPTIONS, StationTable, ("id", None), [ "name" ])
+    Search = Search(STATION_SEARCH_OPTIONS, STATION_CHECKBOXES, StationTable, ("id", None), [ "name" ])
 
     def __init__(self, **station):
 

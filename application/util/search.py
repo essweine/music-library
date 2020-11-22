@@ -27,9 +27,10 @@ class Search(object):
         "number": ">=",
     }
 
-    def __init__(self, options, search_table, search_column, sort):
+    def __init__(self, options, checkboxes, search_table, search_column, sort):
 
         self.options       = options
+        self.checkboxes    = checkboxes
         self.search_table  = search_table
         self.search_column = search_column
         self.sort          = sort
@@ -72,7 +73,11 @@ class Search(object):
                 values = self.property_values(cursor, param)
                 config[param]["values"] = values[param]
 
-        return { "search_options": config, "default_query": query }
+        return {
+            "search_options": config,
+            "checkboxes": self.checkboxes,
+            "default_query": query
+        }
 
     def property_values(self, cursor, prop_name):
 

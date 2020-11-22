@@ -1,10 +1,10 @@
 from ..util import Search
 from ..util.db import Query
-from .search import RecordingTrackView, LibrarySearchView, TRACK_SEARCH_OPTIONS
+from .search import LibrarySearchView, TRACK_SEARCH_OPTIONS, LIBRARY_CHECKBOXES
 
 class TrackAggregation(object):
 
-    Search = Search(TRACK_SEARCH_OPTIONS, LibrarySearchView, ("filename", None), [ ])
+    Search = Search(TRACK_SEARCH_OPTIONS, LIBRARY_CHECKBOXES, LibrarySearchView, ("filename", None), [ ])
 
     @classmethod
     def aggregate(cls, cursor, aggregate_type, params):
@@ -18,7 +18,7 @@ class TrackAggregation(object):
     def rating(cls, cursor, params):
 
         columns = [ ("rating", None), ("tracks", "count(distinct filename)") ]
-        query = Query(PlaylistTrackView, columns, group = "rating", order = "rating")
+        query = Query(LibrarySearchView, columns, distinct = True, group = "rating", order = "rating")
         cls.Search.get_aggregate(cursor, query, "filename", params)
 
 

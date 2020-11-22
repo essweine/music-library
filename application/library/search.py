@@ -84,9 +84,17 @@ TRACK_SEARCH_OPTIONS = {
     "genre": ("options", "Genre"),
 }
 
+LIBRARY_CHECKBOXES = { "official": "Official", "nonofficial": "Non-official", "unrated": "Unrated Only" }
+
 class RecordingSummary(BaseObject):
 
-    Search = Search(RECORDING_SEARCH_OPTIONS, LibrarySearchView, ("recording_id", None), [ "artist", "recording_date" ])
+    Search = Search(
+        RECORDING_SEARCH_OPTIONS,
+        LIBRARY_CHECKBOXES,
+        LibrarySearchView,
+        ("recording_id", None),
+        [ "artist", "recording_date" ]
+    )
 
     def __init__(self, **recording):
 
@@ -114,7 +122,13 @@ class PlaylistTrack(PropertyAggregate):
 
     PROPERTIES = [ "artist" ]
 
-    Search = Search(TRACK_SEARCH_OPTIONS, LibrarySearchView, ("filename", None), [ "title" ])
+    Search = Search(
+        TRACK_SEARCH_OPTIONS,
+        LIBRARY_CHECKBOXES,
+        LibrarySearchView,
+        ("filename", None),
+        [ "title" ]
+    )
 
     def __init__(self, **track):
 

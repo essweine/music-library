@@ -71,6 +71,7 @@ function SearchOptions() {
             exclude: exclude,
             name: name,
             value: paramInput[name].value,
+            display: this.data[name].display,
         };
     }
 }
@@ -89,7 +90,7 @@ function SearchParam(data, remove) {
 
     let paramName = document.createElement("span");
     paramName.classList.add("list-search-name");
-    paramName.innerText = data.name;
+    paramName.innerText = data.display;
     this.root.append(paramName);
 
     let paramValue = document.createElement("span");
@@ -147,6 +148,8 @@ function SearchBar(classes, updateResults) {
         updateResults(this.data);
     }
 
+    this.setSort = function(sort) { this.data.sort = sort; }
+
     let label = document.createElement("span");
     label.classList.add("list-search-label");
     label.innerText = "Search";
@@ -158,6 +161,9 @@ function SearchBar(classes, updateResults) {
     this.configure = (config) => {
         this.data = config.default_query;
         select.configure(config.search_options); 
+        for (let name of Object.keys(config.checkboxes))
+            this.addCheckbox(config.checkboxes[name], name, "list-search-" + name);
+        updateResults(this.data);
     }
 
     let showIcon = new Icon("visibility", e => this.addParam(false), [ "list-search-show" ]);

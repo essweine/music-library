@@ -39,6 +39,8 @@ function Api(errorHandler) {
 
     this.query = (base, query, callback) => { this.post(base + "/search", query, callback); }
 
+    this.aggregate = (base, aggType, query, callback) => { this.post(base + "/aggregate/" + aggType, query, callback); }
+
     this.getAllRecordings = (callback) => { this.get(this.recording, callback); }
 
     this.getRecording = (recordingId, callback) => { this.get(this.recording + "/" + recordingId, callback); }

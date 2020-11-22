@@ -86,10 +86,10 @@
 
 /* --- Track search results layout --- */
 .track-list-search { grid-column: 1 / 6; }
-.track-list-title { grid-column: 1; width: max-content; }
-.track-list-recording { grid-column: 2; width: max-ccontent; }
-.track-list-artist { grid-column: 3; width: max-content; }
-.track-list-rating { grid-column: 4; width: max-content; }
+.track-list-title { grid-column: 1; }
+.track-list-recording { grid-column: 2; }
+.track-list-artist { grid-column: 3; }
+.track-list-rating { grid-column: 4; }
 .track-list-add { grid-column: 5; }
 
 /* --- Station list --- */

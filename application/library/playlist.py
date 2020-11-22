@@ -25,10 +25,11 @@ PLAYLIST_SEARCH_OPTIONS = {
     "name": ("text", "Name"),
     "rating": ("rating", "Minimum Rating"),
 }
+PLAYLIST_CHECKBOXES = { "unrated": "Unrated Only" }
 
 class Playlist(BaseObject):
 
-    Search = Search(PLAYLIST_SEARCH_OPTIONS, PlaylistTable, ("id", None), [ "name" ])
+    Search = Search(PLAYLIST_SEARCH_OPTIONS, PLAYLIST_CHECKBOXES, PlaylistTable, ("id", None), [ "name" ])
 
     def __init__(self, **playlist):
 
