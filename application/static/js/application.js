@@ -8,7 +8,7 @@ import { RatingAggregation } from "./library/tracks.js";
 import { PlaylistList, PlaylistEditor } from "./library/playlist.js";
 import { RadioContainer } from "./library/radio.js";
 import { Player } from "./player/container.js";
-import { RecentlyPlayedTracklist } from "./player/history.js";
+import { PlayerHistory } from "./player/history.js";
 
 function ContainerDefinition(type = "div", classes = [ ], id = null) {
     this.type    = type;
@@ -39,7 +39,7 @@ function Application(action, arg) {
         } else if (action == "tracks") {
             container = new RatingAggregation();
         } else if (action == "history") {
-            container = new RecentlyPlayedTracklist();
+            container = new PlayerHistory();
         } else if (action == "playlist" && arg != null) {
             container = new PlaylistEditor(arg);
         } else if (action == "playlist") {

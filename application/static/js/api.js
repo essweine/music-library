@@ -81,7 +81,12 @@ function Api(errorHandler) {
             start: start.toISOString(),
             end: end.toISOString()
         }
-        this.post(this.history, query, callback); 
+        this.post(this.history + "/recent", query, callback); 
+    }
+
+    this.getFrequentTracks = (numTracks, callback) => {
+        let query = { num_tracks: numTracks };
+        this.post(this.history + "/frequent", query, callback);
     }
 
     /* -- Player requests --- */

@@ -140,8 +140,8 @@
 
 /* --- Alternate columns for recently played --- */
 
-.recent-rating { grid-column: 4; }
-.recent-count {
+.history-rating { grid-column: 4; }
+.history-count {
     grid-column: 5;
     padding: 0 15px;
 }
@@ -197,23 +197,33 @@
 }
 
 #recent-heading {
-    grid-row: 1;
     grid-column: 1 / 6;
     display: inline-grid;
     justify-items: center;
 }
 
 #recently-played {
+    grid-row: 1;
+    display: grid;
+}
+
+#frequent-heading {
+    grid-column: 1 / 6;
+    display: inline-grid;
+    justify-items: center;
+}
+
+#frequently-played {
     grid-row: 2;
     display: grid;
 }
 
-#recent-select {
+.history-select {
     grid-column: 1 / 6;
     display: flex;
     justify-content: center;
     padding: 5px 0;
 }
 
-.recent-period, .recent-intro { padding: 0 3px; }
-.recent-period-selected, .recent-period:hover { text-decoration: underline; }
+.history-option, .history-intro { padding: 0 3px; }
+.history-option-selected, .history-option:hover { text-decoration: underline; }

@@ -75,3 +75,13 @@ class History(BaseObject):
         query.compare("end_time", end, "<")
         query.execute(cursor, HistoryTrack.row_factory)
 
+    @classmethod
+    def frequent_tracks(cls, cursor, num_tracks):
+
+        query = Query(HistoryTrackView,
+            HISTORY_TRACK_COLUMNS + [ ("category", None), ("value", None) ],
+            group = "filename", 
+            order = "count desc",
+            limit = num_tracks
+            ).compare("'count'", 0, ">")
+        query.execute(cursor, HistoryTrack.row_factory)

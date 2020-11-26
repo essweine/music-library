@@ -5,16 +5,13 @@ from tornado.web import Application, StaticFileHandler
 
 from .library import LIBRARY_HANDLERS
 from .importer import DirectoryService, ImportHandler, ImportRootHandler
-from .player import Player, PlayerHandler, PlayerDisplayHandler, PlayerNotificationHandler, RecentlyPlayedHandler
+from .player import Player, PlayerDisplayHandler, PLAYER_HANDLERS
 from .log import LogNotificationHandler
 from .config import TABLES, VIEWS
 
-handlers = LIBRARY_HANDLERS + [ 
+handlers = LIBRARY_HANDLERS + PLAYER_HANDLERS + [ 
     (r"/api/importer/(.*)", ImportHandler),
     (r"/api/importer", ImportRootHandler),
-    (r"/api/player/notifications", PlayerNotificationHandler),
-    (r"/api/player", PlayerHandler),
-    (r"/api/history", RecentlyPlayedHandler),
     (r"/api/log/notifications", LogNotificationHandler),
     (r"/static", StaticFileHandler),
     (r".*", PlayerDisplayHandler),

@@ -139,12 +139,14 @@ function Recording(context) {
             let files = (this.data.recording.notes != null) ? [ this.data.recording.notes ] : [ ];
             this.addFiles(files, this.data.recording.directory);
 
+            recordingRating.remove();
             recordingRating = new RatingDisplay(
                 new Rating("recording-rating", this.data.recording.id, this.data.recording.rating),
                 [ "recording-rating" ],
                 "Rating"
             );
             infoContainer.append(recordingRating.root);
+            soundRating.remove();
             soundRating = new RatingDisplay(
                 new Rating("recording-sound-rating", this.data.recording.id, this.data.recording.sound_rating),
                 [ "recording-sound-rating" ],

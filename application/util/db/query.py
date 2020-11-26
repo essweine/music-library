@@ -63,6 +63,6 @@ class Query(object):
         group = f"group by {self.group}" if self.group else ""
         order = f"order by {self.order}" if self.order else ""
         limit = f"limit {self.limit}" if self.limit is not None else ""
-        return f"select {distinct} {select} from {self.table.name} {conditions} {group} {order}"
+        return f"select {distinct} {select} from {self.table.name} {conditions} {group} {order} {limit}"
 
 

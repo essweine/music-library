@@ -92,6 +92,14 @@ function Tracklist(id, entryType = TracklistEntry) {
         }
         return span;
     }
+
+    this.addHeading = function(text, id) {
+        let heading = document.createElement("span");
+        heading.id = id;
+        heading.classList.add("section-heading");
+        heading.innerText = text;
+        this.root.append(heading);
+    }
 }
 Tracklist.prototype = new Container;
 
