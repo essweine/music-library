@@ -265,9 +265,9 @@ class Player(object):
 
     def _reset_subprocess(self, advance):
 
-        self._subprocess.wait()
         stderr = self._subprocess.stderr.fileno()
         os.set_blocking(stderr, True)
+        self._subprocess.communicate()
 
         if self.state.stream is None:
             entry = self.state.playlist[self.state.current]
