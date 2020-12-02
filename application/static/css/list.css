@@ -106,10 +106,18 @@
 /* --- Generic tracklist --- */
 
 .tracklist-entry { display: contents; }
+.tracklist-heading {
+    display: inline-grid;
+    justify-items: center;
+    font-size: large;
+    font-weight: bold;
+    padding: 5px 0;
+    margin: 5px 0;
+}
 
 /* --- Generic playlist --- */
 
-#player-tracklist, #playlist-tracks-editor {
+#player-playlist, #playlist-tracks-editor {
     display: grid;
     grid-row-gap: 5px;
     align-items: center;
@@ -148,7 +156,7 @@
 
 /* --- Player playlist specific --- */
 
-.tracklist-heading {
+#playlist-heading {
     grid-column: 1 / 7;
     display: grid;
     grid-auto-flow: column;
@@ -159,10 +167,16 @@
     padding: 5px 0;
 }
 
-.tracklist-heading-option { padding-right: 10px; }
-.tracklist-heading-selected, .tracklist-heading-option:hover { text-decoration: underline; }
+#show-all-tracks {
+    display: inline-grid;
+    justify-content: center;
+    font-size: large;
+    font-weight: bold;
+    margin: 10px 0;
+}
 
-#playlist-view { align-content: center; }
+#show-split-view:hover, #show-all-tracks:hover { text-decoration: underline }
+
 .playlist-entry-current { background-color: var(--highlight-color); }
 
 #playlist-controls {
@@ -187,6 +201,10 @@
 }
 #playlist-tracks-editor > .playlist-entry:hover { background-color: var(--highlight-color); }
 
+#next-tracks-heading { grid-column: 1 / 7; }
+
+#recent-heading, #frequent-heading { grid-column: 1 / 6; }
+
 /* --- Additional Recently played styles --- */
 
 #history-container {
@@ -196,21 +214,9 @@
     grid-row-gap: 20px;
 }
 
-#recent-heading {
-    grid-column: 1 / 6;
-    display: inline-grid;
-    justify-items: center;
-}
-
 #recently-played {
     grid-row: 1;
     display: grid;
-}
-
-#frequent-heading {
-    grid-column: 1 / 6;
-    display: inline-grid;
-    justify-items: center;
 }
 
 #frequently-played {
@@ -225,5 +231,5 @@
     padding: 5px 0;
 }
 
-.history-option, .history-intro { padding: 0 3px; }
-.history-option-selected, .history-option:hover { text-decoration: underline; }
+.history-select > .options-action, .options-text { padding: 0 3px; }
+.history-select > .options-action-selected, .options-action:hover { text-decoration: underline; }

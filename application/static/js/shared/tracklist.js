@@ -29,13 +29,20 @@ function TracklistEntry(track, move, remove, prefix) {
 
     this.hide = () => this.root.style.display = "none";
     this.show = () => this.root.style.display = "contents";
+
+    this.addText = (text, className) => {
+        let span = document.createElement("span");
+        span.classList.add(className);
+        span.innerText = text;
+        this.root.append(span);
+    }
 }
 TracklistEntry.prototype = new Container;
 
 function Tracklist(id, entryType = TracklistEntry) {
 
     let def = new ContainerDefinition("div", [ ], id);
-    let data = { tracks: [ ] };
+    let data = { tracks: [ ], current: 0 };
     Container.call(this, data, def);
 
     this.addEntry = function(track, prefix) {
@@ -81,50 +88,36 @@ function Tracklist(id, entryType = TracklistEntry) {
             this.data.tracks[i].updatePosition(i, i == 0, i == this.data.tracks.length - 1);
     }
 
-    this.createOption = function(text, className, selectedClass, action) {
-        let span = document.createElement("span");
-        span.innerText = text;
-        span.classList.add(className);
-        span.onclick = () => {
-            Array.from(document.getElementsByClassName(selectedClass)).map(e => e.classList.remove(selectedClass));
-            span.classList.add(selectedClass);
-            action();
-        }
-        return span;
-    }
-
     this.addHeading = function(text, id) {
         let heading = document.createElement("span");
         heading.id = id;
-        heading.classList.add("section-heading");
+        heading.classList.add("tracklist-heading");
         heading.innerText = text;
         this.root.append(heading);
+    }
+
+    this.prependItem = function(item) {
+        let first = this.root.firstChild;
+        (first != null) ?  this.root.insertBefore(item, first) : this.root.append(item);
     }
 }
 Tracklist.prototype = new Container;
 
-function Playlist(id) {
-
-    Tracklist.call(this, id);
-
-    this.setTracklist = function(tracks) { tracks.map(track => this.addTrack(track)); }
-
-    this.addTrack = function(track) {
-        let entry = this.addEntry(track, "playlist");
-        let addText = function(text, className) {
-            let span = document.createElement("span");
-            span.classList.add(className);
-            span.innerText = text;
-            entry.root.append(span);
-        }
-        addText(track.title, "playlist-title");
-        addText(track.recording, "playlist-recording");
-        addText(track.artist, "playlist-artist");
-        entry.root.append(entry.moveUp.root);
-        entry.root.append(entry.moveDown.root);
-        entry.root.append(entry.removeTrack.root);
-    }
+function PlaylistEntry(track, move, remove, prefix) {
+    TracklistEntry.call(this, track, move, remove, prefix);
+    this.addText(track.title, "playlist-title");
+    this.addText(track.recording, "playlist-recording");
+    this.addText(track.artist, "playlist-artist");
+    this.root.append(this.moveUp.root);
+    this.root.append(this.moveDown.root);
+    this.root.append(this.removeTrack.root);
 }
-Playlist.prototype = new Container;
+PlaylistEntry.prototype = new TracklistEntry;
+
+function Playlist(id) {
+    Tracklist.call(this, id, PlaylistEntry);
+    this.setTracklist = function(tracks) { tracks.map(track => this.addTrack(track)); }
+    this.addTrack = function(track) { this.addEntry(track, "playlist"); }
+}
 
 export { TracklistEntry, Tracklist, Playlist };

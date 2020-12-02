@@ -1,109 +1,56 @@
 import { Container, ContainerDefinition } from "../application.js";
-import { Playlist } from "../shared/tracklist.js";
-import { Icon } from "../shared/widgets.js";
+import { Tracklist, Playlist } from "../shared/tracklist.js";
+import { Icon, Options } from "../shared/widgets.js";
 import { Task } from "../api.js";
+import { HistoryTrack } from "./history.js";
 
-function TracklistControls() {
+function makeExpandable(tracklist, viewOffset) {
 
-    let def = new ContainerDefinition("div", [ ], "playlist-controls");
-    let data = {
-        shuffle: null,
-        repeat: null,
+    tracklist.data.viewOffset = viewOffset;
+    tracklist.data.tracklistHidden = true;
+
+    let toggle = document.createElement("div");
+    toggle.classList.add("list-toggle");
+    toggle.onclick = e => {
+        tracklist.data.tracklistHidden = !tracklist.data.tracklistHidden;
+        tracklist.updateView(tracklist.data.current + tracklist.data.viewOffset);
     };
-    Container.call(this, data, def);
 
-    let shuffleIcon = new Icon("shuffle", e => this.api.shuffleCurrentPlaylist(), [ "control-icon" ]);
-    let repeatIcon  = new Icon("loop", e => this.api.repeatCurrentPlaylist(), [ "control-icon" ]);
-    let clearIcon   = new Icon("clear", e => this.api.clearCurrentPlaylist(), [ "control-icon" ]);
+    tracklist.updateView = (first) => {
+        toggle.remove();
+        let action = (tracklist.data.tracklistHidden) ? "Expand" : "Collapse";
+        let more = tracklist.data.tracks.length - first - 1;
+        if (more == 1)
+            toggle.innerText = action + " (" + more + " more track)";
+        else if (more > 1)
+            toggle.innerText = action + " (" + more + " more tracks)";
 
-    for (let icon of [ shuffleIcon, repeatIcon, clearIcon ])
-        this.root.append(icon.root);
-
-    this.update = (shuffle, repeat) => {
-        (shuffle) ? shuffleIcon.root.classList.remove("disabled-icon") : shuffleIcon.root.classList.add("disabled-icon");
-        (repeat) ? repeatIcon.root.classList.remove("disabled-icon") : repeatIcon.root.classList.add("disabled-icon");
+        for (let track of tracklist.data.tracks) {
+            if (track.data.position < first)
+                track.hide();
+            else if (track.data.position > first)
+                (tracklist.data.tracklistHidden) ? track.hide() : track.show();
+            else {
+                track.root.style["font-size"] = "large";
+                track.moveUp.hide();
+            }
+            if (track.data.position == first + 1)
+                tracklist.root.insertBefore(toggle, track.root);
+        }
     }
 }
-TracklistControls.prototype = new Container;
 
-function CurrentPlaylist() {
+function PlayerTracklist() {
 
-    Playlist.call(this, "player-tracklist");
+    Playlist.call(this, "player-playlist");
 
-    this.data.current = 0;
-    this.data.currentView = "nextTracks";
-    this.data.tracklistHidden = true;
+    this.highlightCurrent = () => this.data.tracks[this.data.current].root.classList.add("playlist-entry-current");
 
-    let heading = document.createElement("div");
-    heading.classList.add("tracklist-heading");
-
-    let view = document.createElement("div");
-    view.id = "playlist-view";
-
-    let updateView = (view) => function() {
-        this.data.currentView = view;
-        this.updateDisplay();
-    };
-
-    let headingClass = "tracklist-heading-option";
-    let selectedClass = "tracklist-heading-selected";
-    let nextTracksView = this.createOption("Next Tracks", headingClass, selectedClass, updateView("nextTracks").bind(this));
-    nextTracksView.classList.add("tracklist-heading-selected");
-    view.append(nextTracksView);
-    let playlistView = this.createOption("All Tracks", headingClass, selectedClass, updateView("allTracks").bind(this));
-    view.append(playlistView);
-    heading.append(view);
-
-    let controls = new TracklistControls();
-    heading.append(controls.root);
-    this.root.append(heading);
-
-    let listToggle = document.createElement("div");
-    listToggle.classList.add("list-toggle");
-    listToggle.onclick = e => {
-        this.data.tracklistHidden = !this.data.tracklistHidden;
-        this.updateDisplay();
-    };
-
-    this.updateDisplay = function() {
-        for (let track of this.data.tracks) {
-            if (this.data.currentView == "allTracks") {
-                track.show();
-                track.root.style["font-size"] = "medium";
-                if (track.data.position == this.data.current)
-                    track.root.classList.add("playlist-entry-current");
-                if (track.data.position != 0)
-                    track.moveUp.show();
-            } else {
-                if (track.data.position <= this.data.current) {
-                    track.hide();
-                } else if (track.data.position == this.data.current + 1) {
-                    track.root.style["font-size"] = "large";
-                    track.moveUp.hide();
-                } else {
-                    (this.data.tracklistHidden) ? track.hide() : track.show();
-                }
-            }
-        }
-        if (this.data.currentView == "nextTracks") {
-            let more = this.data.tracks.length - this.data.current - 1;
-            if (more > 0) {
-                let action = (this.data.tracklistHidden) ? "Expand" : "Collapse";
-                if (more > 1)
-                    listToggle.innerText = action + " (" + more + " more tracks)";
-                else if (more == 1)
-                    listToggle.innerText = action + " (" + more + " more track)";
-                this.root.insertBefore(listToggle, this.data.tracks[this.data.current + 2].root);
-            }
-        } else { listToggle.remove(); }
-    }
-
-    this.update = function(state) {
+    this.update = (state, updateDisplay) => {
         this.clear();
-        this.data.current = state.current;
         this.setTracklist(state.playlist);
-        this.updateDisplay();
-        controls.update(state.shuffle, state.repeat);
+        this.data.current = state.current;
+        updateDisplay();
     }
 
     this.shiftTrackUp = (position) => {
@@ -113,6 +60,94 @@ function CurrentPlaylist() {
     this.removeTrack = (position) => {
         this.api.sendTasks([ new Task("remove", { position: position }) ]);
     }
+}
+PlayerTracklist.prototype = new Container;
+
+function HistoryTracklist() {
+
+    Tracklist.call(this, "player-playlist", HistoryTrack);
+
+    this.setTracklist = function(tracks) {
+        this.clear();
+        tracks.map(track => this.addTrack(track));
+        this.updateView(0);
+    }
+
+    this.addTrack = function(track) { this.addEntry(track, "playlist"); }
+
+    this.update = function() { this.api.getRecentTracks(1800, this.setTracklist.bind(this)); }
+}
+HistoryTracklist.prototype = new Container;
+
+function CurrentPlaylist() {
+
+    let def = new ContainerDefinition("div", [ ], "player-playlist");
+    let data = {
+        shuffle: null,
+        repeat: null,
+    }
+    Container.call(this, data, def);
+
+    let nextTracks   = new PlayerTracklist();
+    let recentTracks = new HistoryTracklist();
+    let allTracks    = new PlayerTracklist();
+
+    nextTracks.addHeading("Next Tracks", "next-tracks-heading");
+    makeExpandable(nextTracks, 1);
+    recentTracks.addHeading("Recently Played", "recent-heading");
+    makeExpandable(recentTracks, 0);
+
+    let heading = document.createElement("div");
+    heading.id = "playlist-heading";
+
+    let showNext = document.createElement("div");
+    showNext.id = "show-split-view";
+    showNext.innerText = "Show Next/Recent Tracks";
+
+    let showAll = document.createElement("div");
+    showAll.id = "show-all-tracks";
+    showAll.innerText = "Show All Tracks";
+
+    let updateView = (showAllTracks) => {
+        if (showAllTracks) {
+            showAll.remove();
+            nextTracks.root.remove();
+            recentTracks.root.remove();
+            allTracks.prependItem(heading);
+            this.root.append(allTracks.root);
+        } else {
+            allTracks.root.remove();
+            this.root.append(nextTracks.root);
+            this.root.append(recentTracks.root);
+            this.root.append(showAll);
+        }
+    }
+    showNext.onclick = e => updateView(false);
+    showAll.onclick = e => updateView(true);
+
+    let controls = document.createElement("div");
+    controls.id = "playlist-controls";
+
+    let shuffleIcon = new Icon("shuffle", e => this.api.shuffleCurrentPlaylist(), [ "control-icon" ]);
+    let repeatIcon  = new Icon("loop", e => this.api.repeatCurrentPlaylist(), [ "control-icon" ]);
+    let clearIcon   = new Icon("clear", e => this.api.clearCurrentPlaylist(), [ "control-icon" ]);
+
+    for (let icon of [ shuffleIcon, repeatIcon, clearIcon ])
+        controls.append(icon.root);
+
+    heading.append(showNext);
+    heading.append(controls);
+    allTracks.root.append(heading);
+
+    this.update = function(state) {
+        (state.shuffle) ? shuffleIcon.root.classList.remove("disabled-icon") : shuffleIcon.root.classList.add("disabled-icon");
+        (state.repeat) ? repeatIcon.root.classList.remove("disabled-icon") : repeatIcon.root.classList.add("disabled-icon");
+        nextTracks.update(state, nextTracks.updateView.bind(nextTracks, state.current + 1));
+        allTracks.update(state, allTracks.highlightCurrent.bind(allTracks))
+        recentTracks.update();
+    }
+
+    updateView(false);
 }
 CurrentPlaylist.prototype = new Container;
 

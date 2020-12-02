@@ -1,6 +1,6 @@
 import { Container, ContainerDefinition } from "../application.js";
 import { ListRoot, SearchBar } from "../shared/list.js";
-import { Playlist } from "../shared/tracklist.js";
+import { Tracklist, Playlist} from "../shared/tracklist.js";
 import { Icon, EditableInfo } from "../shared/widgets.js";
 import { Rating } from "../api.js";
 

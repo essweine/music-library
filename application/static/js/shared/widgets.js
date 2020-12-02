@@ -118,4 +118,40 @@ function EditableInfo(classes = [ ]) {
 }
 EditableInfo.prototype = new Container;
 
-export { Icon, RatingDisplay, EditableInfo };
+function Options(classes = [ ], id = null) {
+
+    let def = new ContainerDefinition("div", classes, id);
+    Container.call(this, null, def);
+
+    let className     = "options-action";
+    let selectedClass = "options-action-selected";
+
+    let select = (option) => {
+        Array.from(this.root.getElementsByClassName(selectedClass)).map(e => e.classList.remove(selectedClass));
+        option.classList.add(selectedClass);
+        this.data = option;
+    }
+
+    this.addOption = (text, action) => {
+        let option = document.createElement("span");
+        option.innerText = text;
+        option.classList.add(className);
+        if (this.data == null)
+            select(option);
+        option.onclick = (e) => {
+            select(e.target);
+            action();
+        }
+        this.root.append(option);
+    }
+
+    this.addText = (text) => {
+        let span = document.createElement("span");
+        span.classList.add("options-text");
+        span.innerText = text;
+        this.root.append(span);
+    }
+}
+Options.prototype = new Container;
+
+export { Icon, RatingDisplay, EditableInfo, Options };
