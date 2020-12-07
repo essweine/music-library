@@ -45,6 +45,8 @@ function Api(errorHandler) {
 
     this.getRecording = (recordingId, callback) => { this.get(this.recording + "/" + recordingId, callback); }
 
+    this.getRecordingTracks = (recordingId, callback) => { this.get(this.recording + "/" + recordingId + "/tracks", callback); }
+
     this.addToLibrary = (data) => { 
         let callback = response => window.location = "/recording/" + response.id;
         this.post(this.recording, data, callback);

@@ -1,6 +1,7 @@
 import { Container, ContainerDefinition } from "../application.js";
-import { ListRoot, SearchBar } from "../shared/list.js";
-import { Tracklist, Playlist} from "../shared/tracklist.js";
+import { ListRoot } from "../shared/list.js";
+import { SearchBar } from "../shared/search.js";
+import { Playlist} from "../shared/tracklist.js";
 import { Icon, EditableInfo } from "../shared/widgets.js";
 import { Rating } from "../api.js";
 
@@ -15,39 +16,6 @@ function PlaylistList() {
         { display: "", className: "playlist-list-play", type: "icon" },
         { display: "", className: "playlist-list-delete", type: "icon" },
     ];
-    ListRoot.call(this, columns, [ "playlist-list-root" ]);
-
-    let expandRow = (playlistId) => {
-        return function(tracks) {
-            let selected = document.getElementById(playlistId);
-            selected.classList.add("list-row-expanded");
-            let next = selected.nextElementSibling;
-            for (let track of tracks) {
-                let data = {
-                    values: [
-                        track.title,
-                        "",
-                        new Rating("track", track.filename, track.rating),
-                        null,
-                        null,
-                        null,
-                        null,
-                    ],
-                    action: null
-                }
-                let row = this.createRow(data, [ "track-" + playlistId, "list-row-expanded" ]);
-                (next != null) ? this.root.insertBefore(row.root, next) : this.root.append(row.root);
-            }
-        }
-    }
-
-    let collapseRow = (playlistId) => {
-        let selected = document.getElementById(playlistId);
-        selected.classList.remove("list-row-expanded");
-        let tracks = Array.from(document.getElementsByClassName("track-" + playlistId));
-        for (let track of tracks)
-            track.remove();
-    }
 
     let playTracks = (entry) => {
         this.api.clearCurrentPlaylist();
@@ -55,11 +23,25 @@ function PlaylistList() {
         this.api.start();
     };
 
-    let deletePlaylist = (playlistId) => this.api.deletePlaylist(playlistId, this.refresh.bind(this, this.search.currentQuery()));
+    let deletePlaylist = (playlistId) => this.api.deletePlaylist(playlistId, this.refresh.bind(this, this.search.data));
 
-    this.getData = (entry) => {
+    let getTrackData = (track) => {
         return {
-            id: entry.id,
+            values: [
+                track.title,
+                "",
+                new Rating("track", track.filename, track.rating),
+                null,
+                null,
+                null,
+                null,
+            ],
+            expand: null,
+        }
+    }
+
+    let getPlaylistData = (entry) => {
+        return {
             values: [
                 entry.name,
                 entry.length,
@@ -69,19 +51,15 @@ function PlaylistList() {
                 { name: "playlist_play", action: e => playTracks(entry) },
                 { name: "clear", action: e => deletePlaylist(entry.id) },
             ],
-            action: {
-                expand: e => this.api.getPlaylistTracks(entry.id, expandRow(entry.id).bind(this)),
-                collapse: e => collapseRow(entry.id),
-            }
+            expand: { id: entry.id, getRows: this.api.getPlaylistTracks, createRow: getTrackData },
         }
     }
 
-    this.refresh = function(query = this.currentQuery()) { this.api.query(this.api.playlist, query, this.update.bind(this)); }
+    ListRoot.call(this, columns, getPlaylistData, "playlist-list-root");
 
-    this.search = new SearchBar([ "playlist-list-search" ], this.refresh.bind(this));
-
+    this.refresh = function(query = this.search.data) { this.api.query(this.api.playlist, query, this.update.bind(this)); }
+    this.search = new SearchBar("playlist-list-search", this.api.playlist, this.refresh.bind(this));
     this.root.append(this.search.root);
-
     this.addHeading();
 
     let newPlaylist = document.createElement("span");
@@ -96,8 +74,7 @@ function PlaylistList() {
     this.root.append(newPlaylist);
 
     document.title = "Browse Playlists";
-    this.api.getAllPlaylists(this.addRows.bind(this));
-    this.api.getSearchConfig(this.api.playlist, this.search.configure);
+    //this.api.getAllPlaylists(this.addRows.bind(this));
 }
 PlaylistList.prototype = new Container;
 
@@ -138,7 +115,22 @@ function PlaylistEditor(playlistId) {
         { display: "Rating", className: "track-list-rating", type: "rating" },
         { display: "", className: "track-list-add", type: "icon" },
     ];
-    let searchResults = new ListRoot(columns, [ ]);
+
+    let getTrackData = (track) => {
+        return {
+            id: null,
+            values: [
+                track.title,
+                track.recording,
+                track.artist,
+                new Rating("track", track.filename, track.rating),
+                { name: "playlist_add", action: e => tracklist.addTrack(track) },
+            ],
+            expand: null,
+        }
+    }
+    let searchResults = new ListRoot(columns, getTrackData, "track-search-results");
+    this.root.append(searchResults.root);
 
     let cleared = function(query) {
         return query.match.length == 0 && query.exclude.length == 0 && query.official && query.nonofficial && !query.unrated;
@@ -151,24 +143,8 @@ function PlaylistEditor(playlistId) {
             searchResults.update([ ]);
     }
 
-    let search = new SearchBar([ "track-list-search" ], searchResults.refresh);
+    let search = new SearchBar("track-list-search", this.api.track, searchResults.refresh);
     searchResults.root.append(search.root);
-
-    searchResults.getData = (track) => {
-        return {
-            id: null,
-            values: [
-                track.title,
-                track.recording,
-                track.artist,
-                new Rating("track", track.filename, track.rating),
-                { name: "playlist_add", action: e => tracklist.addTrack(track) },
-            ],
-            action: null,
-        }
-    }
-
-    this.root.append(searchResults.root);
 
     this.initialize = (playlist) => {
         this.data = playlist;
@@ -178,7 +154,6 @@ function PlaylistEditor(playlistId) {
         document.title = playlist.name;
     }
 
-    this.api.getSearchConfig(this.api.track, search.configure);
     this.api.getPlaylist(playlistId, this.initialize);
 }
 PlaylistEditor.prototype = new Container;

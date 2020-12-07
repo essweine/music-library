@@ -10,9 +10,8 @@ function DirectoryList() {
         { display: "Text", className: "directory-list-text", type: "text" },
         { display: "", className: "directory-list-add", type: "icon" },
     ];
-    ListRoot.call(this, columns, [ "directory-list-root" ]);
 
-    this.getData = (entry) => {
+    let getDirectoryData = (entry) => {
         return {
             values: [
                 entry.relative_path,
@@ -21,14 +20,14 @@ function DirectoryList() {
                 entry.text.length,
                 { name: "add", action: e => window.location.href = "/importer/" + encodeURIComponent(entry.relative_path) },
             ],
-            action: null,
+            expand: null,
         };
     }
 
+    ListRoot.call(this, columns, getDirectoryData, "directory-list-root");
     this.addHeading();
-
     document.title = "Unindexed Directory List";
-    this.api.getAllDirectories(this.addRows.bind(this));
+    this.api.getAllDirectories(this.update.bind(this));
 }
 DirectoryList.prototype = new Container;
 

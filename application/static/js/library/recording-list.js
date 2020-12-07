@@ -1,5 +1,6 @@
 import { Container, ContainerDefinition } from "../application.js";
-import { ListRoot, SearchBar } from "../shared/list.js";
+import { ListRoot } from "../shared/list.js";
+import { SearchBar } from "../shared/search.js";
 import { Rating } from "../api.js";
 
 function RecordingList() { 
@@ -14,38 +15,6 @@ function RecordingList() {
         { display: "", className: "recording-list-queue", type: "icon" },
         { display: "", className: "recording-list-play", type: "icon" },
     ];
-    ListRoot.call(this, columns, [ "recording-list-root" ]);
-
-    let expandRow = (recording) => {
-        let selected = document.getElementById(recording.id);
-        selected.classList.add("list-row-expanded");
-        let next = selected.nextElementSibling;
-        for (let track of recording.tracks) {
-            let data = {
-                values: [
-                    "",
-                    track.title,
-                    "",
-                    new Rating("track", track.filename, track.rating),
-                    null,
-                    null,
-                    { name: "playlist_add", action: e => api.queue(track) },
-                    null,
-                ],
-                action: null
-            }
-            let row = this.createRow(data, [ "track-" + recording.id, "list-row-expanded" ]);
-            (next != null) ? this.root.insertBefore(row.root, next) : this.root.append(row.root);
-        }
-    }
-
-    let collapseRow = (recordingId) => {
-        let selected = document.getElementById(recordingId);
-        selected.classList.remove("list-row-expanded");
-        let tracks = Array.from(document.getElementsByClassName("track-" + recordingId));
-        for (let track of tracks)
-            track.remove();
-    }
 
     let playRecording = (entry) => {
         this.api.clearCurrentPlaylist();
@@ -53,9 +22,24 @@ function RecordingList() {
         this.api.start();
     };
 
-    this.getData = (entry) => {
+    let getTrackData = (track) => {
         return {
-            id: entry.id,
+            values: [
+                "",
+                track.title,
+                "",
+                new Rating("track", track.filename, track.rating),
+                null,
+                null,
+                { name: "playlist_add", action: e => api.queue(track) },
+                null,
+            ],
+            expand: null,
+        };
+    }
+
+    let getRecordingData = (entry) => {
+        return {
             values: [
                 entry.artist,
                 entry.title,
@@ -66,23 +50,19 @@ function RecordingList() {
                 { name: "playlist_add", action: e => this.api.getRecording(entry.id, this.api.queueRecording) },
                 { name: "playlist_play", action: e => playRecording(entry) },
             ],
-            action: {
-                expand: e => this.api.getRecording(entry.id, expandRow),
-                collapse: e => collapseRow(entry.id)
-            }
+            expand: { id: entry.id, getRows: this.api.getRecordingTracks, createRow: getTrackData },
         };
     }
+    ListRoot.call(this, columns, getRecordingData, "recording-list-root");
 
     this.refresh = function(query) { this.api.query(this.api.recording, query, this.update.bind(this)); }
 
-    let search = new SearchBar([ "recording-list-search" ], this.refresh.bind(this));
+    let search = new SearchBar("recording-list-search", this.api.recording, this.refresh.bind(this));
     this.root.append(search.root);
 
     this.addHeading();
 
     document.title = "Browse Recordings";
-    this.api.getAllRecordings(this.addRows.bind(this));
-    this.api.getSearchConfig(this.api.recording, search.configure);
 }
 RecordingList.prototype = new Container;
 

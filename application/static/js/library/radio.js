@@ -1,4 +1,5 @@
-import { ListRoot, SearchBar } from "../shared/list.js";
+import { ListRoot } from "../shared/list.js";
+import { SearchBar } from "../shared/search.js";
 import { Icon, EditableInfo } from "../shared/widgets.js";
 import { Rating } from "../api.js";
 import { Container, ContainerDefinition } from "../application.js";
@@ -92,11 +93,9 @@ function StationList(stationEditor) {
         { display: "", className: "station-list-play", type: "icon" },
         { display: "", className: "station-list-delete", type: "icon" },
     ];
-    ListRoot.call(this, columns, [ "stream-list-root" ]);
 
-    this.getData = function(station) {
+    let getStationData = function(station) {
         return {
-            id: null,
             values: [
                 station.name,
                 { text: station.website, url: station.website },
@@ -107,21 +106,18 @@ function StationList(stationEditor) {
                 { name: "play_arrow", action: e => this.api.streamUrl(station.url) },
                 { name: "clear", action: e => this.deleteStation(station.id) },
             ],
-            action: null,
+            expand: null,
         };
     }
 
+    ListRoot.call(this, columns, getStationData, "stream-list-root");
     this.refresh = function(query) { this.api.query(this.api.station, query, this.update.bind(this)); }
 
-    this.deleteStation = function(stationId) { this.api.deleteStation(stationId, this.refresh.bind(this, this.search.currentQuery())); }
+    this.deleteStation = function(stationId) { this.api.deleteStation(stationId, this.refresh.bind(this, this.search.data)); }
 
-    this.search = new SearchBar([ "station-list-search" ], this.refresh.bind(this));
+    this.search = new SearchBar("station-list-search", this.api.station, this.refresh.bind(this));
     this.root.append(this.search.root);
-
     this.addHeading();
-
-    this.api.getAllStations(this.addRows.bind(this));
-    this.api.getSearchConfig(this.api.station, this.search.configure);
 }
 StationList.prototype = new Container;
 
@@ -133,7 +129,7 @@ function RadioContainer() {
     let stationEditor = new StationEditor();
     let stationList = new StationList(stationEditor);
     stationEditor.setContent(null);
-    stationEditor.refreshStations = stationList.refresh.bind(stationList, stationList.search.currentQuery());
+    stationEditor.refreshStations = stationList.refresh.bind(stationList, stationList.search.data);
     this.root.append(stationEditor.root);
     this.root.append(stationList.root);
 

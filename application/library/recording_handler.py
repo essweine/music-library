@@ -66,3 +66,12 @@ class RecordingHandler(BaseApiHandler):
         except:
             self.write_error(500, log_message = f"Could not update recording {recording_id}", exc_info = sys.exc_info())
 
+class RecordingTrackHandler(BaseApiHandler):
+
+    def get(self, recording_id):
+
+        try:
+            recording = self.db_action(Recording.get, recording_id)
+            self.write(json.dumps(recording.tracks, cls = self.JsonEncoder))
+        except:
+            self.write_error(500, log_message = f"Could not retrieve tracks for {recording_id}", exc_info = sys.exc_info())

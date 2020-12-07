@@ -1,5 +1,6 @@
 import { Container, ContainerDefinition } from "../application.js";
-import { ListRoot, SearchBar } from "../shared/list.js";
+import { ListRoot } from "../shared/list.js";
+import { SearchBar } from "../shared/search.js";
 import { Rating } from "../api.js";
 
 function BarChart(classes) {
@@ -62,13 +63,13 @@ function RatingAggregation() {
             chart.setValue(bar, (100* rating.tracks / total) + "%", rating.tracks);
         });
     }
-    let refresh = (query = search.currentQuery()) => {
+
+    let refresh = (query = search.data) => {
         search.setSort([ "rating", "title" ]);
         this.api.aggregate(this.api.track, "rating", query, updateChart);
-        this.api.query(this.api.track, search.currentQuery(), tracks.update.bind(tracks));
+        this.api.query(this.api.track, search.data, tracks.update.bind(tracks));
     }
-
-    let search = new SearchBar([ "track-aggregate-search" ], refresh);
+    let search = new SearchBar("track-aggregate-search", this.api.track, refresh);
     this.root.append(search.root);
 
     let columns = [
@@ -77,19 +78,19 @@ function RatingAggregation() {
         { display: "Artist", className: "track-list-artist", type: "text" },
         { display: "Rating", className: "track-list-rating", type: "rating" },
     ];
-    let tracks = new ListRoot(columns, [ ]);
-    tracks.getData = (track) => {
+
+    let getTrackData = (track) => {
         return {
-            id: null,
             values: [
                 track.title,
                 track.recording,
                 track.artist,
                 new Rating("track", track.filename, track.rating),
             ],
-            action: null,
+            expand: null,
         }
     }
+    let tracks = new ListRoot(columns, getTrackData, "track-search-results");
     tracks.addHeading();
 
     let options = document.createElement("span");
@@ -110,8 +111,6 @@ function RatingAggregation() {
     options.append(hide);
 
     this.root.append(options);
-
-    this.api.getSearchConfig(this.api.track, search.configure);
 }
 RatingAggregation.prototype = new Container;
 

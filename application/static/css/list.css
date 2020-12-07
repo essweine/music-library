@@ -59,7 +59,7 @@
 .directory-list-add { grid-column: 5; }
 
 /* --- Recording list layout --- */
-.recording-list-search { grid-column: 1 / 9; }
+#recording-list-search { grid-column: 1 / 9; }
 .recording-list-artist { grid-column: 1; }
 .recording-list-title { grid-column: 2; }
 .recording-list-date { grid-column: 3; }
@@ -70,7 +70,7 @@
 .recording-list-play { grid-column: 8; }
 
 /* -- Playlist list layout --- */
-.playlist-list-search { grid-column: 1 / 8; }
+#playlist-list-search { grid-column: 1 / 8; }
 .playlist-list-name { grid-column: 1 }
 .playlist-list-tracks { grid-column: 2 }
 .playlist-list-rating { grid-column: 3 }
@@ -85,7 +85,7 @@
 }
 
 /* --- Track search results layout --- */
-.track-list-search { grid-column: 1 / 6; }
+#track-list-search { grid-column: 1 / 6; }
 .track-list-title { grid-column: 1; }
 .track-list-recording { grid-column: 2; }
 .track-list-artist { grid-column: 3; }
@@ -93,7 +93,7 @@
 .track-list-add { grid-column: 5; }
 
 /* --- Station list --- */
-.station-list-search { grid-column: 1 / 9; }
+#station-list-search { grid-column: 1 / 9; }
 .station-list-name { grid-column: 1; }
 .station-list-website { grid-column: 2; }
 .station-list-minutes-listened { grid-column: 3; }
@@ -121,6 +121,11 @@
     display: grid;
     grid-row-gap: 5px;
     align-items: center;
+}
+
+#playlist-tracks-editor {
+    padding: 5px 0;
+    margin: 5px 0;
 }
 
 .playlist-title {
