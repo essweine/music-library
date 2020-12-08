@@ -171,15 +171,26 @@ a:hover { font-weight: bold; }
 
 #rating-bar-unrated > .bar-data > .bar-rect { background-color: #aac; }
 
-.aggregate-query-options {
+#aggregate-query-select { margin: 5px 0 10px 0; }
+#aggregate-query-select > .options-text, 
+#aggregate-query-select > .options-action {
+    padding: 0 3px;
+    font-size: large;
+    font-weight: bold;
+}
+#aggregate-query-select > .options-action-selected, 
+#aggregate-query-select > .options-action:hover { text-decoration: underline }
+
+#aggregate-results-toggle {
     display: flex;
     justify-content: center;
     padding: 5px 0;
 }
 
-.aggregate-query-option {
+#aggregate-results-toggle > .options-action {
     padding: 0 5px;
-    text-decoration: underline;
+    font-size: medium;
 }
 
-.aggregate-query-option:hover { font-weight: bold; }
+#aggregate-results-toggle > .options-action-selected, 
+#aggregate-results-toggle > .options-action:hover { text-decoration: underline }

@@ -4,7 +4,7 @@ import { ErrorDisplay, LogManager } from "./errors.js";
 import { DirectoryList } from "./library/directory.js";
 import { RecordingList } from "./library/recording-list.js";
 import { RecordingDisplay, ImportDisplay } from "./library/recording.js";
-import { RatingAggregation } from "./library/tracks.js";
+import { RatingManager } from "./library/rating-manager.js";
 import { PlaylistList, PlaylistEditor } from "./library/playlist.js";
 import { RadioContainer } from "./library/radio.js";
 import { Player } from "./player/container.js";
@@ -36,8 +36,8 @@ function Application(action, arg) {
             container = new RecordingDisplay(arg);
         } else if (action == "recording") {
             container = new RecordingList();
-        } else if (action == "tracks") {
-            container = new RatingAggregation();
+        } else if (action == "ratings") {
+            container = new RatingManager();
         } else if (action == "history") {
             container = new PlayerHistory();
         } else if (action == "playlist" && arg != null) {

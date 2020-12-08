@@ -1,12 +1,12 @@
 # Classes
 from .recording import Recording, LibraryTrack
 from .search import RecordingSummary, PlaylistTrack
-from .aggregate import TrackAggregation
+from .aggregate import TrackAggregation, RecordingAggregation
 from .playlist import Playlist
 from .station import Station
 
 # Handlers
-from .recording_handler import RecordingHandler, RecordingRootHandler, RecordingSearchHandler, RecordingTrackHandler
+from .recording_handler import RecordingHandler, RecordingRootHandler, RecordingSearchHandler, RecordingTrackHandler, RecordingAggregationHandler
 from .track_handler import TrackSearchHandler, TrackAggregationHandler
 from .station_handler import StationHandler, StationRootHandler, StationSearchHandler
 from .playlist_handler import PlaylistHandler, PlaylistRootHandler, PlaylistSearchHandler, PlaylistTrackHandler
@@ -14,6 +14,7 @@ from .rating_handler import RatingHandler
 
 LIBRARY_HANDLERS = [
     (r"/api/recording/search", RecordingSearchHandler),
+    (r"/api/recording/aggregate/(.*)", RecordingAggregationHandler),
     (r"/api/recording/(.*)/tracks", RecordingTrackHandler),
     (r"/api/recording/(.*)", RecordingHandler),
     (r"/api/recording", RecordingRootHandler),

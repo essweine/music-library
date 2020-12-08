@@ -154,7 +154,7 @@ function SearchBar(id, apiPath, callback) {
         checkbox.checked = this.data[queryParam];
         checkbox.oninput = e => {
             this.data[queryParam] = checkbox.checked;
-            updateResults(this.data);
+            callback(this.data);
         }
         span.append(checkbox);
         this.root.append(span);

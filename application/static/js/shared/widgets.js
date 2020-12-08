@@ -132,11 +132,11 @@ function Options(classes = [ ], id = null) {
         this.data = option;
     }
 
-    this.addOption = (text, action) => {
+    this.addOption = (text, action, selected = false) => {
         let option = document.createElement("span");
         option.innerText = text;
         option.classList.add(className);
-        if (this.data == null)
+        if (this.data == null || selected)
             select(option);
         option.onclick = (e) => {
             select(e.target);

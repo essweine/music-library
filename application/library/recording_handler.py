@@ -1,7 +1,7 @@
 import sys
 import json
 
-from . import Recording, RecordingSummary
+from . import Recording, RecordingSummary, RecordingAggregation
 from ..importer import DirectoryService
 from ..util import BaseApiHandler, BaseSearchHandler
 
@@ -39,6 +39,21 @@ class RecordingSearchHandler(BaseSearchHandler):
 
     def search(self):
         return self.db_query(RecordingSummary.search, self.json_body)
+
+class RecordingAggregationHandler(BaseApiHandler):
+
+    def post(self, agg_type):
+
+        if not self.json_body:
+            self.write_error(400, messsages = [ "Expected json" ])
+
+        try:
+            results = self.db_query(RecordingAggregation.aggregate, agg_type, self.json_body)
+            self.write(json.dumps(results, cls = self.JsonEncoder))
+        except ValueError as exc:
+            self.write_error(400, messages = [ str(exc) ])
+        except Exception as exc:
+            self.write_error(500, log_message = f"Could not execute recording query", exc_info = sys.exc_info())
 
 class RecordingHandler(BaseApiHandler):
 

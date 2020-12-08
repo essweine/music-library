@@ -236,5 +236,5 @@
     padding: 5px 0;
 }
 
-.history-select > .options-action, .options-text { padding: 0 3px; }
-.history-select > .options-action-selected, .options-action:hover { text-decoration: underline; }
+.history-select > .options-action, .history-select > .options-text { padding: 0 3px; }
+.history-select > .options-action-selected, .history-select > .options-action:hover { text-decoration: underline; }

@@ -1,6 +1,6 @@
 import { Container, ContainerDefinition } from "../application.js";
 import { Tracklist, Playlist } from "../shared/tracklist.js";
-import { Icon, Options } from "../shared/widgets.js";
+import { Icon } from "../shared/widgets.js";
 import { Task } from "../api.js";
 import { HistoryTrack } from "./history.js";
 
