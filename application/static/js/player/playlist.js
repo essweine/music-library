@@ -1,8 +1,7 @@
 import { Container, ContainerDefinition } from "../application.js";
-import { Tracklist, Playlist } from "../shared/tracklist.js";
-import { Icon } from "../shared/widgets.js";
-import { Task } from "../api.js";
-import { HistoryTrack } from "./history.js";
+import { Tracklist, Playlist, TracklistEntry } from "../shared/tracklist.js";
+import { Icon, RatingDisplay } from "../shared/widgets.js";
+import { Task, Rating } from "../api.js";
 
 function makeExpandable(tracklist, viewOffset) {
 
@@ -62,6 +61,21 @@ function PlayerTracklist() {
     }
 }
 PlayerTracklist.prototype = new Container;
+
+function HistoryTrack(track, move, remove, prefix) {
+
+    TracklistEntry.call(this, track, move, remove, prefix);
+
+    this.addText(track.title, "playlist-title");
+    this.addText(track.recording, "playlist-recording");
+    this.addText(track.artist, "playlist-artist");
+
+    let rating = new RatingDisplay(new Rating("track", track.filename, track.rating), [ "history-rating" ]);
+    this.root.append(rating.root);
+
+    let count = (track.count > 1) ? "x " + track.count : "";
+    this.addText(count, "history-count");
+}
 
 function HistoryTracklist() {
 

@@ -29,3 +29,13 @@ class FrequentlyPlayedHandler(BaseApiHandler):
         else:
             self.logger.error(f"POST request {request.url}: expected json")
         self.write(json.dumps(results, cls = self.JsonEncoder))
+
+class TrackHistoryHandler(BaseApiHandler):
+
+    def post(self):
+
+        if self.json_body:
+            results = self.db_query(History.track, **self.json_body)
+        else:
+            self.logger.error(f"POST request {request.url}: expected json")
+        self.write(json.dumps(results, cls = self.JsonEncoder))

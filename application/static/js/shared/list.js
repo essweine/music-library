@@ -62,19 +62,25 @@ function ListRoot(columns, defaultRow, id) {
     this.addRows = function(items, rowType, classes = [ ], before = null) {
         for (let entry of items) {
             let data = rowType(entry);
-            let rowId = (data.expand) ? data.expand.id : null;
+            let rowId = (data.expand) ? data.expand.id.replace(/\s+/g, "-") : null;
             let action = null;
             if (data.expand) {
                 let createRow = expand(rowId, data.expand.createRow);
                 action = {
-                    expand: e => data.expand.getRows(rowId, createRow.bind(this)),
+                    expand: e => data.expand.getRows(data.expand.id, createRow.bind(this)),
                     collapse: e => collapse(rowId),
                 };
             }
             let row = new ListRow(classes, rowId);
             for (let idx in data.values)
                 row.addColumn(data.values[idx], this.data[idx].type, this.data[idx].className, action);
-            (before == null) ? this.root.append(row.root) : this.root.insertBefore(row.root, before);
+            let footer = this.root.getElementsByClassName("list-footer");
+            if (before != null)
+                this.root.insertBefore(row.root, before);
+            else if (footer.length > 0)
+                this.root.insertBefore(row.root, footer[0]);
+            else
+                this.root.append(row.root);
         }
     }
 
@@ -83,6 +89,11 @@ function ListRoot(columns, defaultRow, id) {
         for (let column of this.data)
             heading.addColumn(column.display, "text", column.className);
         this.root.append(heading.root);
+    }
+
+    this.addFooter = function(footer) {
+        footer.classList.add("list-footer");
+        this.root.append(footer);
     }
 
     this.clear = function() {

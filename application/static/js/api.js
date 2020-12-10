@@ -91,6 +91,11 @@ function Api(errorHandler) {
         this.post(this.history + "/frequent", query, callback);
     }
 
+    this.getTrackHistory = (filename, callback) => {
+        let query = { "filename": filename };
+        this.post(this.history + "/track", query, callback);
+    }
+
     /* -- Player requests --- */
 
     this.start = () => { this.sendTasks([ new Task("start") ]); }

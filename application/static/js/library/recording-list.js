@@ -31,7 +31,7 @@ function RecordingList() {
                 new Rating("track", track.filename, track.rating),
                 null,
                 null,
-                { name: "playlist_add", action: e => api.queue(track) },
+                { name: "playlist_add", action: e => this.api.queue(track) },
                 null,
             ],
             expand: null,

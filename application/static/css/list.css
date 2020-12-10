@@ -210,7 +210,7 @@
 
 #recent-heading, #frequent-heading { grid-column: 1 / 6; }
 
-/* --- Additional Recently played styles --- */
+/* --- History page --- */
 
 #history-container {
     display: grid;
@@ -229,12 +229,25 @@
     display: grid;
 }
 
-.history-select {
-    grid-column: 1 / 6;
+.history-select, .history-heading {
+    grid-column: 1 / 7;
     display: flex;
     justify-content: center;
     padding: 5px 0;
+    margin: 5px 0;
+}
+
+.history-heading {
+    font-size: large;
+    font-weight: bold;
 }
 
 .history-select > .options-action, .history-select > .options-text { padding: 0 3px; }
 .history-select > .options-action-selected, .history-select > .options-action:hover { text-decoration: underline; }
+
+.history-list-title { grid-column: 1 }
+.history-list-recording { grid-column: 2 }
+.history-list-artist { grid-column: 3 }
+.history-list-rating { grid-column: 4 }
+.history-list-count { grid-column: 5 }
+.history-list-queue { grid-column: 6 }

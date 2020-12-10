@@ -1,4 +1,5 @@
 from datetime import datetime
+from dateutil.tz import UTC, tzlocal
 
 from ..util.db import Column, Table, JoinedView, Subquery, Query
 from ..util import BaseObject
@@ -69,10 +70,12 @@ class History(BaseObject):
             group = "filename", 
             order = "last_listened desc"
         )
-        start = datetime.strptime(start, "%Y-%m-%dT%H:%M:%S.%fZ").strftime("%Y-%m-%d %H:%M:%S")
-        end = datetime.strptime(end, "%Y-%m-%dT%H:%M:%S.%fZ").strftime("%Y-%m-%d %H:%M:%S")
-        query.compare("end_time", start, ">=")
-        query.compare("end_time", end, "<")
+        if start is not None:
+            start = datetime.strptime(start, "%Y-%m-%dT%H:%M:%S.%fZ").strftime("%Y-%m-%d %H:%M:%S")
+            query.compare("end_time", start, ">=")
+        if end is not None:
+            end = datetime.strptime(end, "%Y-%m-%dT%H:%M:%S.%fZ").strftime("%Y-%m-%d %H:%M:%S")
+            query.compare("end_time", end, "<")
         query.execute(cursor, HistoryTrack.row_factory)
 
     @classmethod
@@ -83,5 +86,16 @@ class History(BaseObject):
             group = "filename", 
             order = "count desc",
             limit = num_tracks
-            ).compare("'count'", 0, ">")
+        ).compare("'count'", 0, ">")
         query.execute(cursor, HistoryTrack.row_factory)
+
+    @classmethod
+    def track(cls, cursor, filename):
+
+        to_value = lambda c, r: r[0].replace(tzinfo = UTC).astimezone(tzlocal()).strftime("%b %-d %Y %I:%M %P")
+        query = Query(HistoryTable,
+            [ ("start_time", None) ],
+            order = "start_time desc",
+        ).compare("filename", filename, "=")
+        query.execute(cursor, to_value)
+
