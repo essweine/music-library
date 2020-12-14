@@ -15,6 +15,13 @@ class ImportRootHandler(BaseApiHandler):
         except:
             self.write_error(500, log_message = "Could not get unindexed directory list", exc_info = sys.exc_info())
 
+    def post(self):
+
+        try:
+            self.application.directory_service.index()
+        except:
+            self.write_error(500, log_message = "Could not get reindex directory list", exc_info = sys.exc_info())
+
 class ImportHandler(BaseApiHandler):
 
     def get(self, dirname):

@@ -52,11 +52,16 @@
 .list-search-remove { grid-column: 5; }
 
 /* --- Import layout --- */
+
+#directory-list-refresh:hover {
+    text-decoration: underline;
+}
 .directory-list-directory { grid-column: 1; }
 .directory-list-audio { grid-column: 2; }
 .directory-list-images { grid-column: 3; }
 .directory-list-text { grid-column: 4; }
-.directory-list-add { grid-column: 5; }
+.directory-list-preview { grid-column: 5; }
+.directory-list-add { grid-column: 6; }
 
 /* --- Recording list layout --- */
 #recording-list-search { grid-column: 1 / 9; }

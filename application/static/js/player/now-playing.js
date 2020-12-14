@@ -45,6 +45,26 @@ function CurrentTrack() {
 }
 CurrentTrack.prototype = Container;
 
+function PreviewTrack() {
+    Container.init.call(this, "div", "current-track");
+
+    let filename = this.createElement("div", "track-title");
+    this.root.append(filename);
+
+    let dirname = this.createElement("div", "recording-title");
+    dirname.innerText = "Previewing";
+    let addDir = this.createElement("a", "recording-link");
+    dirname.append(addDir);
+    this.root.append(dirname);
+
+    this.update = (track, directory) => {
+        filename.innerText = track.filename;
+        addDir.href = "/importer/" + encodeURIComponent(directory);
+        addDir.innerText = directory;
+    }
+}
+PreviewTrack.prototype = Container;
+
 function CurrentStream() {
 
     Container.init.call(this, "div", "current-stream");
@@ -102,6 +122,7 @@ function NowPlaying() {
     Container.init.call(this, "div", "player-container");
 
     let currentTrack   = new CurrentTrack();
+    let previewTrack   = new PreviewTrack();
     let currentStream  = new CurrentStream();
     let playerControls = new PlayerControls();
     let playlist       = new CurrentPlaylist();
@@ -117,12 +138,22 @@ function NowPlaying() {
             this.root.insertBefore(currentStream.root, playerControls.root);
         } else if (state.playlist.length > 0) {
             let current = state.playlist[state.current];
-            currentTrack.update(current);
+            if (state.preview == null) {
+                previewTrack.root.remove();
+                currentTrack.update(current);
+                this.root.insertBefore(currentTrack.root, playerControls.root);
+            } else {
+                currentTrack.root.remove();
+                previewTrack.update(current, state.preview);
+                this.root.insertBefore(previewTrack.root, playerControls.root);
+            }
             currentStream.root.remove();
-            this.root.insertBefore(currentTrack.root, playerControls.root);
             this.root.append(playlist.root);
+            if (state.preview != null)
+                playlist.updateView(true);
         } else {
             currentTrack.root.remove();
+            previewTrack.root.remove();
             currentStream.root.remove();
             this.root.append(playlist.root);
         }

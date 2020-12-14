@@ -119,7 +119,7 @@ function CurrentPlaylist() {
     let showAll = this.createElement("div", "show-all-tracks");
     showAll.innerText = "Show All Tracks";
 
-    let updateView = (showAllTracks) => {
+    this.updateView = (showAllTracks) => {
         if (showAllTracks) {
             showAll.remove();
             nextTracks.root.remove();
@@ -133,8 +133,8 @@ function CurrentPlaylist() {
             this.root.append(showAll);
         }
     }
-    showNext.onclick = e => updateView(false);
-    showAll.onclick = e => updateView(true);
+    showNext.onclick = e => this.updateView(false);
+    showAll.onclick = e => this.updateView(true);
 
     let controls = this.createElement("div", "playlist-controls");
 
@@ -157,7 +157,7 @@ function CurrentPlaylist() {
         recentTracks.update();
     }
 
-    updateView(false);
+    this.updateView(false);
 }
 CurrentPlaylist.prototype = Container;
 

@@ -81,7 +81,6 @@ function Recording(context) {
     let queueIcon  = new Icon("playlist_play", e => this.queueTracks(this.data.recording.tracks));
 
     let fileAction = function() {
-        console.log(this.data);
         let filename = rawInfo.data.selected;
         let source = this.data.directory.parsed_text[this.data.directory.text.indexOf(filename)];
         this.addInfoFromSource(source);

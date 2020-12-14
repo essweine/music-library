@@ -8,16 +8,23 @@ function DirectoryList() {
         { display: "Audio", className: "directory-list-audio", type: "text" },
         { display: "Images", className: "directory-list-images", type: "text" },
         { display: "Text", className: "directory-list-text", type: "text" },
+        { display: "", className: "directory-list-preview", type: "icon" },
         { display: "", className: "directory-list-add", type: "icon" },
     ];
 
-    let getDirectoryData = (entry) => {
+    let preview = (entry) => {
+        let task = this.createTask("preview", { directory: entry.relative_path, filenames: entry.audio });
+        this.sendTasks([ task ]);
+    }
+
+    let getDirectoryData = function(entry) {
         return {
             values: [
                 entry.relative_path,
                 entry.audio.length,
                 entry.images.length,
                 entry.text.length,
+                { name: "play_arrow", action: e => preview(entry) },
                 { name: "add", action: e => window.location.href = "/importer/" + encodeURIComponent(entry.relative_path) },
             ],
             expand: null,
@@ -25,6 +32,12 @@ function DirectoryList() {
     }
 
     ListRoot.call(this, columns, getDirectoryData, "directory-list-root");
+
+    let refresh = Container.createElement("span", "directory-list-refresh", [ "section-heading" ]);
+    refresh.innerText = "Refresh Directory List";
+    this.root.append(refresh);
+    refresh.onclick = e => this.refreshDirectories(r => window.location.href = "/importer");
+
     this.addHeading();
     document.title = "Unindexed Directory List";
     this.getAllDirectories(this.update.bind(this));

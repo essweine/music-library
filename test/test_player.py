@@ -19,14 +19,14 @@ class TestPlayer(unittest.TestCase):
 
         cls.conn = sqlite3.connect(DB_NAME, detect_types = sqlite3.PARSE_DECLTYPES)
 
-        directory_service = DirectoryService(ROOT_PATH, DEFAULT_INDEX)
+        cls.directory_service = DirectoryService(ROOT_PATH, DEFAULT_INDEX)
         cursor = cls.conn.cursor()
         for item in TABLES + VIEWS:
             item.initialize(cursor)
         cls.conn.commit()
 
-        directory = directory_service.get_directory("root/Keep It Like A Secret")
-        cls.recording = directory_service.create_recording(directory, directory.text[0])
+        directory = cls.directory_service.get_directory("root/Keep It Like A Secret")
+        cls.recording = cls.directory_service.create_recording(directory, directory.text[0])
         Recording.create(cursor, cls.recording.as_dict())
 
         cursor.close()
@@ -172,4 +172,36 @@ class TestPlayer(unittest.TestCase):
         self.assertEqual(state.history[0].url, self.station["url"])
         self.assertNotEqual(state.history[0].start_time, None)
         self.assertNotEqual(state.history[0].end_time, None)
+
+    def test_013_preview(self):
+
+        directory = self.directory_service.get_directory("root/Edge of the Sun")
+        self.directory_service.aggregate(directory)
+        task = {
+            "name": "preview",
+            "directory": directory.relative_path,
+            "filenames": directory.audio
+        }
+        state = self.send_task(task)
+        self.assertEqual(state.preview, directory.relative_path)
+        self.assertEqual(len(state.playlist), 6)
+        self.assertEqual(state.playlist[0].filename, directory.audio[0])
+
+        original = self.directory_service.get_directory("root/Keep It Like A Secret")
+        self.player.send_task({ "name": "add", "filename": original.audio[0], "position": None })
+        state_changed = self.player.conn.poll(1)
+        self.assertEqual(state_changed, False)
+        self.assertEqual(len(state.playlist), 6)
+        self.assertEqual(state.playlist[-1].filename, directory.audio[-1])
+
+        state = self.send_task({ "name": "start" })
+        sys.stdout.write("\nWaiting for player to advance\n")
+        state_changed = self.player.conn.poll(8)
+        sys.stdout.write("\nDone waiting\n")
+        self.assertEqual(state_changed, True)
+        state = self.player.conn.recv()
+        self.assertEqual(len(state.history), 0)
+
+        state = self.send_task({ "name": "clear" })
+        self.assertEqual(state.preview, None)
 

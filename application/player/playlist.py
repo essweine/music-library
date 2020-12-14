@@ -16,6 +16,7 @@ class PlaylistState(BaseObject):
         self.order = state.get("order", [ ])
         self.shuffled = state.get("shuffled", False)
         self.repeat = state.get("repeat", False)
+        self.preview = state.get("preview", None)
 
     @property
     def current(self):

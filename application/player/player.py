@@ -59,6 +59,8 @@ class Player(object):
                         self._handle_repeat()
                     elif task.name == "shuffle":
                         self._handle_shuffle()
+                    elif task.name == "preview":
+                        self._handle_preview(task)
 
                 if self._subprocess is not None:
                     self._check_subprocess()
@@ -135,11 +137,12 @@ class Player(object):
 
     def _handle_add_to_playlist(self, task):
 
-        entry = PlaylistEntry(task.filename)
-        position = task.position if task.position is not None else len(self.state.playlist)
-        self.state.playlist.insert(position, entry)
-        self.state._playlist_state.add(position)
-        self.state.current = self.state._playlist_state.current
+        if self.state.preview is None:
+            entry = PlaylistEntry(task.filename)
+            position = task.position if task.position is not None else len(self.state.playlist)
+            self.state.playlist.insert(position, entry)
+            self.state._playlist_state.add(position)
+            self.state.current = self.state._playlist_state.current
 
     def _handle_remove_from_playlist(self, task):
 
@@ -162,6 +165,7 @@ class Player(object):
         self.state.playlist.clear()
         self.state._playlist_state.clear()
         self.state.current = 0
+        self.state.preview = self.state._playlist_state.preview = None
 
     def _handle_repeat(self):
 
@@ -175,6 +179,13 @@ class Player(object):
             self.state._playlist_state.shuffle(self.state.current)
         else:
             self.state._playlist_state.unshuffle(self.state.current)
+
+    def _handle_preview(self, task):
+
+        self._handle_clear_playlist()
+        for filename in task.filenames:
+            self._handle_add_to_playlist(Task(name = "add", filename = filename, position = None))
+        self.state.preview = self.state._playlist_state.preview = task.directory
 
     def _start(self):
 
@@ -269,7 +280,7 @@ class Player(object):
         os.set_blocking(stderr, True)
         self._subprocess.communicate()
 
-        if self.state.stream is None:
+        if self.state.stream is None and self.state.preview is None:
             entry = self.state.playlist[self.state.current]
             entry.end_time = datetime.utcnow()
             self.state.history.append(entry)

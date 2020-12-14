@@ -11,7 +11,7 @@ class ProcState(Enum):
 
 class Task(BaseObject):
 
-    ATTRIBUTES = [ "name", "filename", "position", "original", "destination", "offset", "url" ]
+    ATTRIBUTES = [ "name", "filename", "position", "original", "destination", "offset", "url", "filenames", "directory" ]
 
     def __init__(self, **task):
 
@@ -29,6 +29,7 @@ class State(BaseObject):
         self.stream = state.get("stream")
         self.shuffle = state.get("shuffle", False)
         self.repeat = state.get("repeat", False)
+        self.preview = state.get("preview", None)
 
         self._playlist_state = PlaylistState()
 

@@ -57,6 +57,8 @@ const Container = {
 
     getAllDirectories: function(callback) { this.get(this.importerApi, callback); },
 
+    refreshDirectories: function(callback) { this.post(this.importerApi, null, callback); },
+
     /* --- Library requests --- */
 
     getItem:    function(base, itemId, callback) { this.get(base + "/" + itemId, callback); },
