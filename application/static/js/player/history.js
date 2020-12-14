@@ -1,7 +1,6 @@
-import { Container, ContainerDefinition } from "../application.js";
+import { Container } from "../container.js";
 import { RatingDisplay, Options } from "../shared/widgets.js";
 import { ListRoot } from "../shared/list.js";
-import { Rating } from "../api.js";
 
 function HistoryList(listTitle, options, id) {
 
@@ -27,19 +26,18 @@ function HistoryList(listTitle, options, id) {
                 track.title,
                 track.recording,
                 track.artist,
-                new Rating("track", track.filename, track.rating),
+                Container.createRating("track", track.filename, track.rating),
                 "x" + track.count,
-                { name: "playlist_add", action: e => this.api.queue(track) },
+                { name: "playlist_add", action: e => this.queue(track) },
             ],
-            expand: { id: track.filename, getRows: this.api.getTrackHistory, createRow: addHistory },
+            expand: { id: track.filename, getRows: this.getTrackHistory, createRow: addHistory },
         };
     };
 
     ListRoot.call(this, columns, createRow, id);
 
-    let sectionHeading = document.createElement("div");
+    let sectionHeading = this.createElement("div", null, [ "history-heading" ]);
     sectionHeading.innerText = listTitle;
-    sectionHeading.classList.add("history-heading");
     this.root.append(sectionHeading);
     this.addFooter(options.root);
 }
@@ -50,7 +48,7 @@ function RecentlyPlayedTracklist() {
     options.addText("Show");
 
     let updateView = (period) => function() { 
-        this.api.getRecentTracks(period, this.update.bind(this));
+        this.getRecentTracks(period, this.update.bind(this));
         this.data.period = period;
     }
     options.addOption("1 hour", updateView(3600).bind(this));
@@ -58,20 +56,20 @@ function RecentlyPlayedTracklist() {
     options.addOption("4 hours", updateView(14400).bind(this));
     options.addOption("1 day", updateView(86400).bind(this));
 
-    let ws = this.getNotificationService(this.api.playerNotification);
-    ws.addEventListener("message", e => this.api.getRecentTracks(this.data.period, this.update.bind(this)));
-
     HistoryList.call(this, "Recently Played", options, "recently-played");
     this.data.period = 3600;
+
+    let ws = this.getNotificationService(this.playerNotification);
+    ws.addEventListener("message", e => this.getRecentTracks(this.data.period, this.update.bind(this)));
 }
-RecentlyPlayedTracklist.prototype = new Container;
+RecentlyPlayedTracklist.prototype = new ListRoot;
 
 function FrequentlyPlayedTracklist() {
 
     let options = new Options([ "history-select" ]);
     options.addText("Show");
     let updateView = (numTracks) => function() {
-        this.api.getFrequentTracks(numTracks, this.update.bind(this));
+        this.getFrequentTracks(numTracks, this.update.bind(this));
         this.data.numTracks = numTracks
     }
     options.addOption("10", updateView(10).bind(this));
@@ -82,20 +80,20 @@ function FrequentlyPlayedTracklist() {
     HistoryList.call(this, "Frequently Played", options, "frequently-played");
     updateView(10).call(this);
 }
-FrequentlyPlayedTracklist.prototype = new Container;
+FrequentlyPlayedTracklist.prototype = new ListRoot;
 
 function PlayerHistory() {
 
-    let def = new ContainerDefinition("div", [ ], "player-history");
-    Container.call(this, { }, def);
+    Container.init.call(this, "div", "player-history");
 
     let recent = new RecentlyPlayedTracklist();
     this.root.append(recent.root);
+
     let frequent = new FrequentlyPlayedTracklist();
     this.root.append(frequent.root);
 
     document.title = "Player History";
 }
-PlayerHistory.prototype = new Container;
+PlayerHistory.prototype = Container;
 
 export { PlayerHistory };

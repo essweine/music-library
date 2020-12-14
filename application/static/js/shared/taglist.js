@@ -1,18 +1,19 @@
-import { Container, ContainerDefinition } from "../application.js";
+import { Container } from "../container.js";
 import { Icon } from "../shared/widgets.js";
 
 function Tag(data, removeAction) {
 
-    let def = new ContainerDefinition("span", [ "tag" ]);
-    Container.call(this, { prop: data.prop, value: data.value }, def);
+    Container.init.call(this, "span", null, [ "tag" ]);
+    this.data = { 
+        prop: data.prop,
+        value: data.value
+    };
 
-    let prop = document.createElement("span");
-    prop.classList.add("tag-property");
+    let prop = this.createElement("span", null, [ "tag-property" ]);
     prop.innerText = data.display;
     this.root.append(prop);
 
-    let val = document.createElement("span");
-    val.classList.add("tag-value");
+    let val = this.createElement("span", null, [ "tag-value" ]);
     val.innerText = data.value;
     this.root.append(val);
 
@@ -21,15 +22,13 @@ function Tag(data, removeAction) {
     this.hideProperty = () => { prop.remove(); }
     this.toggleEdit = (editable) => { (editable) ? this.root.append(removeTag.root) : removeTag.remove(); }
 }
-Tag.prototype = new Container;
+Tag.prototype = Container
 
 function NewTag(propNames, saveAction) {
 
-    let def = new ContainerDefinition("span", [ "tag" ]);
-    Container.call(this, { }, def);
+    Container.init.call(this, "span", null, [ "tag" ]);
 
-    let tagProperty = document.createElement("select");
-    tagProperty.classList.add("tag-property");
+    let tagProperty = this.createElement("select", null, [ "tag-property" ]);
     for (let prop of Object.keys(propNames)) {
         let option = document.createElement("option");
         option.value = prop;
@@ -37,8 +36,7 @@ function NewTag(propNames, saveAction) {
         tagProperty.append(option);
     }
 
-    let tagValue = document.createElement("input");
-    tagValue.classList.add("tag-value");
+    let tagValue = this.createElement("input", null, [ "tag-value" ]);
     tagValue.type = "text";
     tagValue.size = 20;
 
@@ -70,13 +68,12 @@ function NewTag(propNames, saveAction) {
 
     this.root.append(editTag.root);
 }
-NewTag.prototype = new Container;
+NewTag.prototype = Container;
 
 function Taglist(propNames = { }, classes = [ ]) {
 
-    let def = new ContainerDefinition("div", classes.concat([ "taglist" ]));
-    let data = Object.fromEntries(Object.keys(propNames).map(key => [ key, [ ] ]));
-    Container.call(this, data, def);
+    Container.init.call(this, "div", null, classes.concat([ "taglist" ]));
+    this.data = Object.fromEntries(Object.keys(propNames).map(key => [ key, [ ] ]));
 
     this.getValues = function(prop) { return this.data[prop].map(tag => tag.data.value); }
 
@@ -111,27 +108,23 @@ function Taglist(propNames = { }, classes = [ ]) {
     let newTag = new NewTag(propNames, this.addTag.bind(this));
     this.root.append(newTag.root);
 }
-Taglist.prototype = new Container;
+Taglist.prototype = Container;
 
 function AggregateTaglist(prop, propName, classes = [ ]) {
 
-    let def = new ContainerDefinition("div", classes.concat("aggregate-taglist"));
-    Container.call(this, [ ], def);
+    Container.init.call(this, "div", null, classes.concat("aggregate-taglist"));
+    this.data = [ ];
 
     this.linkTaglist = function(taglist) { this.data.push(taglist); }
 
-    let label = document.createElement("span");
-    label.classList.add("taglist-label");
+    let label = this.createElement("span", null, [ "taglist-label" ]);
     label.innerText = propName;
 
-    let display = document.createElement("span");
-    display.classList.add("taglist-display");
+    let display = this.createElement("span", null, [ "taglist-display" ]);
 
-    let tagValues = document.createElement("div");
-    tagValues.classList.add("taglist-values");
+    let tagValues = this.createElement("div", null, [ "taglist-values" ]);
 
     let newTag = document.createElement("span");
-
     let newValue = document.createElement("input");
     newValue.type = "text";
     newValue.size = 40;
@@ -139,7 +132,6 @@ function AggregateTaglist(prop, propName, classes = [ ]) {
 
     let addIcon = new Icon("add", e => this.addTag(), [ "aggregate-add-tag" ]);
     newTag.append(addIcon.root);
-
     tagValues.append(newTag);
 
     this.removeTag = function(tag) {
@@ -190,6 +182,6 @@ function AggregateTaglist(prop, propName, classes = [ ]) {
         this.data.map(tag => tag.toggleEdit(editable));
     }
 }
-AggregateTaglist.prototype = new Container;
+AggregateTaglist.prototype = Container;
 
 export { Taglist, AggregateTaglist };

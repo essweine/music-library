@@ -1,7 +1,5 @@
-import { Container, ContainerDefinition } from "../application.js";
 import { Tracklist, TracklistEntry } from "../shared/tracklist.js";
 import { Icon, RatingDisplay, EditableInfo } from "../shared/widgets.js";
-import { Rating } from "../api.js";
 import { Taglist } from "../shared/taglist.js";
 
 function RecordingTrack(track, move, remove, prefix) {
@@ -9,18 +7,17 @@ function RecordingTrack(track, move, remove, prefix) {
     TracklistEntry.call(this, track, move, remove, prefix);
     this.data.detailVisible = false;
 
-    let trackNum = document.createElement("span");
+    let trackNum = this.createElement("span", null, [ "recording-track-position" ]);
     trackNum.innerText = track.track_num;
-    trackNum.classList.add("recording-track-position");
     this.root.append(trackNum);
 
     let trackTitle = new EditableInfo([ "recording-track-title" ]);
     trackTitle.configure(track.title, track.filename, track.filename);
     this.root.append(trackTitle.root);
 
-    let rating = new RatingDisplay(new Rating("track", track.filename, track.rating), [ "recording-track-rating" ]);
+    let rating = new RatingDisplay(this.createRating("track", track.filename, track.rating), [ "recording-track-rating" ]);
 
-    let queueTrack    = new Icon("playlist_add", e => this.api.queue(track), [ "recording-queue-track" ]);
+    let queueTrack    = new Icon("playlist_add", e => this.queue(track), [ "recording-queue-track" ]);
     let expandTrack   = new Icon("expand_more", e => this.toggleDetail(true), [ "recording-expand-track" ]);
     let collapseTrack = new Icon("expand_less", e => this.toggleDetail(false), [ "recording-collapse-track" ]);
 
@@ -85,8 +82,7 @@ function RecordingTracklist() {
 
     Tracklist.call(this, "recording-tracklist", RecordingTrack);
 
-    let options = document.createElement("div");
-    options.id  = "recording-tracklist-options";
+    let options = this.createElement("div", "recording-tracklist-options");
 
     let setTrackTitles = function(titles) {
         for (let i = 0; i < this.data.tracks.length; i++) {
@@ -132,6 +128,6 @@ function RecordingTracklist() {
 
     this.save = function() { this.data.tracks.map(track => track.save()); }
 }
-RecordingTracklist.prototype = new Container;
+RecordingTracklist.prototype = new Tracklist;
 
 export { RecordingTrack, RecordingTracklist };

@@ -1,9 +1,8 @@
-import { Container, ContainerDefinition } from "../application.js";
+import { Container } from "../container.js";
 import { ListRoot } from "../shared/list.js";
 import { SearchBar } from "../shared/search.js";
 import { Playlist} from "../shared/tracklist.js";
 import { Icon, EditableInfo } from "../shared/widgets.js";
-import { Rating } from "../api.js";
 
 function PlaylistList() { 
 
@@ -18,19 +17,19 @@ function PlaylistList() {
     ];
 
     let playTracks = (entry) => {
-        this.api.clearCurrentPlaylist();
-        this.api.getPlaylistTracks(entry.id, this.api.queueTracks);
-        this.api.start();
+        this.clearCurrentPlaylist();
+        this.getItem(this.playlistApi, entry.id, this.queueTracks);
+        this.start();
     };
 
-    let deletePlaylist = (playlistId) => this.api.deletePlaylist(playlistId, this.refresh.bind(this, this.search.data));
+    let deletePlaylist = (playlistId) => this.deleteItem(this.playlistApi, playlistId, this.refresh.bind(this, this.search.data));
 
     let getTrackData = (track) => {
         return {
             values: [
                 track.title,
                 "",
-                new Rating("track", track.filename, track.rating),
+                Container.createRating("track", track.filename, track.rating),
                 null,
                 null,
                 null,
@@ -45,46 +44,43 @@ function PlaylistList() {
             values: [
                 entry.name,
                 entry.length,
-                new Rating("playlist", entry.id, entry.rating),
+                Container.createRating("playlist", entry.id, entry.rating),
                 { name: "create", action: e => window.location.href = "/playlist/" + entry.id },
-                { name: "playlist_add", action: e => this.api.getPlaylistTracks(entry.id, this.api.queueTracks) },
+                { name: "playlist_add", action: e => this.getPlaylistTracks(entry.id, this.queueTracks) },
                 { name: "playlist_play", action: e => playTracks(entry) },
                 { name: "clear", action: e => deletePlaylist(entry.id) },
             ],
-            expand: { id: entry.id, getRows: this.api.getPlaylistTracks, createRow: getTrackData },
+            expand: { id: entry.id, getRows: this.getPlaylistTracks, createRow: getTrackData },
         }
     }
 
     ListRoot.call(this, columns, getPlaylistData, "playlist-list-root");
 
-    this.refresh = function(query = this.search.data) { this.api.query(this.api.playlist, query, this.update.bind(this)); }
-    this.search = new SearchBar("playlist-list-search", this.api.playlist, this.refresh.bind(this));
+    this.refresh = function(query = this.search.data) { this.query(this.playlistApi, query, this.update.bind(this)); }
+    this.search = new SearchBar("playlist-list-search", this.playlistApi, this.refresh.bind(this));
     this.root.append(this.search.root);
     this.addHeading();
 
-    let newPlaylist = document.createElement("span");
-    newPlaylist.classList.add("playlist-list-name");
-    let text = document.createElement("span");
-    text.classList.add("playlist-add-new");
+    let newPlaylist = this.createElement("span", null, [ "playlist-list-name" ]);
+    let text = this.createElement("span", null, [ "playlist-add-new" ]);
     text.innerText = "New Playlist";
     newPlaylist.append(text);
-    let newPlaylistIcon = new Icon("add", e => this.api.createPlaylist(r => window.location.href = "/playlist/" + r.id));
+
+    let callback = resp => window.location.href = "/playlist/" + resp.id;
+    let newPlaylistIcon = new Icon("add", e => this.createItem(this.playlistApi, null, callback));
     newPlaylist.append(newPlaylistIcon.root);
 
     this.root.append(newPlaylist);
 
     document.title = "Browse Playlists";
-    //this.api.getAllPlaylists(this.addRows.bind(this));
 }
-PlaylistList.prototype = new Container;
+PlaylistList.prototype = new ListRoot;
 
 function PlaylistEditor(playlistId) {
 
-    let def = new ContainerDefinition("div", [ ], "playlist-container");
-    Container.call(this, { }, def);
+    Container.init.call(this, "div", "playlist-container");
 
-    let heading = document.createElement("div");
-    heading.classList.add("section-heading");
+    let heading = this.createElement("div", null, [ "section-heading" ]);
     let playlistName = new EditableInfo([ "playlist-name" ]);
     heading.append(playlistName.root);
     this.root.append(heading);
@@ -96,7 +92,7 @@ function PlaylistEditor(playlistId) {
         this.data.name = playlistName.data;
         let tracks = tracklist.getTracklist();
         this.data.filenames = tracks.map(track => track.filename);
-        this.api.savePlaylist(this.data);
+        this.saveItem(this.playlistApi, this.data);
     }
 
     let saveIcon   = new Icon("save", e => this.save(), [ "playlist-save" ]);
@@ -105,7 +101,6 @@ function PlaylistEditor(playlistId) {
     heading.append(cancelIcon.root);
 
     let tracklist = new Playlist("playlist-tracks-editor");
-
     this.root.append(tracklist.root);
 
     let columns = [
@@ -123,7 +118,7 @@ function PlaylistEditor(playlistId) {
                 track.title,
                 track.recording,
                 track.artist,
-                new Rating("track", track.filename, track.rating),
+                Container.createRating("track", track.filename, track.rating),
                 { name: "playlist_add", action: e => tracklist.addTrack(track) },
             ],
             expand: null,
@@ -138,24 +133,24 @@ function PlaylistEditor(playlistId) {
 
     searchResults.refresh = (query = search.currentQuery()) => {
         if (!cleared(query))
-            this.api.query(this.api.track, query, searchResults.update.bind(searchResults));
+            this.query(this.trackApi, query, searchResults.update.bind(searchResults));
         else
             searchResults.update([ ]);
     }
 
-    let search = new SearchBar("track-list-search", this.api.track, searchResults.refresh);
+    let search = new SearchBar("track-list-search", this.trackApi, searchResults.refresh);
     searchResults.root.append(search.root);
 
     this.initialize = (playlist) => {
         this.data = playlist;
         playlistName.configure(playlist.name, "name", "Name");
         playlistName.toggleEdit(true);
-        this.api.getPlaylistTracks(playlist.id, tracklist.setTracklist.bind(tracklist));
+        this.getPlaylistTracks(playlist.id, tracklist.setTracklist.bind(tracklist));
         document.title = playlist.name;
     }
 
-    this.api.getPlaylist(playlistId, this.initialize);
+    this.getItem(this.playlistApi, playlistId, this.initialize);
 }
-PlaylistEditor.prototype = new Container;
+PlaylistEditor.prototype = Container;
 
 export { PlaylistList, PlaylistEditor };

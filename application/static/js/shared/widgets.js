@@ -1,8 +1,8 @@
-import { Container, ContainerDefinition } from "../application.js";
+import { Container } from "../container.js";
 
 function Icon(iconName, action, classes = [ ], id = null) {
-    let def = new ContainerDefinition("div", classes.concat([ "material-icons" ]), id);
-    Container.call(this, { }, def);
+
+    Container.init.call(this, "div", id, classes.concat([ "material-icons" ]));
 
     this.root.innerText = iconName;
     this.root.onclick = action;
@@ -14,11 +14,12 @@ function Icon(iconName, action, classes = [ ], id = null) {
     this.addClass    = (className) => this.root.classList.add(className);
     this.removeClass = (className) => this.root.classList.remove(className);
 }
+Icon.prototype = Container;
 
 function RatingDisplay(rating, classes = [ ], labelText = null, id = null) {
 
-    let def = new ContainerDefinition("span", classes.concat([ "rating-container" ]), id);
-    Container.call(this, rating, def);
+    Container.init.call(this, "span", id, classes.concat([ "rating-container" ]));
+    this.data = rating;
 
     this.setRating = (rating) => {
         this.data = rating;
@@ -44,14 +45,13 @@ function RatingDisplay(rating, classes = [ ], labelText = null, id = null) {
 
     this.updateValue = (value) => {
         this.setValue(value);
-        this.api.updateRating(this.data);
+        this.updateRating(this.data);
     }
 
     this.remove = () => { this.root.remove() }
 
     if (labelText != null) {
-        let label = document.createElement("span");
-        label.classList.add("rating-label");
+        let label = this.createElement("span", null, [ "rating-label" ]);
         label.innerText = labelText;
         this.root.append(label);
     }
@@ -67,19 +67,14 @@ function RatingDisplay(rating, classes = [ ], labelText = null, id = null) {
     if (rating != null)
         this.setRating(rating);
 }
-RatingDisplay.prototype = new Container;
+RatingDisplay.prototype = Container;
 
 function EditableInfo(classes = [ ]) {
 
-    let def = new ContainerDefinition("div", classes.concat([ "editable-info" ]));
-    Container.call(this, { }, def);
+    Container.init.call(this, "div", null, classes.concat([ "editable-info" ]));
 
-    let display = document.createElement("span");
-    display.classList.add("editable-display");
-
-    let label = document.createElement("label");
-    label.classList.add("editable-label");
-
+    let display = this.createElement("span", null, [ "editable-display" ]);
+    let label   = this.createElement("label", null, [ "editable-label" ]);
     let input      = document.createElement("input");
     input.type = "text";
     input.size = 40;
@@ -116,12 +111,11 @@ function EditableInfo(classes = [ ]) {
         }
     }
 }
-EditableInfo.prototype = new Container;
+EditableInfo.prototype = Container;
 
 function Options(classes = [ ], id = null) {
 
-    let def = new ContainerDefinition("div", classes, id);
-    Container.call(this, null, def);
+    Container.init.call(this, "div", id, classes);
 
     let className     = "options-action";
     let selectedClass = "options-action-selected";
@@ -133,9 +127,8 @@ function Options(classes = [ ], id = null) {
     }
 
     this.addOption = (text, action, selected = false) => {
-        let option = document.createElement("span");
+        let option = this.createElement("span", null, [ className ]);
         option.innerText = text;
-        option.classList.add(className);
         if (this.data == null || selected)
             select(option);
         option.onclick = (e) => {
@@ -146,12 +139,11 @@ function Options(classes = [ ], id = null) {
     }
 
     this.addText = (text) => {
-        let span = document.createElement("span");
-        span.classList.add("options-text");
+        let span = this.createElement("span", null, [ "options-text" ]);
         span.innerText = text;
         this.root.append(span);
     }
 }
-Options.prototype = new Container;
+Options.prototype = Container;
 
 export { Icon, RatingDisplay, EditableInfo, Options };

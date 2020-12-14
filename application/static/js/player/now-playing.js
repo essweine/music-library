@@ -1,40 +1,31 @@
-import { Container, ContainerDefinition } from "../application.js";
-import { Task, Rating } from "../api.js";
+import { Container } from "../container.js";
 import { Icon, RatingDisplay } from "../shared/widgets.js";
 import { CurrentPlaylist } from "./playlist.js";
 
 function CurrentTrack() {
 
-    let def = new ContainerDefinition("div", [ ], "current-track");
-    Container.call(this, { }, def);
+    Container.init.call(this, "div", "current-track");
 
-    let artworkContainer = document.createElement("div");
-    artworkContainer.classList.add("bullshit-container-1");
+    let artworkContainer = this.createElement("div", "bullshit-container-1");
     this.root.append(artworkContainer);
 
-    let img = document.createElement("img");
-    img.id = "artwork";
+    let img = this.createElement("img", "artwork");
     img.width = 250;
     img.height = 250;
     artworkContainer.append(img);
 
-    let textContainer = document.createElement("div");
-    textContainer.classList.add("bullshit-container-2");
+    let textContainer = this.createElement("div", "bullshit-container-2");
     this.root.append(textContainer);
 
-    let trackTitle = document.createElement("div");
-    trackTitle.id = "track-title";
+    let trackTitle = this.createElement("div", "track-title");
     textContainer.append(trackTitle);
 
-    let recordingTitle = document.createElement("div");
-    recordingTitle.id = "recording-title";
-    let recordingLink = document.createElement("a");
-    recordingLink.id = "recording-link";
+    let recordingTitle = this.createElement("div", "recording-title");
+    let recordingLink = this.createElement("a", "recording-link");
     recordingTitle.append(recordingLink);
     textContainer.append(recordingTitle);
 
-    let artist = document.createElement("div");
-    artist.id = "track-artist";
+    let artist = this.createElement("div", "track-artist");
     textContainer.append(artist);
 
     let ratingDisplay = new RatingDisplay(null, [ ], null, "track-rating");
@@ -49,26 +40,22 @@ function CurrentTrack() {
             img.src = "/file/" + encodeURIComponent(track.artwork);
         else
             img.remove();
-        ratingDisplay.setRating(new Rating("track", track.filename, track.rating));
+        ratingDisplay.setRating(this.createRating("track", track.filename, track.rating));
     }
 }
-CurrentTrack.prototype = new Container;
+CurrentTrack.prototype = Container;
 
 function CurrentStream() {
 
-    let def = new ContainerDefinition("div", [ ], "current-stream");
-    Container.call(this, { }, def);
+    Container.init.call(this, "div", "current-stream");
 
-    let url = document.createElement("div");
-    url.id = "station-data";
+    let url = this.createElement("div", "station-data");
     this.root.append(url);
 
-    let stationLink = document.createElement("a");
+    let stationLink = this.createElement("a");
 
-    let titleContainer = document.createElement("div");
-    titleContainer.id = "stream-title-container";
-    let streamTitle = document.createElement("div");
-    streamTitle.id = "stream-title";
+    let titleContainer = this.createElement("div", "stream-title-container");
+    let streamTitle = this.createElement("div", "stream-title");
     titleContainer.append(streamTitle);
 
     this.root.append(titleContainer);
@@ -90,39 +77,37 @@ function CurrentStream() {
             streamTitle.innerText = "No metadata available";
     }
 }
-CurrentStream.prototype = new Container;
+CurrentStream.prototype = Container;
 
 function PlayerControls() {
 
-    let def = new ContainerDefinition("div", [ ], "player-controls");
-    Container.call(this, { }, def);
+    Container.init.call(this, "div", "player-controls");
 
     let classes = [ "control-icon" ];
-    let skipPrev = new Task("skip", { offset: -1 });
-    let skipNext = new Task("skip", { offset: 1 });
+    let skipPrev = this.createTask("skip", { offset: -1 });
+    let skipNext = this.createTask("skip", { offset: 1 });
 
-    let previous = new Icon("skip_previous", e => this.api.sendTasks([ skipPrev ]), classes);
-    let stop     = new Icon("stop", e => this.api.stop(), classes);
-    let pause    = new Icon("pause", e => this.api.pause(), classes);
-    let play     = new Icon("play_arrow", e => this.api.start(), classes);
-    let next     = new Icon("skip_next", e => this.api.sendTasks([ skipNext ]), classes);
+    let previous = new Icon("skip_previous", e => this.sendTasks([ skipPrev ]), classes);
+    let stop     = new Icon("stop", e => this.stop(), classes);
+    let pause    = new Icon("pause", e => this.pause(), classes);
+    let play     = new Icon("play_arrow", e => this.start(), classes);
+    let next     = new Icon("skip_next", e => this.sendTasks([ skipNext ]), classes);
 
     [ previous, stop, pause, play, next ].map(icon => this.root.append(icon.root));
 }
-PlayerControls.prototype = new Container;
+PlayerControls.prototype = Container;
 
-function Player() {
+function NowPlaying() {
 
-    let def = new ContainerDefinition("div", [ ], "player-container");
-    Container.call(this, { }, def);
+    Container.init.call(this, "div", "player-container");
 
     let currentTrack   = new CurrentTrack();
     let currentStream  = new CurrentStream();
     let playerControls = new PlayerControls();
     let playlist       = new CurrentPlaylist();
 
-    for (let elem of [ currentTrack.root, playerControls.root, playlist.root ])
-        this.root.append(elem);
+    for (let elem of [ currentTrack, playerControls, playlist ])
+        this.root.append(elem.root);
 
     this.update = (state) => {
         if (state.stream != null) {
@@ -142,12 +127,16 @@ function Player() {
             this.root.append(playlist.root);
         }
         playlist.update(state);
+        if (state.proc_state == "playing") {
+            let current = state.playlist[state.current];
+            document.title = "Now Playing: " + current.title + " (" + current.artist + ")";
+        } else { document.title = "Now Playing [" + state.proc_state + "]"; }
     }
 
-    let ws = this.getNotificationService(this.api.playerNotification);
-    ws.addEventListener("message", e => this.api.getCurrentState(this.update));
+    let ws = this.getNotificationService(this.playerNotification);
+    ws.addEventListener("message", e => this.getCurrentState(this.update));
     document.title = "Now Playing";
 }
-Player.prototype = new Container;
+NowPlaying.prototype = Container;
 
-export { Player };
+export { NowPlaying };

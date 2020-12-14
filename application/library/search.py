@@ -100,7 +100,8 @@ class RecordingSummary(BaseObject):
 
         for name, definition in SUMMARY_SUBQUERY.columns + ARTIST_SUBQUERY.columns:
             self.__setattr__(name, recording.get(name))
-        self.artist = sorted(self.artist.split("::"))
+        if self.artist is not None:
+            self.artist = sorted(self.artist.split("::"))
 
     @classmethod
     def get_all(cls, cursor):

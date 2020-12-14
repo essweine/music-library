@@ -1,7 +1,6 @@
-import { Container, ContainerDefinition } from "../application.js";
+import { Container } from "../container.js";
 import { Tracklist, Playlist, TracklistEntry } from "../shared/tracklist.js";
 import { Icon, RatingDisplay } from "../shared/widgets.js";
-import { Task, Rating } from "../api.js";
 
 function makeExpandable(tracklist, viewOffset) {
 
@@ -43,24 +42,25 @@ function PlayerTracklist() {
 
     Playlist.call(this, "player-playlist");
 
-    this.highlightCurrent = () => this.data.tracks[this.data.current].root.classList.add("playlist-entry-current");
+    this.highlightCurrent = function() {
+        if (this.data.current < this.data.tracks.length)
+            this.data.tracks[this.data.current].root.classList.add("playlist-entry-current");
+    }
 
-    this.update = (state, updateDisplay) => {
+    this.update = function(state, updateDisplay) {
         this.clear();
         this.setTracklist(state.playlist);
         this.data.current = state.current;
         updateDisplay();
     }
 
-    this.shiftTrackUp = (position) => {
-        this.api.sendTasks([ new Task("move", { original: position, destination: position - 1 }) ]);
+    this.shiftTrackUp = function(position) {
+        this.sendTasks([ this.createTask("move", { original: position, destination: position - 1 }) ]);
     }
 
-    this.removeTrack = (position) => {
-        this.api.sendTasks([ new Task("remove", { position: position }) ]);
-    }
+    this.removeTrack = function(position) { this.sendTasks([ this.createTask("remove", { position: position }) ]); }
 }
-PlayerTracklist.prototype = new Container;
+PlayerTracklist.prototype = new Tracklist;
 
 function HistoryTrack(track, move, remove, prefix) {
 
@@ -70,12 +70,13 @@ function HistoryTrack(track, move, remove, prefix) {
     this.addText(track.recording, "playlist-recording");
     this.addText(track.artist, "playlist-artist");
 
-    let rating = new RatingDisplay(new Rating("track", track.filename, track.rating), [ "history-rating" ]);
+    let rating = new RatingDisplay(this.createRating("track", track.filename, track.rating), [ "history-rating" ]);
     this.root.append(rating.root);
 
     let count = (track.count > 1) ? "x " + track.count : "";
     this.addText(count, "history-count");
 }
+HistoryTrack.prototype = new TracklistEntry;
 
 function HistoryTracklist() {
 
@@ -89,18 +90,17 @@ function HistoryTracklist() {
 
     this.addTrack = function(track) { this.addEntry(track, "playlist"); }
 
-    this.update = function() { this.api.getRecentTracks(1800, this.setTracklist.bind(this)); }
+    this.update = function() { this.getRecentTracks(1800, this.setTracklist.bind(this)); }
 }
-HistoryTracklist.prototype = new Container;
+HistoryTracklist.prototype = new Tracklist;
 
 function CurrentPlaylist() {
 
-    let def = new ContainerDefinition("div", [ ], "player-playlist");
-    let data = {
+    Container.init.call(this, "div", "player-playlist");
+    this.data = {
         shuffle: null,
         repeat: null,
     }
-    Container.call(this, data, def);
 
     let nextTracks   = new PlayerTracklist();
     let recentTracks = new HistoryTracklist();
@@ -111,15 +111,12 @@ function CurrentPlaylist() {
     recentTracks.addHeading("Recently Played", "recent-heading");
     makeExpandable(recentTracks, 0);
 
-    let heading = document.createElement("div");
-    heading.id = "playlist-heading";
+    let heading = this.createElement("div", "playlist-heading");
 
-    let showNext = document.createElement("div");
-    showNext.id = "show-split-view";
+    let showNext = this.createElement("div", "show-split-view");
     showNext.innerText = "Show Next/Recent Tracks";
 
-    let showAll = document.createElement("div");
-    showAll.id = "show-all-tracks";
+    let showAll = this.createElement("div", "show-all-tracks");
     showAll.innerText = "Show All Tracks";
 
     let updateView = (showAllTracks) => {
@@ -139,12 +136,11 @@ function CurrentPlaylist() {
     showNext.onclick = e => updateView(false);
     showAll.onclick = e => updateView(true);
 
-    let controls = document.createElement("div");
-    controls.id = "playlist-controls";
+    let controls = this.createElement("div", "playlist-controls");
 
-    let shuffleIcon = new Icon("shuffle", e => this.api.shuffleCurrentPlaylist(), [ "control-icon" ]);
-    let repeatIcon  = new Icon("loop", e => this.api.repeatCurrentPlaylist(), [ "control-icon" ]);
-    let clearIcon   = new Icon("clear", e => this.api.clearCurrentPlaylist(), [ "control-icon" ]);
+    let shuffleIcon = new Icon("shuffle", e => this.shuffleCurrentPlaylist(), [ "control-icon" ]);
+    let repeatIcon  = new Icon("loop", e => this.repeatCurrentPlaylist(), [ "control-icon" ]);
+    let clearIcon   = new Icon("clear", e => this.clearCurrentPlaylist(), [ "control-icon" ]);
 
     for (let icon of [ shuffleIcon, repeatIcon, clearIcon ])
         controls.append(icon.root);
@@ -163,6 +159,6 @@ function CurrentPlaylist() {
 
     updateView(false);
 }
-CurrentPlaylist.prototype = new Container;
+CurrentPlaylist.prototype = Container;
 
 export { CurrentPlaylist };

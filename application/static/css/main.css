@@ -87,7 +87,7 @@ a:hover { font-weight: bold; }
 }
 
 /* --- Errors --- */
-.error-display { padding: 10px 0; }
+#error-display { padding: 10px 0; }
 .error-heading { font-size: large; }
 .error-message { padding: 5px; }
 
@@ -113,16 +113,16 @@ a:hover { font-weight: bold; }
     padding: 15px 0px 15px 0px;
 }
 
-.station-edit-heading {
+#station-edit-heading {
     grid-column: 2;
     width: 100%;
     display: grid;
     grid-auto-flow: column;
     justify-self: stretch;
 }
+#station-edit-text { justify-self: start; }
+#station-edit-icons { justify-self: end; }
 
-.station-edit-text { justify-self: start; }
-.station-edit-icons { justify-self: end; }
 .station-edit-action { width: min-content; }
 
 .station-edit-data > .editable-label {

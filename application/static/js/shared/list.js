@@ -1,18 +1,15 @@
 import { Icon, RatingDisplay } from "./widgets.js";
-import { Container, ContainerDefinition } from "../application.js";
+import { Container } from "../container.js";
 
-function ListRow(classes, id = null) {
+function ListRow(id = null, classes = [ ]) {
 
-    let def = new ContainerDefinition("div", classes.concat([ "list-row" ]), id);
-    let data = { collapsed: true };
-    Container.call(this, data, def);
+    Container.init.call(this, "div", id, classes.concat([ "list-row" ]));
+    this.data = { collapsed: true };
 
     this.addColumn = function(value, colType, className, rowAction) {
         if (colType == "text" || value == null) {
-            let cell = document.createElement("span");
+            let cell = this.createElement("span", null, [ "list-cell", className ]);
             cell.innerText = (value != null) ? value : "";
-            cell.classList.add(className);
-            cell.classList.add("list-cell");
             if (rowAction != null) {
                 cell.onclick = e => {
                     (this.data.collapsed) ? rowAction.expand() : rowAction.collapse();
@@ -21,11 +18,10 @@ function ListRow(classes, id = null) {
             }
             this.root.append(cell);
         } else if (colType == "link") {
-            let link = document.createElement("a");
+            let link = this.createElement("a", null, [ "list-cell" ]);
             link.href = value.url;
             link.innerText = value.text;
             link.style["background-color"] = "inherit";
-            link.classList.add("list-cell");
             this.root.append(link);
         } else if (colType == "rating") {
             let ratingDisplay = new RatingDisplay(value, [ className, "list-cell" ]);
@@ -36,12 +32,12 @@ function ListRow(classes, id = null) {
         }
     }
 }
-ListRow.prototype = new Container;
+ListRow.prototype = Container;
 
 function ListRoot(columns, defaultRow, id) {
 
-    let def = new ContainerDefinition("div", [ "list-root" ], id);
-    Container.call(this, columns, def);
+    Container.init.call(this, "div", id, [ "list-root" ]);
+    this.data = columns;
 
     let expand = (rowId, createRow) => {
         return function(items) {
@@ -67,11 +63,11 @@ function ListRoot(columns, defaultRow, id) {
             if (data.expand) {
                 let createRow = expand(rowId, data.expand.createRow);
                 action = {
-                    expand: e => data.expand.getRows(data.expand.id, createRow.bind(this)),
+                    expand: e => data.expand.getRows.call(this, data.expand.id, createRow.bind(this)),
                     collapse: e => collapse(rowId),
                 };
             }
-            let row = new ListRow(classes, rowId);
+            let row = new ListRow(rowId, classes);
             for (let idx in data.values)
                 row.addColumn(data.values[idx], this.data[idx].type, this.data[idx].className, action);
             let footer = this.root.getElementsByClassName("list-footer");
@@ -85,7 +81,7 @@ function ListRoot(columns, defaultRow, id) {
     }
 
     this.addHeading = function() {
-        let heading = new ListRow([ "list-heading" ]);
+        let heading = new ListRow(null, [ "list-heading" ]);
         for (let column of this.data)
             heading.addColumn(column.display, "text", column.className);
         this.root.append(heading.root);
@@ -107,5 +103,6 @@ function ListRoot(columns, defaultRow, id) {
         this.addRows(items, defaultRow);
     }
 }
+ListRoot.prototype = Container;
 
 export { ListRoot };

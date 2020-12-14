@@ -1,5 +1,4 @@
-import { Container, ContainerDefinition } from "../application.js";
-import { Rating } from "../api.js";
+import { Container } from "../container.js";
 import { Icon, RatingDisplay, EditableInfo } from "../shared/widgets.js";
 import { RawInfo, RecordingImage } from "./directory.js";
 import { AggregateTaglist } from "../shared/taglist.js";
@@ -7,12 +6,15 @@ import { RecordingTracklist } from "./recording-tracklist.js";
 
 function Recording(context) {
 
-    let def = new ContainerDefinition("div", [ ], "recording-container");
-    Container.call(this, { context: context }, def);
+    Container.init.call(this, "div", "recording-container");
+    this.data = {
+        context: context,
+        recording: { },
+        directory: { },
+    };
 
     let addSection = (sectionId) => {
-        let section = document.createElement("div");
-        section.id = sectionId;
+        let section = this.createElement("div", sectionId);
         this.root.append(section);
         return section;
     }
@@ -57,34 +59,37 @@ function Recording(context) {
 
     let importIcon = new Icon("add", e =>  {
         this.update();
-        this.api.addToLibrary(this.data.recording);
+        let callback = resp => window.location = "/recording/" + resp.id;
+        this.createItem(this.recordingApi, this.data.recording, callback);
     });
     let cancelImport = new Icon("clear", e => window.location.href = "/importer");
 
     let editIcon   = new Icon("create", e => this.toggleEdit(true));
     let saveIcon   = new Icon("save", e => {
         this.update();
-        this.api.saveRecording(this.data.recording);
+        this.saveItem(this.recordingApi, this.data.recording);
     });
     let cancelEdit = new Icon("clear", e => {
         this.addInfoFromSource(this.data.recording);
         this.toggleEdit(false);
     });
     let playIcon   = new Icon("play_arrow", e => {
-        this.api.clearCurrentPlaylist();
-        this.api.queueTracks(this.data.recording.tracks)
-        this.api.start();
+        this.clearCurrentPlaylist();
+        this.queueTracks(this.data.recording.tracks)
+        this.start();
     });
-    let queueIcon  = new Icon("playlist_play", e => this.api.queueTracks(this.data.recording.tracks));
+    let queueIcon  = new Icon("playlist_play", e => this.queueTracks(this.data.recording.tracks));
+
     let fileAction = function() {
+        console.log(this.data);
         let filename = rawInfo.data.selected;
-        let source = this.data.parsed_text[this.data.text.indexOf(filename)];
+        let source = this.data.directory.parsed_text[this.data.directory.text.indexOf(filename)];
         this.addInfoFromSource(source);
     }
 
     this.addFiles = function(files, baseDir) {
         if (files.length) {
-            let info = new RawInfo(files, baseDir, fileAction);
+            let info = new RawInfo(files, baseDir, fileAction.bind(this));
             this.root.replaceChild(info.root, rawInfo);
             rawInfo = info;
         } else { rawInfo.innerText = "No notes available"; }
@@ -141,14 +146,14 @@ function Recording(context) {
 
             recordingRating.remove();
             recordingRating = new RatingDisplay(
-                new Rating("recording-rating", this.data.recording.id, this.data.recording.rating),
+                this.createRating("recording-rating", this.data.recording.id, this.data.recording.rating),
                 [ "recording-rating" ],
                 "Rating"
             );
             infoContainer.append(recordingRating.root);
             soundRating.remove();
             soundRating = new RatingDisplay(
-                new Rating("recording-sound-rating", this.data.recording.id, this.data.recording.sound_rating),
+                this.createRating("recording-sound-rating", this.data.recording.id, this.data.recording.sound_rating),
                 [ "recording-sound-rating" ],
                 "Sound Rating"
             );
@@ -176,7 +181,7 @@ function Recording(context) {
 
         if (editable && this.data.directory == null) {
             let dirname = encodeURIComponent(this.data.recording.directory);
-            this.api.getDirectoryListing(dirname, this.updateFiles);
+            this.getItem(this.importerApi, dirname, this.updateFiles);
         }
 
         recordingInfo.map(elem => elem.toggleEdit(editable));
@@ -204,9 +209,7 @@ function Recording(context) {
             (editable) ? overview.append(cancelEdit.root): cancelEdit.remove();
         }
     }
-
 }
-Recording.prototype = new Container;
 
 function RecordingDisplay(recordingId) {
     Recording.call(this, "recording");
@@ -216,9 +219,9 @@ function RecordingDisplay(recordingId) {
         this.configure();
         this.toggleEdit(false);
     }
-    this.api.getRecording(recordingId, initialize.bind(this));
+    this.getItem(this.recordingApi, recordingId, initialize.bind(this));
 }
-RecordingDisplay.prototype = new Container;
+RecordingDisplay.prototype = Container;
 
 function ImportDisplay(dirname) {
     Recording.call(this, "import");
@@ -229,8 +232,8 @@ function ImportDisplay(dirname) {
         this.configure();
         this.toggleEdit(true);
     }
-    this.api.getDirectoryListing(dirname, initialize.bind(this));
+    this.getItem(this.importerApi, dirname, initialize.bind(this));
 }
-ImportDisplay.prototype = new Container;
+ImportDisplay.prototype = Container;
 
 export { RecordingDisplay, ImportDisplay };

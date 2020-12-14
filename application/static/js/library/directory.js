@@ -1,4 +1,4 @@
-import { Container, ContainerDefinition } from "../application.js";
+import { Container } from "../container.js";
 import { ListRoot } from "../shared/list.js";
 
 function DirectoryList() {
@@ -27,18 +27,19 @@ function DirectoryList() {
     ListRoot.call(this, columns, getDirectoryData, "directory-list-root");
     this.addHeading();
     document.title = "Unindexed Directory List";
-    this.api.getAllDirectories(this.update.bind(this));
+    this.getAllDirectories(this.update.bind(this));
 }
-DirectoryList.prototype = new Container;
+DirectoryList.prototype = new ListRoot;
 
 function RecordingImage(images, directory, selected = null) {
 
-    let def = new ContainerDefinition("div", [ ], "recording-image");
-    let data = { directory: directory };
-    Container.call(this, data, def);
+    Container.init.call(this, "div", "recording-image");
+    this.data = {
+        directory: directory,
+        selected: null,
+    };
 
-    let img = document.createElement("img");
-    img.id = "recording-artwork";
+    let img = this.createElement("img", "recording-artwork");
     this.root.append(img);
 
     let select = document.createElement("select");
@@ -67,19 +68,17 @@ function RecordingImage(images, directory, selected = null) {
         this.addImage(image, directory);
     (selected != null) ? selectImage(selected) : selectImage(images[0]);
 }
-RecordingImage.prototype = new Container;
+RecordingImage.prototype = Container;
 
 function RawInfo(files, directory, selectAction, selected = null) {
 
-    let def = new ContainerDefinition("div", [ ], "recording-raw-info");
-    let data = {
+    Container.init.call(this, "div", "recording-raw-info");
+    this.data = {
         directory: directory,
         notesVisible: false,
     };
-    Container.call(this, data, def);
 
-    let notes = document.createElement("pre");
-    notes.id  = "raw-text";
+    let notes = this.createElement("pre", "raw-text");
     this.root.append(notes);
 
     let toggle = document.createElement("button");
@@ -91,7 +90,7 @@ function RawInfo(files, directory, selectAction, selected = null) {
         this.root.style["background-color"] = (this.data.notesVisible) ? "#eee" : "#fff";
     }
 
-    let getNotes = function(file) {
+    let getNotes = (file) => {
         let request = new XMLHttpRequest();
         request.onload = e => notes.innerText = e.target.response;
         request.open("GET", "/file/" + encodeURIComponent(file));
@@ -136,6 +135,6 @@ function RawInfo(files, directory, selectAction, selected = null) {
         this.addFile(file);
     (selected != null) ? getNotes(selected) : getNotes(files[0]);
 }
-RawInfo.prototype = new Container;
+RawInfo.prototype = Container;
 
 export { DirectoryList, RecordingImage, RawInfo };

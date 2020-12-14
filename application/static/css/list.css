@@ -79,7 +79,7 @@
 .playlist-list-play { grid-column: 6 }
 .playlist-list-delete { grid-column: 7 }
 
-.playlist-add-new {
+#playlist-add-new {
     font-size: large;
     padding-right: 5px;
 }

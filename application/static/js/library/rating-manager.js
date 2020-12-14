@@ -1,55 +1,49 @@
-import { Container, ContainerDefinition } from "../application.js";
+import { Container } from "../container.js";
 import { ListRoot } from "../shared/list.js";
 import { SearchBar } from "../shared/search.js";
 import { Options } from "../shared/widgets.js";
-import { Rating } from "../api.js";
 
-function BarChart(classes) {
+function BarChart(id) {
 
-    let def = new ContainerDefinition("div", classes.concat([ "bar-chart" ]));
-    Container.call(this, { }, def);
+    Container.init.call(this, "div", id, [ "bar-chart" ]);
+    this.data = { };
 
-    this.addBar = (label, id) => {
+    this.addBar = function(label, id) {
 
-        let bar = document.createElement("span");
-        bar.id = id;
+        let bar = this.createElement("span", id);
         bar.classList.add("bar");
 
-        let yLabel = document.createElement("span");
-        yLabel.classList.add("bar-label");
+        let yLabel = this.createElement("span", null, [ "bar-label" ]);
         yLabel.innerText = label;
         bar.append(yLabel);
 
-        let barData = document.createElement("span");
-        barData.classList.add("bar-data");
+        let barData = this.createElement("span", null, [ "bar-data" ]);
         bar.append(barData);
 
-        let rect = document.createElement("span");
-        rect.classList.add("bar-rect");
+        let rect = this.createElement("span", null, [ "bar-rect" ]);
         barData.append(rect);
 
-        let barLabel = document.createElement("span");
-        barLabel.classList.add("bar-text");
+        let barLabel = this.createElement("span", null, [ "bar-text" ]);
         barData.append(barLabel);
 
         this.data[id] = { rect: rect, barLabel: barLabel, yLabel: yLabel };
         this.root.append(bar);
     }
 
-    this.setValue = (id, value, text) => {
+    this.setValue = function(id, value, text) {
         this.data[id].rect.style.width = value;
         this.data[id].barLabel.innerText = text;
     }
 
-    this.reset = () => Object.keys(this.data).map(id => this.setValue(id, "0%", "0"));
+    this.reset = function() { Object.keys(this.data).map(id => this.setValue(id, "0%", "0")); }
 }
+BarChart.prototype = Container;
 
 function RatingAggregation(apiPath, columns, sort, createRow) {
 
-    let def = new ContainerDefinition("div", [ ]);
-    Container.call(this, { }, def);
+    Container.init.call(this);
 
-    let chart = new BarChart([ "rating-chart" ]);
+    let chart = new BarChart("rating-chart");
     this.root.append(chart.root);
 
     chart.addBar("Unrated", "rating-bar-unrated");
@@ -67,7 +61,7 @@ function RatingAggregation(apiPath, columns, sort, createRow) {
 
     let refresh = (query = search.data) => {
         search.setSort(sort);
-        this.api.aggregate(apiPath, "rating", query, updateChart);
+        this.aggregate(apiPath, "rating", query, updateChart);
     }
     let search = new SearchBar("aggregate-search", apiPath, refresh);
     this.root.append(search.root);
@@ -76,22 +70,20 @@ function RatingAggregation(apiPath, columns, sort, createRow) {
     results.addHeading();
 
     let showResults = e => {
-        this.api.query(apiPath, search.data, results.update.bind(results));
+        this.query(apiPath, search.data, results.update.bind(results));
         this.root.append(results.root);
     }
 
     let options = new Options([ ], "aggregate-results-toggle");
     options.addOption("Show Results", showResults);
     options.addOption("Hide Results", e => results.root.remove(), true);
-
     this.root.append(options.root);
 }
-RatingAggregation.prototype = new Container;
+RatingAggregation.prototype = Container;
 
 function RatingManager() {
 
-    let def = new ContainerDefinition("div", [ ], "rating-manager");
-    Container.call(this, { }, def);
+    Container.init.call(this, "div", "rating-manager");
 
     let trackColumns = [
         { display: "Title", className: "track-list-title", type: "text" },
@@ -102,11 +94,16 @@ function RatingManager() {
     let trackSort = [ "rating", "title" ];
     let getTrackData = (track) => {
         return {
-            values: [ track.title, track.recording, track.artist, new Rating("track", track.filename, track.rating) ],
+            values: [
+                track.title,
+                track.recording,
+                track.artist,
+                this.createRating("track", track.filename, track.rating)
+            ],
             expand: null,
         }
     }
-    let trackAgg = new RatingAggregation(this.api.track, trackColumns, trackSort, getTrackData);
+    let trackAgg = new RatingAggregation(this.trackApi, trackColumns, trackSort, getTrackData);
 
     let recordingColumns = [
         { display: "Artist", className: "recording-list-artist", type: "text" },
@@ -116,11 +113,15 @@ function RatingManager() {
     let recordingSort = [ "rating", "artist", "title" ];
     let getRecordingData = (recording) => {
         return {
-            values: [ recording.artist, recording.title, new Rating("recording-rating", recording.id, recording.rating) ],
+            values: [
+                recording.artist,
+                recording.title,
+                this.createRating("recording-rating", recording.id, recording.rating)
+            ],
             expand: null,
         }
     }
-    let recordingAgg = new RatingAggregation(this.api.recording, recordingColumns, recordingSort, getRecordingData);
+    let recordingAgg = new RatingAggregation(this.recordingApi, recordingColumns, recordingSort, getRecordingData);
 
     let showTrackAgg = e => {
         recordingAgg.root.remove();
@@ -138,6 +139,6 @@ function RatingManager() {
     this.root.append(options.root);
     this.root.append(trackAgg.root);
 }
-RatingManager.prototype = new Container;
+RatingManager.prototype = Container;
 
 export { RatingManager };

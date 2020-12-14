@@ -1,10 +1,9 @@
 import { Icon } from "./widgets.js";
-import { Container, ContainerDefinition } from "../application.js";
+import { Container } from "../container.js";
 
 function SearchOptions() {
 
-    let def = new ContainerDefinition("select", [ "list-search-select" ]);
-    Container.call(this, { }, def);
+    Container.init.call(this, "select", null, [ "list-search-select" ]);
 
     let ratingSelect = document.createElement("select");
     for (let rating of [ "1", "2", "3", "4", "5" ]) {
@@ -14,9 +13,8 @@ function SearchOptions() {
         ratingSelect.append(option)
     }
 
-    let createTextInput = function() {
-        let input = document.createElement("input");
-        input.classList.add("list-text-search");
+    let createTextInput = () => {
+        let input = this.createElement("input", null, [ "list-text-search" ]);
         input.type = "text";
         input.name = "search-criteria";
         return input;
@@ -75,41 +73,35 @@ function SearchOptions() {
         };
     }
 }
-SearchOptions.prototype = new Container;
+SearchOptions.prototype = Container;
 
 function SearchParam(data, remove) {
 
-    let def = new ContainerDefinition("div", [ "list-search-criterion" ]);
-    Container.call(this, data, def);
+    Container.init.call(this, "div", null, [ "list-search-criterion" ]);
+    this.data = data;
 
-    let visibility = document.createElement("span");
-    visibility.classList.add("material-icons");
-    visibility.classList.add("list-search-hidden");
+    let visibility = this.createElement("span", null, [ "material-icons", "list-search-hidden" ]);
     visibility.innerText = (data.exclude) ? "visibility_off" : "visibility";
     this.root.append(visibility);
 
-    let paramName = document.createElement("span");
-    paramName.classList.add("list-search-name");
+    let paramName = this.createElement("span", null, [ "list-search-name" ]);
     paramName.innerText = data.display;
     this.root.append(paramName);
 
-    let paramValue = document.createElement("span");
-    paramValue.classList.add("list-search-value");
+    let paramValue = this.createElement("span", [ "list-search-value" ]);
     paramValue.innerText = data.value;
     this.root.append(paramValue);
 
     let removeIcon = new Icon("clear", e => remove(this), [ "list-search-remove" ]);
     this.root.append(removeIcon.root);
 }
-SearchParam.prototype = new Container;
+SearchParam.prototype = Container;
 
-function SearchBar(id, apiPath, callback) {
+function SearchBar(id, apiPath, update) {
 
-    let def = new ContainerDefinition("div", [ "list-search-bar" ], id)
-    Container.call(this, { }, def);
+    Container.init.call(this, "div", id, [ "list-search-bar" ]);
 
-    let label = document.createElement("span");
-    label.classList.add("list-search-label");
+    let label = this.createElement("span", [ "list-search-label" ]);
     label.innerText = "Search";
     this.root.append(label);
 
@@ -127,7 +119,7 @@ function SearchBar(id, apiPath, callback) {
         let queryData = Object.fromEntries([ [ param.data.name, param.data.value ] ]);
         queryType.splice(queryType.indexOf(queryData), 1);
         param.root.remove();
-        callback(this.data);
+        update(this.data);
     }
 
     this.addParam = function(exclude) {
@@ -136,15 +128,13 @@ function SearchBar(id, apiPath, callback) {
         (exclude) ? this.data.exclude.push(queryData) : this.data.match.push(queryData);
         let param = new SearchParam(paramData, this.removeParam.bind(this));
         this.root.append(param.root);
-        callback(this.data);
+        update(this.data);
     }
 
     this.setSort = (sort) => { this.data.sort = sort; }
 
     let addCheckbox = (paramText, queryParam, className) => {
-        let span = document.createElement("span");
-        span.classList.add(className);
-
+        let span = this.createElement("span", null, [ className ]);
         let text = document.createElement("span");
         text.innerText = paramText;
         span.append(text);
@@ -154,7 +144,7 @@ function SearchBar(id, apiPath, callback) {
         checkbox.checked = this.data[queryParam];
         checkbox.oninput = e => {
             this.data[queryParam] = checkbox.checked;
-            callback(this.data);
+            update(this.data);
         }
         span.append(checkbox);
         this.root.append(span);
@@ -165,11 +155,11 @@ function SearchBar(id, apiPath, callback) {
         select.configure(config.search_options); 
         for (let name of Object.keys(config.checkboxes))
             addCheckbox(config.checkboxes[name], name, "list-search-" + name);
-        callback(this.data);
+        update(this.data);
     }
 
-    this.api.getSearchConfig(apiPath, configure);
+    this.getSearchConfig(apiPath, configure);
 }
-SearchBar.prototype = new Container;
+SearchBar.prototype = Container;
 
 export { SearchBar };

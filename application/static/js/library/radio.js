@@ -1,23 +1,15 @@
+import { Container } from "../container.js";
 import { ListRoot } from "../shared/list.js";
 import { SearchBar } from "../shared/search.js";
 import { Icon, EditableInfo } from "../shared/widgets.js";
-import { Rating } from "../api.js";
-import { Container, ContainerDefinition } from "../application.js";
 
 function StationEditor() {
 
-    let def = new ContainerDefinition("div", [ ], "station-editor");
-    let data = { stationId: null };
-    Container.call(this, data, def);
+    Container.init.call(this, "div", "station-editor");
 
-    let heading = document.createElement("div");
-    heading.classList.add("station-edit-heading");
-    heading.classList.add("section-heading");
-
-    let headingText = document.createElement("span");
-    headingText.classList.add("station-edit-text");
+    let heading = this.createElement("div", "station-edit-heading", [ "section-heading" ]);
+    let headingText = this.createElement("span", "station-edit-text");
     heading.append(headingText);
-
     this.root.append(heading);
 
     let name    = new EditableInfo([ "station-edit-data" ]);
@@ -28,17 +20,22 @@ function StationEditor() {
     this.root.append(website.root);
     this.root.append(url.root);
 
-    this.save = () => { name.save(); website.save(); url.save(); }
+    this.save = function() { name.save(); website.save(); url.save(); }
 
-    this.reset = () => { name.reset(); website.reset(); url.reset(); }
+    this.reset = function() { name.reset(); website.reset(); url.reset(); }
 
-    this.update = (context) => {
+    this.update = function(context) {
         this.save();
-        let data = { id: this.data.stationId, name: name.data, website: website.data, url: url.data };
+        let data = {
+            id: this.data,
+            name: name.data,
+            website: website.data,
+            url: url.data
+        };
         if (context == "add")
-            this.api.createStation(data, this.refreshStations);
+            this.createItem(this.stationApi, data, this.refreshStations);
         else if (context == "save")
-            this.api.saveStation(data, this.refreshStations);
+            this.saveItem(this.stationApi, data, this.refreshStations);
         this.setContent(null);
     }
 
@@ -47,8 +44,7 @@ function StationEditor() {
     let undoIcon  = new Icon("undo", e => this.reset(), [ "station-edit-action" ]);
     let clearIcon = new Icon("clear", e => this.setContent(null), [ "station-edit-action" ]);
 
-    let icons = document.createElement("span");
-    icons.classList.add("station-edit-icons");
+    let icons = this.createElement("span", "station-edit-icons");
     heading.append(icons);
 
     for (let icon of [ addIcon, saveIcon, undoIcon, clearIcon ])
@@ -56,7 +52,7 @@ function StationEditor() {
 
     this.setContent = (station) => {
         if (station == null) {
-            this.data.stationId = null;
+            this.data = null;
             headingText.innerText = "New Station";
             name.configure("", "name", "Name");
             website.configure("", "website", "Website");
@@ -65,7 +61,7 @@ function StationEditor() {
             saveIcon.hide();
             undoIcon.hide();
         } else {
-            this.data.stationId = station.id;
+            this.data = station.id;
             headingText.innerText = "Editing " + station.name;
             name.set(station.name);
             website.set(station.website);
@@ -79,7 +75,7 @@ function StationEditor() {
         url.toggleEdit(true);
     }
 }
-StationEditor.prototype = new Container;
+StationEditor.prototype = Container;
 
 function StationList(stationEditor) {
 
@@ -94,16 +90,16 @@ function StationList(stationEditor) {
         { display: "", className: "station-list-delete", type: "icon" },
     ];
 
-    let getStationData = function(station) {
+    let getStationData = (station) => {
         return {
             values: [
                 station.name,
                 { text: station.website, url: station.website },
                 station.minutes_listened,
                 station.last_listened,
-                new Rating("station", station.id, station.rating),
+                Container.createRating("station", station.id, station.rating),
                 { name: "create", action: e => stationEditor.setContent(station) },
-                { name: "play_arrow", action: e => this.api.streamUrl(station.url) },
+                { name: "play_arrow", action: e => this.streamUrl(station.url) },
                 { name: "clear", action: e => this.deleteStation(station.id) },
             ],
             expand: null,
@@ -111,30 +107,31 @@ function StationList(stationEditor) {
     }
 
     ListRoot.call(this, columns, getStationData, "stream-list-root");
-    this.refresh = function(query) { this.api.query(this.api.station, query, this.update.bind(this)); }
 
-    this.deleteStation = function(stationId) { this.api.deleteStation(stationId, this.refresh.bind(this, this.search.data)); }
+    this.refresh = function(query) { this.query(this.stationApi, query, this.update.bind(this)); }
 
-    this.search = new SearchBar("station-list-search", this.api.station, this.refresh.bind(this));
+    this.deleteStation = function(stationId) { this.deleteItem(this.stationApi, stationId, this.refresh.bind(this, this.search.data)); }
+
+    this.search = new SearchBar("station-list-search", this.stationApi, this.refresh.bind(this));
     this.root.append(this.search.root);
     this.addHeading();
 }
-StationList.prototype = new Container;
+StationList.prototype = new ListRoot;
 
 function RadioContainer() {
 
-    let def = new ContainerDefinition("div", [ ], "radio-container");
-    Container.call(this, { }, def);
+    Container.init.call(this, "div", "radio-container");
 
     let stationEditor = new StationEditor();
     let stationList = new StationList(stationEditor);
     stationEditor.setContent(null);
-    stationEditor.refreshStations = stationList.refresh.bind(stationList, stationList.search.data);
+    // This makes no fucking sense.
+    stationEditor.refreshStations = () => stationList.refresh.call(stationList, stationList.search.data);
     this.root.append(stationEditor.root);
     this.root.append(stationList.root);
 
-    document.title = "Internet Radio"
+    document.title = "Internet Radio";
 }
-RadioContainer.prototype = new Container;
+RadioContainer.prototype = Container;
 
 export { RadioContainer };

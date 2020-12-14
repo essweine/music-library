@@ -1,10 +1,10 @@
-import { Container, ContainerDefinition } from "../application.js";
+import { Container } from "../container.js";
 import { Icon } from "./widgets.js";
 
 function TracklistEntry(track, move, remove, prefix) {
 
-    let def = new ContainerDefinition("div", [ "tracklist-entry" ]);
-    Container.call(this, { track: track }, def);
+    Container.init.call(this, "div", null, [ "tracklist-entry" ]);
+    this.data = { track: track };
 
     this.moveUp      = new Icon("arrow_upward", e => move(this.data.position), [ prefix + "-move-up" ]);
     this.moveDown    = new Icon("arrow_downward", e => move(this.data.position + 1), [ prefix + "-move-down" ]);
@@ -31,19 +31,17 @@ function TracklistEntry(track, move, remove, prefix) {
     this.show = () => this.root.style.display = "contents";
 
     this.addText = (text, className) => {
-        let span = document.createElement("span");
-        span.classList.add(className);
+        let span = this.createElement("span", null, [ className ]);
         span.innerText = text;
         this.root.append(span);
     }
 }
-TracklistEntry.prototype = new Container;
+TracklistEntry.prototype = Container;
 
 function Tracklist(id, entryType = TracklistEntry) {
 
-    let def = new ContainerDefinition("div", [ ], id);
-    let data = { tracks: [ ], current: 0 };
-    Container.call(this, data, def);
+    Container.init.call(this, "div", id);
+    this.data = { tracks: [ ], current: 0 };
 
     this.addEntry = function(track, prefix) {
         let entry = new entryType(
@@ -89,9 +87,7 @@ function Tracklist(id, entryType = TracklistEntry) {
     }
 
     this.addHeading = function(text, id) {
-        let heading = document.createElement("span");
-        heading.id = id;
-        heading.classList.add("tracklist-heading");
+        let heading = this.createElement("span", id, [ "tracklist-heading" ]);
         heading.innerText = text;
         this.root.append(heading);
     }
@@ -101,13 +97,16 @@ function Tracklist(id, entryType = TracklistEntry) {
         (first != null) ?  this.root.insertBefore(item, first) : this.root.append(item);
     }
 }
-Tracklist.prototype = new Container;
+Tracklist.prototype = Container;
 
 function PlaylistEntry(track, move, remove, prefix) {
+
     TracklistEntry.call(this, track, move, remove, prefix);
+
     this.addText(track.title, "playlist-title");
     this.addText(track.recording, "playlist-recording");
     this.addText(track.artist, "playlist-artist");
+
     this.root.append(this.moveUp.root);
     this.root.append(this.moveDown.root);
     this.root.append(this.removeTrack.root);
@@ -115,9 +114,12 @@ function PlaylistEntry(track, move, remove, prefix) {
 PlaylistEntry.prototype = new TracklistEntry;
 
 function Playlist(id) {
+
     Tracklist.call(this, id, PlaylistEntry);
+
     this.setTracklist = function(tracks) { tracks.map(track => this.addTrack(track)); }
     this.addTrack = function(track) { this.addEntry(track, "playlist"); }
 }
+Playlist.prototype = new Tracklist;
 
 export { TracklistEntry, Tracklist, Playlist };

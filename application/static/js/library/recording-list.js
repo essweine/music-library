@@ -1,7 +1,6 @@
-import { Container, ContainerDefinition } from "../application.js";
+import { Container } from "../container.js";
 import { ListRoot } from "../shared/list.js";
 import { SearchBar } from "../shared/search.js";
-import { Rating } from "../api.js";
 
 function RecordingList() { 
 
@@ -17,9 +16,9 @@ function RecordingList() {
     ];
 
     let playRecording = (entry) => {
-        this.api.clearCurrentPlaylist();
-        this.api.getRecording(entry.id, this.api.queueRecording);
-        this.api.start();
+        this.clearCurrentPlaylist();
+        this.getItem(this.recordingApi, entry.id, this.queueRecording.bind(this));
+        this.start();
     };
 
     let getTrackData = (track) => {
@@ -28,10 +27,10 @@ function RecordingList() {
                 "",
                 track.title,
                 "",
-                new Rating("track", track.filename, track.rating),
+                Container.createRating("track", track.filename, track.rating),
                 null,
                 null,
-                { name: "playlist_add", action: e => this.api.queue(track) },
+                { name: "playlist_add", action: e => this.queue(track) },
                 null,
             ],
             expand: null,
@@ -44,27 +43,27 @@ function RecordingList() {
                 entry.artist,
                 entry.title,
                 entry.recording_date,
-                new Rating("recording-rating", entry.id, entry.rating),
-                new Rating("recording-sound-rating", entry.id, entry.sound_rating),
+                Container.createRating("recording-rating", entry.id, entry.rating),
+                Container.createRating("recording-sound-rating", entry.id, entry.sound_rating),
                 { name: "album", action: e => window.location.href = "/recording/" + entry.id },
-                { name: "playlist_add", action: e => this.api.getRecording(entry.id, this.api.queueRecording) },
+                { name: "playlist_add", action: e => this.getItem(this.recordingApi, entry.id, this.queueRecording.bind(this)) },
                 { name: "playlist_play", action: e => playRecording(entry) },
             ],
-            expand: { id: entry.id, getRows: this.api.getRecordingTracks, createRow: getTrackData },
+            expand: { id: entry.id, getRows: this.getRecordingTracks, createRow: getTrackData },
         };
     }
     ListRoot.call(this, columns, getRecordingData, "recording-list-root");
 
-    this.refresh = function(query) { this.api.query(this.api.recording, query, this.update.bind(this)); }
+    this.refresh = function(query) { this.query(this.recordingApi, query, this.update.bind(this)); }
 
-    let search = new SearchBar("recording-list-search", this.api.recording, this.refresh.bind(this));
+    let search = new SearchBar("recording-list-search", this.recordingApi, this.refresh.bind(this));
     this.root.append(search.root);
 
     this.addHeading();
 
     document.title = "Browse Recordings";
 }
-RecordingList.prototype = new Container;
+RecordingList.prototype = new ListRoot;
 
 export { RecordingList };
 
