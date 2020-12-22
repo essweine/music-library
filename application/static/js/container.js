@@ -26,14 +26,15 @@ const Container = {
 
     /* --- Api paths --- */
 
-    importerApi:  "/api/importer",
-    recordingApi: "/api/recording",
-    trackApi:     "/api/track",
-    playlistApi:  "/api/playlist",
-    stationApi:   "/api/station",
-    ratingApi:    "/api/rating",
-    historyApi:   "/api/history",
-    playerApi:    "/api/player",
+    importerApi:   "/api/importer",
+    recordingApi:  "/api/recording",
+    trackApi:      "/api/track",
+    playlistApi:   "/api/playlist",
+    stationApi:    "/api/station",
+    ratingApi:     "/api/rating",
+    suggestionApi: "/api/suggestion",
+    historyApi:    "/api/history",
+    playerApi:     "/api/player",
 
     playerNotification: "/api/player/notifications",
     logNotification:    "/api/log/notifications",
@@ -97,6 +98,14 @@ const Container = {
         let query = { "filename": filename };
         this.post(this.historyApi + "/track", query, callback);
     },
+
+    /* --- Suggestions --- */
+
+    onThisDate: function(official, callback) { this.get(this.suggestionApi + "/on-this-date?official=" + official, callback); },
+
+    unlistened: function(official, callback) { this.get(this.suggestionApi + "/unlistened?official=" + official, callback); },
+
+    randomRecordings: function(official, callback) { this.get(this.suggestionApi + "/random?official=" + official, callback); },
 
     /* -- Player requests --- */
 

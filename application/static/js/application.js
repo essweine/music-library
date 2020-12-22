@@ -2,11 +2,12 @@ import { Container } from "./container.js";
 import { NowPlaying } from "./player/now-playing.js";
 import { PlayerHistory } from "./player/history.js";
 import { DirectoryList } from "./library/directory.js";
-import { RecordingList } from "./library/recording-list.js";
+import { RecordingBrowser } from "./library/recording-list.js";
 import { RecordingDisplay, ImportDisplay } from "./library/recording.js";
 import { PlaylistList, PlaylistEditor } from "./library/playlist.js";
 import { RadioContainer } from "./library/radio.js";
 import { RatingManager } from "./library/rating-manager.js";
+import { SuggestionManager } from "./library/suggestions.js";
 import { LogManager } from "./log-manager.js";
 
 function ErrorDisplay(messages) {
@@ -44,7 +45,9 @@ function Application(action, arg, content) {
     } else if (action == "recording" && arg != null) {
         container = new RecordingDisplay(arg);
     } else if (action == "recording") {
-        container = new RecordingList();
+        container = new RecordingBrowser();
+    } else if (action == "suggestions") {
+        container = new SuggestionManager();
     } else if (action == "ratings") {
         container = new RatingManager();
     } else if (action == "history") {

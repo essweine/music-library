@@ -2,7 +2,7 @@ import { Container } from "../container.js";
 import { ListRoot } from "../shared/list.js";
 import { SearchBar } from "../shared/search.js";
 
-function RecordingList() { 
+function RecordingList(id) { 
 
     let columns = [
         { display: "Artist", className: "recording-list-artist", type: "text" },
@@ -52,18 +52,21 @@ function RecordingList() {
             expand: { id: entry.id, getRows: this.getRecordingTracks, createRow: getTrackData },
         };
     }
-    ListRoot.call(this, columns, getRecordingData, "recording-list-root");
-
-    this.refresh = function(query) { this.query(this.recordingApi, query, this.update.bind(this)); }
-
-    let search = new SearchBar("recording-list-search", this.recordingApi, this.refresh.bind(this));
-    this.root.append(search.root);
-
-    this.addHeading();
-
-    document.title = "Browse Recordings";
+    ListRoot.call(this, columns, getRecordingData, id);
 }
 RecordingList.prototype = new ListRoot;
 
-export { RecordingList };
+function RecordingBrowser() {
+    Container.init.call(this, "div", "recording-browser");
+    let recordingList = new RecordingList("recording-list-root");
+    recordingList.refresh = function(query) { this.query(this.recordingApi, query, recordingList.update.bind(recordingList)); }
+    let search = new SearchBar("recording-list-search", this.recordingApi, recordingList.refresh.bind(recordingList));
+    recordingList.root.append(search.root);
+    recordingList.addHeading();
+    this.root.append(recordingList.root);
+    document.title = "Browse Recordings";
+};
+RecordingBrowser.prototype = Container;
+
+export { RecordingList, RecordingBrowser };
 

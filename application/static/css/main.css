@@ -171,15 +171,18 @@ a:hover { font-weight: bold; }
 
 #rating-bar-unrated > .bar-data > .bar-rect { background-color: #aac; }
 
-#aggregate-query-select { margin: 5px 0 10px 0; }
+#aggregate-query-select, .suggestion-options { margin: 5px 0 10px 0; }
 #aggregate-query-select > .options-text, 
 #aggregate-query-select > .options-action {
     padding: 0 3px;
     font-size: large;
     font-weight: bold;
 }
+
 #aggregate-query-select > .options-action-selected, 
-#aggregate-query-select > .options-action:hover { text-decoration: underline }
+#aggregate-query-select > .options-action:hover,
+#aggregate-results-toggle > .options-action-selected, 
+#aggregate-results-toggle > .options-action:hover { text-decoration: underline }
 
 #aggregate-results-toggle {
     display: flex;
@@ -192,5 +195,13 @@ a:hover { font-weight: bold; }
     font-size: medium;
 }
 
-#aggregate-results-toggle > .options-action-selected, 
-#aggregate-results-toggle > .options-action:hover { text-decoration: underline }
+/* --- Suggestions --- */
+
+.suggestion-options > .options-text,
+.suggestion-options > .options-action {
+    padding: 0 3px;
+    font-size: large;
+}
+
+.suggestion-options> .options-action-selected,
+.suggestion-options > .options-action:hover { text-decoration: underline }
