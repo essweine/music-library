@@ -53,6 +53,19 @@ function Recording(context) {
     input.id = "official-checkbox";
     officialToggle.append(input);
 
+    let tagToggle = document.createElement("div");
+    tagToggle.classList.add("recording-official");
+
+    let tagText = document.createElement("span");
+    tagText.innerText = "Copy album data to file metadata";
+    tagText.style["padding-right"] = "8px";
+    tagToggle.append(tagText);
+
+    let tagInput = document.createElement("input");
+    tagInput.type = "checkbox";
+    tagInput.id = "tag-checkbox";
+    tagToggle.append(tagInput);
+
     let heading = document.createElement("span");
     heading.id = "recording-heading";
     overview.append(heading);
@@ -61,6 +74,8 @@ function Recording(context) {
         this.update();
         let callback = resp => window.location = "/recording/" + resp.id;
         this.createItem(this.recordingApi, this.data.recording, callback);
+        if (tagInput.checked)
+            this.setTags(this.data.recording.id);
     });
     let cancelImport = new Icon("clear", e => window.location.href = "/importer");
 
@@ -68,6 +83,8 @@ function Recording(context) {
     let saveIcon   = new Icon("save", e => {
         this.update();
         this.saveItem(this.recordingApi, this.data.recording);
+        if (tagInput.checked)
+            this.setTags(this.data.recording.id);
     });
     let cancelEdit = new Icon("clear", e => {
         this.addInfoFromSource(this.data.recording);
@@ -190,8 +207,11 @@ function Recording(context) {
             infoContainer.append(officialToggle);
             let officialCheckbox = document.getElementById("official-checkbox");
             officialCheckbox.checked = (this.data.recording == null) ? false : this.data.recording.official;
-        } else
+            infoContainer.append(tagToggle);
+        } else {
             officialToggle.remove();
+            tagToggle.remove();
+        }
         
         if (typeof(imageContainer.toggleEdit) !== "undefined")
             imageContainer.toggleEdit(editable);

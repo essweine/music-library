@@ -73,6 +73,8 @@ const Container = {
 
     updateRating: function(rating) { this.post(this.ratingApi, rating, NoOp); },
 
+    setTags: function(recordingId) { this.post(this.recordingApi + "/" + recordingId + "/tags", null, NoOp); },
+
     getSearchConfig: function(base, callback) { this.get(base + "/search", callback); },
 
     query: function(base, query, callback) { this.post(base + "/search", query, callback); },

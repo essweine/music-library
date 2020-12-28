@@ -6,7 +6,7 @@ from .playlist import Playlist
 from .station import Station
 
 # Handlers
-from .recording_handler import RecordingHandler, RecordingRootHandler, RecordingTrackHandler
+from .recording_handler import RecordingHandler, RecordingRootHandler, RecordingTrackHandler, RecordingTagHandler
 from .recording_handler import RecordingSearchHandler, RecordingAggregationHandler
 from .track_handler import TrackSearchHandler, TrackAggregationHandler
 from .station_handler import StationHandler, StationRootHandler, StationSearchHandler
@@ -18,6 +18,7 @@ LIBRARY_HANDLERS = [
     (r"/api/recording/search", RecordingSearchHandler),
     (r"/api/recording/aggregate/(.*)", RecordingAggregationHandler),
     (r"/api/recording/(.*)/tracks", RecordingTrackHandler),
+    (r"/api/recording/(.*)/tags", RecordingTagHandler),
     (r"/api/recording/(.*)", RecordingHandler),
     (r"/api/recording", RecordingRootHandler),
     (r"/api/track/search", TrackSearchHandler),

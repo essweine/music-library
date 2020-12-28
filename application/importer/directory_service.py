@@ -3,6 +3,8 @@ import re, json
 from uuid import uuid4
 from itertools import chain
 
+from mutagen.flac import FLAC
+
 from ..config import AUDIO_FILETYPES, IMAGE_FILETYPES, TEXT_FILETYPES
 from ..util import BaseObject
 from ..library import Recording, LibraryTrack
@@ -128,6 +130,26 @@ class DirectoryService(object):
 
         with open(os.path.join(self.root_path, filename), 'rb') as text:
             return ParsedText(text)
+
+    def write_tags(self, recording):
+
+        errors = [ ]
+        for track in recording.tracks:
+            try:
+                audio = FLAC(os.path.join(self.root_path, track.filename))
+                audio["ALBUM"] = recording.title
+                audio["TITLE"] = track.title
+                audio["ARTIST"] = track.artist
+                audio["COMPOSER"] = track.composer
+                audio["GENRE"] = track.genre
+                audio["TRACKNUMBER"] = str(track.track_num)
+                audio["TRACKTOTAL"] = str(len(recording.tracks))
+                if recording.recording_date is not None:
+                    audio["DATE"] = str(recording.recording_date.year)
+                audio.save()
+            except Exception as exc:
+                errors.append(f"{track.filename} {str(exc)}")
+        return errors
 
     @staticmethod
     def is_audio(filename):

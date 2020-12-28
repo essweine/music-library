@@ -2,7 +2,6 @@ import sys
 import json
 
 from . import Recording, RecordingSummary, RecordingAggregation
-from ..importer import DirectoryService
 from ..util import BaseApiHandler, BaseSearchHandler
 
 class RecordingRootHandler(BaseApiHandler):
@@ -90,3 +89,16 @@ class RecordingTrackHandler(BaseApiHandler):
             self.write(json.dumps(recording.tracks, cls = self.JsonEncoder))
         except:
             self.write_error(500, log_message = f"Could not retrieve tracks for {recording_id}", exc_info = sys.exc_info())
+
+class RecordingTagHandler(BaseApiHandler):
+
+    def post(self, recording_id):
+
+        try:
+            recording = self.db_action(Recording.get, recording_id)
+            errors = self.application.directory_service.write_tags(recording)
+            if errors:
+                self.write_error(400, messages = errors)
+        except:
+            self.write_error(500, log_message = f"Could not write tags", exc_info = sys.exc_info())
+
