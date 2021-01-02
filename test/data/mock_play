@@ -1,3 +1,0 @@
-#!/bin/bash
-# I don't want to play the file, but I need something that takes time to run.
-sleep $1
