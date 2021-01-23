@@ -5,7 +5,7 @@ from datetime import datetime, date
 
 class BaseObject(object):
 
-    def as_dict(self):
+    def serialize(self):
 
         def convert(val):
             if isinstance(val, list):
@@ -15,7 +15,7 @@ class BaseObject(object):
             if isinstance(val, dict):
                 return dict([ (attr, convert(v)) for attr, v in val.items() ])
             if isinstance(val, BaseObject):
-                return val.as_dict()
+                return val.serialize()
             return val
 
         return dict([ (attr, convert(val)) for attr, val in self.__dict__.items() if not attr.startswith("_") ])
@@ -45,19 +45,15 @@ class BaseObject(object):
         return all([ self.__getattribute__(attr) == other.__getattribute__(attr) for attr in self.__dict__ if not attr.startswith("_") ])
 
     @classmethod
-    def row_factory(cls, cursor, row):
-        return cls(**dict([ (col[0], row[idx]) for idx, col in enumerate(cursor.description) ]))
-
-    @classmethod
     def __subclasshook__(cls, subclass):
-        return hasattr(subclass, 'as_dict') and callable(subclass.as_dict)
+        return hasattr(subclass, 'serialize') and callable(subclass.serialize)
 
 class JsonEncoder(json.JSONEncoder):
 
     def default(self, obj):
 
         if issubclass(obj.__class__, (BaseObject, )):
-            return obj.as_dict()
+            return obj.serialize()
         elif isinstance(obj, datetime):
             return obj.strftime("%Y-%m-%d %H:%M:%S")
         elif isinstance(obj, date):

@@ -1,18 +1,18 @@
 import sys
 import json
 
+from .recording import PlaylistTrackView
 from ..util import BaseApiHandler, BaseSearchHandler
-from . import Playlist, PlaylistTrack, TrackAggregation
 
 class TrackSearchHandler(BaseSearchHandler):
 
     SearchType = "track"
 
     def get_configuration(self):
-        return self.db_action(PlaylistTrack.search_configuration)
+        return self.db_action(PlaylistTrackView.search_configuration)
 
     def search(self):
-        return self.db_query(PlaylistTrack.search, self.json_body)
+        return self.db_query(PlaylistTrackView.search, self.json_body)
 
 class TrackAggregationHandler(BaseApiHandler):
 
@@ -22,7 +22,7 @@ class TrackAggregationHandler(BaseApiHandler):
             self.write_error(400, messsages = [ "Expected json" ])
 
         try:
-            results = self.db_query(TrackAggregation.aggregate, agg_type, self.json_body)
+            results = self.db_query(PlaylistTrackView.aggregate, agg_type, self.json_body)
             self.write(json.dumps(results, cls = self.JsonEncoder))
         except ValueError as exc:
             self.write_error(400, messages = [ str(exc) ])

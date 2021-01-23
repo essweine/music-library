@@ -6,10 +6,10 @@ import sys
 from uuid import uuid4
 from datetime import date
 
+from application.library import TABLES, VIEWS
 from application.importer import DirectoryService
-from application.library import Recording, Station
+from application.library import LibrarySearchView
 from application.player import player
-from application.config import TABLES, VIEWS
 from . import ROOT_PATH, DEFAULT_INDEX, DB_NAME
 
 class TestPlayer(unittest.TestCase):
@@ -27,7 +27,7 @@ class TestPlayer(unittest.TestCase):
 
         directory = cls.directory_service.get_directory("root/Keep It Like A Secret")
         cls.recording = cls.directory_service.create_recording(directory, directory.text[0])
-        Recording.create(cursor, cls.recording.as_dict())
+        LibrarySearchView.create_recording(cursor, cls.recording.serialize())
 
         cursor.close()
 

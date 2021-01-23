@@ -6,7 +6,7 @@ class Query(object):
     def __init__(self, table, select = None, distinct = False, group = None, order = None, limit = None):
 
         self.table    = table
-        self.select   = self._build_select(select)
+        self.select   = select
         self.distinct = distinct
         self.group    = group
         self.order    = order
@@ -47,17 +47,15 @@ class Query(object):
         cursor.row_factory = row_factory
         cursor.execute(query, self.values)
 
-    def _build_select(self, select):
-
-        if select is not None:
-            column = lambda definition, name: f"{definition} as {name}" if definition else name
-            return [ column(definition, name) for name, definition in select ]
-        else:
-            return [ "*" ]
-
     def __repr__(self):
 
-        select = ", ".join([ f"{col}" for col in self.select ])
+        if self.select is not None:
+            column = lambda definition, name: f"{definition} as {name}" if definition else name
+            columns = [ column(definition, name) for name, definition in self.select ]
+        else:
+            columns = [ "*" ]
+
+        select = ", ".join(columns)
         distinct = "distinct" if self.distinct else ""
         conditions = "where " + " and ".join([ cond for cond in self.conditions ]) if self.conditions else ""
         group = f"group by {self.group}" if self.group else ""

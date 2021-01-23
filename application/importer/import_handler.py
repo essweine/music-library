@@ -32,7 +32,7 @@ class ImportHandler(BaseApiHandler):
                 self.application.directory_service.aggregate(directory)
             parsed_text = [ self.application.directory_service.create_recording(directory, f) for f in directory.text ] 
             parsed_text.append(self.application.directory_service.create_recording(directory))
-            response = directory.as_dict()
+            response = directory.serialize()
             response.update({ "parsed_text": parsed_text })
             self.write(json.dumps(response, cls = self.JsonEncoder))
         except:

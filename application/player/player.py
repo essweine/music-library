@@ -3,10 +3,9 @@ import subprocess, signal, time, os
 import logging
 from datetime import datetime, timedelta
 
-from ..library import Station
+from ..library import StationTable, HistoryTable
 from .state import Task, State, ProcState
 from .playlist import PlaylistEntry, StreamEntry
-from .history import History
 
 CMD = [ "ffmpeg", "-hide_banner" ]
 OUTPUT_ARGS = [ "-f", "alsa", "hw:0" ]
@@ -93,7 +92,7 @@ class Player(object):
 
             if isinstance(entry, PlaylistEntry) and (entry.end_time - entry.start_time).seconds > 10:
                 try:
-                    History.create(cursor, entry)
+                    HistoryTable.insert(cursor, entry.serialize())
                 except Exception as exc:
                     self.logger.error("Could not create history entry for {entry.filename}", exc_info = True)
                 if entry.error:
@@ -101,7 +100,7 @@ class Player(object):
 
             elif isinstance(entry, StreamEntry):
                 try:
-                    Station.update_history(cursor, entry)
+                    StationTable.update_history(cursor, entry)
                 except Exception as exc:
                     self.logger.error(f"Could not update history for station {entry.url}", exc_info = True)
 

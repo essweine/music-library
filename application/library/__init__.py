@@ -1,9 +1,30 @@
-# Classes
-from .recording import Recording, LibraryTrack
-from .search import RecordingSummary, PlaylistTrack
-from .aggregate import TrackAggregation, RecordingAggregation
-from .playlist import Playlist
-from .station import Station
+# DB Interface
+from .recording import PropertyTable, TrackTable, RecordingTable, RecordingPropertyView, TrackPropertyView
+from .recording import LibraryTrackView, RecordingTrackView, LibrarySearchView, RecordingSummaryView, PlaylistTrackView
+from .playlist import PlaylistTable, PlaylistEntryTable
+from .station import StationTable
+from .history import HistoryTable, HistoryTrackView
+
+TABLES = [
+    PropertyTable,
+    TrackTable,
+    RecordingTable,
+    PlaylistTable,
+    PlaylistEntryTable,
+    StationTable,
+    HistoryTable,
+]
+
+VIEWS = [
+    RecordingPropertyView,
+    TrackPropertyView,
+    LibraryTrackView,
+    RecordingTrackView,
+    LibrarySearchView,
+    RecordingSummaryView,
+    PlaylistTrackView,
+    HistoryTrackView,
+]
 
 # Handlers
 from .recording_handler import RecordingHandler, RecordingRootHandler, RecordingTrackHandler, RecordingTagHandler
@@ -13,6 +34,7 @@ from .station_handler import StationHandler, StationRootHandler, StationSearchHa
 from .playlist_handler import PlaylistHandler, PlaylistRootHandler, PlaylistSearchHandler, PlaylistTrackHandler
 from .rating_handler import RatingHandler
 from .suggestion_handler import SuggestionHandler
+from .history_handler import RecentlyPlayedHandler, FrequentlyPlayedHandler, TrackHistoryHandler
 
 LIBRARY_HANDLERS = [
     (r"/api/recording/search", RecordingSearchHandler),
@@ -32,5 +54,8 @@ LIBRARY_HANDLERS = [
     (r"/api/station", StationRootHandler),
     (r"/api/rating", RatingHandler),
     (r"/api/suggestion/(.*)", SuggestionHandler),
+    (r"/api/history/recent", RecentlyPlayedHandler),
+    (r"/api/history/frequent", FrequentlyPlayedHandler),
+    (r"/api/history/track", TrackHistoryHandler),
 ]
 

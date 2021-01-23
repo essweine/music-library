@@ -3,11 +3,10 @@ import json
 from datetime import datetime
 
 from ..util import BaseObject, BaseApiHandler
-from ..util.db import Query
 
-from .search import RecordingSummaryView, RecordingSummary, LibrarySearchView
-from .recording import RecordingTable
-from ..player.history import HistoryTable
+from .db import Query
+from .recording import RecordingSummaryView, RecordingTable, LibrarySearchView
+from .history import HistoryTable
 
 class Suggestion(BaseObject):
 
@@ -20,7 +19,7 @@ class Suggestion(BaseObject):
         subquery.compare(f"strftime('%d', recording_date)", str(today.day), "=")
         subquery.compare("official", official, "=")
         query = Query(RecordingSummaryView).compare_subquery("id", subquery)
-        query.execute(cursor, RecordingSummary.row_factory)
+        query.execute(cursor, RecordingSummaryView.row_factory)
 
     @staticmethod
     def unlistened(cursor, official):
@@ -37,7 +36,7 @@ class Suggestion(BaseObject):
             order = "random_id",
             limit = 10
         ).compare_subquery("id", recordings)
-        query.execute(cursor, RecordingSummary.row_factory)
+        query.execute(cursor, RecordingSummaryView.row_factory)
 
     @staticmethod
     def random(cursor, official):
@@ -48,7 +47,7 @@ class Suggestion(BaseObject):
             order = "random_id",
             limit = 10
         ).compare("official", official, "=")
-        query.execute(cursor, RecordingSummary.row_factory)
+        query.execute(cursor, RecordingSummaryView.row_factory)
 
 class SuggestionHandler(BaseApiHandler):
 

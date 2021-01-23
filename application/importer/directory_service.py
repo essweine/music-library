@@ -1,13 +1,12 @@
 import os
 import re, json
-from uuid import uuid4
 from itertools import chain
 
 from mutagen.flac import FLAC
 
 from ..config import AUDIO_FILETYPES, IMAGE_FILETYPES, TEXT_FILETYPES
 from ..util import BaseObject
-from ..library import Recording, LibraryTrack
+from ..library import RecordingTable, LibraryTrackView
 from .parsed_text import ParsedText
 
 class DirectoryListing(BaseObject):
@@ -96,12 +95,13 @@ class DirectoryService(object):
 
     def create_recording(self, directory, textfile = None):
 
-        recording = Recording()
-        recording.id, recording.directory = str(uuid4()), directory.relative_path
+        recording = RecordingTable.new_item()
+        recording.directory = directory.relative_path
+        recording.tracks = [ ]
 
         for idx, filename in enumerate(directory.audio):
 
-            track = LibraryTrack()
+            track = LibraryTrackView.new_item()
             track.filename     = filename
             track.track_num    = idx + 1
             track.recording_id = recording.id

@@ -6,7 +6,7 @@ from tornado.websocket import WebSocketHandler
 from tornado import log as logger
 
 from ..util import BaseApiHandler
-from ..library import Station, PlaylistTrack
+from ..library import StationTable, PlaylistTrackView
 
 class PlayerDisplayHandler(RequestHandler):
 
@@ -39,11 +39,11 @@ class PlayerHandler(BaseApiHandler):
         state = self.application.player.state
         filenames = [ entry.filename for entry in state.playlist ]
         if state.stream:
-            state.stream.station = self.db_action(Station.from_url, state.stream.url)
+            state.stream.station = self.db_action(StationTable.from_url, state.stream.url)
         if state.preview is None:
-            state.playlist = self.db_action(PlaylistTrack.from_filenames, filenames)
+            state.playlist = self.db_action(PlaylistTrackView.from_filenames, filenames)
         else:
-            state.playlist = [ PlaylistTrack(filename = filename, title = filename) for filename in filenames ]
+            state.playlist = [ PlaylistTrackView.create_item(filename = filename, title = filename) for filename in filenames ]
         return state
 
 class PlayerNotificationHandler(WebSocketHandler):

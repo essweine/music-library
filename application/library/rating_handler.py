@@ -2,7 +2,7 @@ import sys
 import json
 
 from ..util import BaseApiHandler
-from .import Recording, Station, Playlist
+from . import RecordingTable, TrackTable, StationTable, PlaylistTable
 
 class Rating(object):
 
@@ -22,15 +22,15 @@ class RatingHandler(BaseApiHandler):
         try:
             rating = Rating(**self.json_body)
             if rating.item_type == "recording-rating":
-                self.db_action(Recording.set_rating, rating)
+                self.db_action(RecordingTable.set_rating, rating)
             elif rating.item_type == "recording-sound-rating":
-                self.db_action(Recording.set_sound_rating, rating)
+                self.db_action(RecordingTable.set_sound_rating, rating)
             elif rating.item_type == "track":
-                self.db_action(Recording.set_track_rating, rating)
+                self.db_action(TrackTable.set_rating, rating)
             elif rating.item_type == "playlist":
-                self.db_action(Playlist.set_rating, rating)
+                self.db_action(PlaylistTable.set_rating, rating)
             elif rating.item_type == "station":
-                self.db_action(Station.set_rating, rating)
+                self.db_action(StationTable.set_rating, rating)
         except Exception as exc:
             self.write_error(500, log_message = "Could not update rating", exc_info = sys.exc_info())
 

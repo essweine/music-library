@@ -1,7 +1,7 @@
 import sys
 import json
 
-from . import Recording, RecordingSummary, RecordingAggregation
+from .recording import RecordingSummaryView, LibrarySearchView
 from ..util import BaseApiHandler, BaseSearchHandler
 
 class RecordingRootHandler(BaseApiHandler):
@@ -9,7 +9,7 @@ class RecordingRootHandler(BaseApiHandler):
     def get(self):
 
         try:
-            summaries = self.db_query(RecordingSummary.get_all)
+            summaries = self.db_query(RecordingSummaryView.get_all)
             self.write(json.dumps(summaries, cls = self.JsonEncoder))
         except Exception as exc:
             self.write_error(500, log_message = "Could not get recording list", exc_info = sys.exc_info())
@@ -20,10 +20,10 @@ class RecordingRootHandler(BaseApiHandler):
             self.write_error(400, messsages = [ "Expected json" ])
 
         try:
-            errors = Recording.validate(self.json_body)
+            errors = LibrarySearchView.validate(self.json_body)
             if errors:
                 self.write_error(400, messages = errors)
-            recording_id = self.db_action(Recording.create, self.json_body)
+            recording_id = self.db_action(LibrarySearchView.create_recording, self.json_body)
             self.write(json.dumps({ "id": recording_id }))
             self.application.directory_service.add_directory_to_index(self.json_body["directory"])
         except:
@@ -34,10 +34,10 @@ class RecordingSearchHandler(BaseSearchHandler):
     SearchType = "recording"
 
     def get_configuration(self):
-        return self.db_action(RecordingSummary.search_configuration)
+        return self.db_action(RecordingSummaryView.search_configuration)
 
     def search(self):
-        return self.db_query(RecordingSummary.search, self.json_body)
+        return self.db_query(RecordingSummaryView.search, self.json_body)
 
 class RecordingAggregationHandler(BaseApiHandler):
 
@@ -47,7 +47,7 @@ class RecordingAggregationHandler(BaseApiHandler):
             self.write_error(400, messsages = [ "Expected json" ])
 
         try:
-            results = self.db_query(RecordingAggregation.aggregate, agg_type, self.json_body)
+            results = self.db_query(RecordingSummaryView.aggregate, agg_type, self.json_body)
             self.write(json.dumps(results, cls = self.JsonEncoder))
         except ValueError as exc:
             self.write_error(400, messages = [ str(exc) ])
@@ -59,7 +59,7 @@ class RecordingHandler(BaseApiHandler):
     def get(self, recording_id):
 
         try:
-            recording = self.db_action(Recording.get, recording_id)
+            recording = self.db_action(LibrarySearchView.get_recording, recording_id)
             if recording is not None:
                 self.write(json.dumps(recording, cls = self.JsonEncoder))
             else:
@@ -73,10 +73,10 @@ class RecordingHandler(BaseApiHandler):
             self.write_error(400, messsages = [ "Expected json" ])
 
         try:
-            errors = Recording.validate(self.json_body)
+            errors = LibrarySearchView.validate(self.json_body)
             if errors:
                 self.write_error(400, messages = errors)
-            self.db_action(Recording.update, self.json_body)
+            self.db_action(LibrarySearchView.update_recording, self.json_body)
         except:
             self.write_error(500, log_message = f"Could not update recording {recording_id}", exc_info = sys.exc_info())
 
@@ -85,8 +85,8 @@ class RecordingTrackHandler(BaseApiHandler):
     def get(self, recording_id):
 
         try:
-            recording = self.db_action(Recording.get, recording_id)
-            self.write(json.dumps(recording.tracks, cls = self.JsonEncoder))
+            tracks = self.db_query(LibrarySearchView.get_tracks, recording_id)
+            self.write(json.dumps(tracks, cls = self.JsonEncoder))
         except:
             self.write_error(500, log_message = f"Could not retrieve tracks for {recording_id}", exc_info = sys.exc_info())
 
@@ -95,7 +95,7 @@ class RecordingTagHandler(BaseApiHandler):
     def post(self, recording_id):
 
         try:
-            recording = self.db_action(Recording.get, recording_id)
+            recording = self.db_action(LibrarySearchView.get_recording, recording_id)
             errors = self.application.directory_service.write_tags(recording)
             if errors:
                 self.write_error(400, messages = errors)

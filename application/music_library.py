@@ -3,15 +3,12 @@ import logging
 
 from tornado.web import Application, StaticFileHandler
 
-from .library import LIBRARY_HANDLERS
-from .importer import DirectoryService, ImportHandler, ImportRootHandler
+from .library import LIBRARY_HANDLERS, TABLES, VIEWS
+from .importer import IMPORT_HANDLERS, DirectoryService
 from .player import Player, PlayerDisplayHandler, PLAYER_HANDLERS
 from .log import LogNotificationHandler
-from .config import TABLES, VIEWS
 
-handlers = LIBRARY_HANDLERS + PLAYER_HANDLERS + [ 
-    (r"/api/importer/(.*)", ImportHandler),
-    (r"/api/importer", ImportRootHandler),
+handlers = LIBRARY_HANDLERS + PLAYER_HANDLERS + IMPORT_HANDLERS + [ 
     (r"/api/log/notifications", LogNotificationHandler),
     (r"/static", StaticFileHandler),
     (r".*", PlayerDisplayHandler),
