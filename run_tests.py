@@ -3,7 +3,7 @@
 import argparse
 import unittest
 from test import setUpModule, tearDownModule
-from test import test_directory_service, test_recording, test_playlist, test_station, test_player
+from test import test_directory_service, test_recording, test_playlist, test_station, test_player, test_podcast
 
 suites = {
     "importer": unittest.defaultTestLoader.loadTestsFromModule(test_directory_service),
@@ -11,6 +11,7 @@ suites = {
     "playlist": unittest.defaultTestLoader.loadTestsFromModule(test_playlist),
     "station": unittest.defaultTestLoader.loadTestsFromModule(test_station), 
     "player": unittest.defaultTestLoader.loadTestsFromModule(test_player),
+    "podcast": unittest.defaultTestLoader.loadTestsFromModule(test_podcast),
 }
 
 if __name__ == "__main__":

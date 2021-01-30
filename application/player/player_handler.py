@@ -6,7 +6,7 @@ from tornado.websocket import WebSocketHandler
 from tornado import log as logger
 
 from ..util import BaseApiHandler
-from ..library import StationTable, PlaylistTrackView
+from ..library import StationTable, PodcastSearchView, PlaylistTrackView
 
 class PlayerDisplayHandler(RequestHandler):
 
@@ -40,6 +40,7 @@ class PlayerHandler(BaseApiHandler):
         filenames = [ entry.filename for entry in state.playlist ]
         if state.stream:
             state.stream.station = self.db_action(StationTable.from_url, state.stream.url)
+            state.stream.podcast = self.db_action(PodcastSearchView.from_url, state.stream.url)
         if state.preview is None:
             state.playlist = self.db_action(PlaylistTrackView.from_filenames, filenames)
         else:

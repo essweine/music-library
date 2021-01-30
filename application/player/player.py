@@ -3,7 +3,7 @@ import subprocess, signal, time, os
 import logging
 from datetime import datetime, timedelta
 
-from ..library import StationTable, HistoryTable
+from ..library import StationTable, PodcastEpisodeTable, HistoryTable
 from .state import Task, State, ProcState
 from .playlist import PlaylistEntry, StreamEntry
 
@@ -101,6 +101,7 @@ class Player(object):
             elif isinstance(entry, StreamEntry):
                 try:
                     StationTable.update_history(cursor, entry)
+                    PodcastEpisodeTable.update_history(cursor, entry)
                 except Exception as exc:
                     self.logger.error(f"Could not update history for station {entry.url}", exc_info = True)
 

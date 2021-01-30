@@ -3,6 +3,7 @@ from .recording import PropertyTable, TrackTable, RecordingTable, RecordingPrope
 from .recording import LibraryTrackView, RecordingTrackView, LibrarySearchView, RecordingSummaryView, PlaylistTrackView
 from .playlist import PlaylistTable, PlaylistEntryTable
 from .station import StationTable
+from .podcast import PodcastTable, PodcastEpisodeTable, PodcastSearchView, PodcastSummaryView
 from .history import HistoryTable, HistoryTrackView
 
 TABLES = [
@@ -12,6 +13,8 @@ TABLES = [
     PlaylistTable,
     PlaylistEntryTable,
     StationTable,
+    PodcastTable,
+    PodcastEpisodeTable,
     HistoryTable,
 ]
 
@@ -24,14 +27,18 @@ VIEWS = [
     RecordingSummaryView,
     PlaylistTrackView,
     HistoryTrackView,
+    PodcastSearchView,
+    PodcastSummaryView,
 ]
 
 # Handlers
 from .recording_handler import RecordingHandler, RecordingRootHandler, RecordingTrackHandler, RecordingTagHandler
 from .recording_handler import RecordingSearchHandler, RecordingAggregationHandler
 from .track_handler import TrackSearchHandler, TrackAggregationHandler
-from .station_handler import StationHandler, StationRootHandler, StationSearchHandler
 from .playlist_handler import PlaylistHandler, PlaylistRootHandler, PlaylistSearchHandler, PlaylistTrackHandler
+from .station_handler import StationHandler, StationRootHandler, StationSearchHandler
+from .podcast_handler import PodcastRootHandler, PodcastSearchHandler, PodcastHandler
+from .podcast_handler import PodcastEpisodeRootHandler, PodcastEpisodeHandler
 from .rating_handler import RatingHandler
 from .suggestion_handler import SuggestionHandler
 from .history_handler import RecentlyPlayedHandler, FrequentlyPlayedHandler, TrackHistoryHandler
@@ -52,6 +59,11 @@ LIBRARY_HANDLERS = [
     (r"/api/station/search", StationSearchHandler),
     (r"/api/station/(.*)", StationHandler),
     (r"/api/station", StationRootHandler),
+    (r"/api/podcast/search", PodcastSearchHandler),
+    (r"/api/podcast/(.*)/episodes/(.*)", PodcastEpisodeHandler),
+    (r"/api/podcast/(.*)/episodes", PodcastEpisodeRootHandler),
+    (r"/api/podcast/(.*)", PodcastHandler),
+    (r"/api/podcast", PodcastRootHandler),
     (r"/api/rating", RatingHandler),
     (r"/api/suggestion/(.*)", SuggestionHandler),
     (r"/api/history/recent", RecentlyPlayedHandler),

@@ -51,6 +51,9 @@
 .list-search-value { grid-column: 3; }
 .list-search-remove { grid-column: 5; }
 
+/* --- List row filter --- */
+.row-filter-label, .row-filter-checkbox { padding-right: 15px; }
+
 /* --- Import layout --- */
 
 #directory-list-refresh:hover {
@@ -107,6 +110,21 @@
 .station-list-edit { grid-column: 6; }
 .station-list-play { grid-column: 7; }
 .station-list-delete { grid-column: 8; }
+
+/* --- Podcast list --- */
+#podcast-list-search { grid-column: 1 / 9; }
+#podcast-episode-filter {
+    grid-column: 1 / 9;
+    padding: 10px 0;
+}
+.podcast-list-name { grid-column: 1; }
+.podcast-list-episodes { grid-column: 2; }
+.podcast-list-episodes-unlistened { grid-column: 3; }
+.podcast-list-date { grid-column: 4; }
+.podcast-list-rating { grid-column: 5; }
+.podcast-list-edit { grid-column: 6; }
+.podcast-list-refresh { grid-column: 7; }
+.podcast-list-delete { grid-column: 8; }
 
 /* --- Generic tracklist --- */
 

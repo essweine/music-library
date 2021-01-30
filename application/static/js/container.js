@@ -31,6 +31,7 @@ const Container = {
     trackApi:      "/api/track",
     playlistApi:   "/api/playlist",
     stationApi:    "/api/station",
+    podcastApi:    "/api/podcast",
     ratingApi:     "/api/rating",
     suggestionApi: "/api/suggestion",
     historyApi:    "/api/history",
@@ -70,6 +71,18 @@ const Container = {
     getRecordingTracks: function(recordingId, callback) { this.get(this.recordingApi + "/" + recordingId + "/tracks", callback); },
 
     getPlaylistTracks: function(playlistId, callback) { this.get(this.playlistApi + "/" + playlistId + "/tracks", callback); },
+
+    getPodcastEpisodes: function(podcastId, listened, showAll, callback) {
+        let queryArgs = [ ];
+        if (listened)
+            queryArgs.push("listened=true");
+        if (showAll)
+            queryArgs.push("all=true");
+        let query = (queryArgs.length) ? "?" + queryArgs.join("&") : "";
+        this.get(this.podcastApi + "/" + podcastId + "/episodes" + query, callback); 
+    },
+
+    updatePodcastEpisodes: function(podcastId, callback) { this.post(this.podcastApi + "/" + podcastId + "/episodes", null, callback); },
 
     updateRating: function(rating) { this.post(this.ratingApi, rating, NoOp); },
 

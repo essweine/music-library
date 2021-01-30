@@ -34,19 +34,19 @@
 
 #artwork { object-fit: cover; }
 
-#track-title {
+#track-title, #podcast-title {
     grid-row: 1;
     font-size: x-large;
     font-weight: bold;
     padding-top: 10px;
 }
 
-#recording-title {
+#recording-title, #podcast-name {
     grid-row: 2;
     width: max-content;
 }
 
-#recording-link {
+#recording-link, #podcast-link {
     font-size: large;
     font-style: italic;
 }
@@ -56,7 +56,12 @@
     font-size: large;
 }
 
-#track-rating { padding-top: 10px; }
+#track-rating, #podcast-rating { padding-top: 10px; }
+
+#podcast-description {
+    padding: 20px 0;
+    max-width: 1000px;
+}
 
 /*  --- Player stream --- */
 #current-stream { display: grid; }

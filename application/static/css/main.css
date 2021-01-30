@@ -107,30 +107,30 @@ a:hover { font-weight: bold; }
 .log-info { color: green; }
 
 /* --- Station editor --- */
-#station-editor {
+#stream-editor {
     display: grid;
     justify-content: start;
     padding: 15px 0px 15px 0px;
 }
 
-#station-edit-heading {
+#stream-edit-heading {
     grid-column: 2;
     width: 100%;
     display: grid;
     grid-auto-flow: column;
     justify-self: stretch;
 }
-#station-edit-text { justify-self: start; }
-#station-edit-icons { justify-self: end; }
+#stream-edit-text { justify-self: start; }
+#stream-edit-icons { justify-self: end; }
 
-.station-edit-action { width: min-content; }
+.stream-edit-action { width: min-content; }
 
-.station-edit-data > .editable-label {
+.stream-edit-data > .editable-label {
     grid-column: 1;
     align-self: center;
     padding-right: 10px;
 }
-.station-edit-data > .editable-input { grid-column: 2; }
+.stream-edit-data > .editable-input { grid-column: 2; }
 
 /* --- Charts --- */
 .bar-chart {

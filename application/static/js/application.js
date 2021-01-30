@@ -5,7 +5,8 @@ import { DirectoryList } from "./library/directory.js";
 import { RecordingBrowser } from "./library/recording-list.js";
 import { RecordingDisplay, ImportDisplay } from "./library/recording.js";
 import { PlaylistList, PlaylistEditor } from "./library/playlist.js";
-import { RadioContainer } from "./library/radio.js";
+import { StationContainer } from "./library/station.js";
+import { PodcastContainer } from "./library/podcast.js";
 import { RatingManager } from "./library/rating-manager.js";
 import { SuggestionManager } from "./library/suggestions.js";
 import { LogManager } from "./log-manager.js";
@@ -57,7 +58,9 @@ function Application(action, arg, content) {
     } else if (action == "playlist") {
         container = new PlaylistList();
     } else if (action == "radio") {
-        container = new RadioContainer();
+        container = new StationContainer();
+    } else if (action == "podcast") {
+        container = new PodcastContainer();
     } else if (action == "log") {
         container = new LogManager();
     } else {

@@ -65,7 +65,7 @@ function PreviewTrack() {
 }
 PreviewTrack.prototype = Container;
 
-function CurrentStream() {
+function CurrentStation() {
 
     Container.init.call(this, "div", "current-stream");
 
@@ -97,7 +97,39 @@ function CurrentStream() {
             streamTitle.innerText = "No metadata available";
     }
 }
-CurrentStream.prototype = Container;
+CurrentStation.prototype = Container;
+
+function CurrentPodcast() {
+
+    Container.init.call(this, "div", "current-stream");
+
+    let podcastTitle = this.createElement("div", "podcast-title");
+    this.root.append(podcastTitle);
+
+    let podcastName = this.createElement("div", "podcast-name");
+    let podcastLink = this.createElement("a", "podcast-link");
+    podcastName.append(podcastLink);
+    this.root.append(podcastName);
+
+    let pubDate = this.createElement("div", "podcast-published");
+    this.root.append(pubDate);
+
+    let ratingDisplay = new RatingDisplay(null, [ ], null, "podcast-rating");
+    this.root.append(ratingDisplay.root);
+
+    let description = this.createElement("div", "podcast-description");
+    this.root.append(description);
+
+    this.update = (podcast) => {
+        podcastTitle.innerText = podcast.episode_title;
+        podcastLink.href = podcast.website;
+        podcastLink.innerText = podcast.podcast_name;
+        pubDate.innerText = "Published " + podcast.date_published;
+        description.innerText = podcast.description;
+        ratingDisplay.setRating(this.createRating("podcast", podcast.podcast_id, podcast.rating));
+    }
+}
+CurrentPodcast.prototype = Container;
 
 function PlayerControls() {
 
@@ -123,7 +155,8 @@ function NowPlaying() {
 
     let currentTrack   = new CurrentTrack();
     let previewTrack   = new PreviewTrack();
-    let currentStream  = new CurrentStream();
+    let currentStation = new CurrentStation();
+    let currentPodcast = new CurrentPodcast();
     let playerControls = new PlayerControls();
     let playlist       = new CurrentPlaylist();
 
@@ -131,11 +164,17 @@ function NowPlaying() {
         this.root.append(elem.root);
 
     this.update = (state) => {
-        if (state.stream != null) {
-            currentStream.update(state.stream);
+        if (state.stream != null && state.stream.station != null) {
+            currentStation.update(state.stream);
             currentTrack.root.remove();
             playlist.root.remove();
-            this.root.insertBefore(currentStream.root, playerControls.root);
+            this.root.insertBefore(currentStation.root, playerControls.root);
+        } else if (state.stream != null && state.stream.podcast != null) {
+            currentPodcast.update(state.stream.podcast);
+            currentTrack.root.remove();
+            currentStation.root.remove();
+            playlist.root.remove();
+            this.root.insertBefore(currentPodcast.root, playerControls.root);
         } else if (state.playlist.length > 0) {
             let current = state.playlist[state.current];
             if (state.preview == null) {
@@ -147,20 +186,25 @@ function NowPlaying() {
                 previewTrack.update(current, state.preview);
                 this.root.insertBefore(previewTrack.root, playerControls.root);
             }
-            currentStream.root.remove();
+            currentStation.root.remove();
+            currentPodcast.root.remove();
             this.root.append(playlist.root);
             if (state.preview != null)
                 playlist.updateView(true);
         } else {
             currentTrack.root.remove();
             previewTrack.root.remove();
-            currentStream.root.remove();
+            currentStation.root.remove();
+            currentPodcast.root.remove();
             this.root.append(playlist.root);
         }
         playlist.update(state);
-        if (state.proc_state == "playing") {
+        if (state.proc_state == "playing" && state.stream == null) {
             let current = state.playlist[state.current];
             document.title = "Now Playing: " + current.title + " (" + current.artist + ")";
+        } else if (state.proc_state == "playing" && state.stream != null) {
+            let streamTitle = (state.stream.station != null) ? state.stream.station.name : state.stream.podcast.podcast_name;
+            document.title = "Now Playing: " + streamTitle;
         } else { document.title = "Now Playing [" + state.proc_state + "]"; }
     }
 
