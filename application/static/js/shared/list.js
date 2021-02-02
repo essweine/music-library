@@ -58,12 +58,12 @@ function ListRoot(columns, defaultRow, id) {
     this.addRows = function(items, rowType, classes = [ ], before = null) {
         for (let entry of items) {
             let data = rowType(entry);
-            let rowId = (data.expand) ? data.expand.id.replace(/\s+/g, "-") : null;
+            let rowId = (data.rowId) ? data.rowId.replace(/\s+/g, "-") : null;
             let action = null;
             if (data.expand) {
                 let createRow = expand(rowId, data.expand.createRow);
                 action = {
-                    expand: e => data.expand.getRows.call(this, data.expand.id, createRow.bind(this)),
+                    expand: e => data.expand.getRows.call(this, data.rowId, createRow.bind(this)),
                     collapse: e => collapse(rowId),
                 };
             }

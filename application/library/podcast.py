@@ -60,6 +60,13 @@ class PodcastEpisodeTable(Table, ItemTable, ItemCreator):
         values = (datetime.utcnow().strftime("%Y-%m-%d"), entry.url)
         cursor.execute(stmt, values)
 
+    @classmethod
+    def set_listened(cls, cursor, episode_id):
+
+        stmt = "update podcast_episode set listened_date=? where id=?"
+        values = (datetime.utcnow().strftime("%Y-%m-%d"), episode_id)
+        cursor.execute(stmt, values)
+
 class PodcastSearchView(JoinedView, ItemCreator):
 
     name = "podcast_search"
@@ -112,7 +119,7 @@ class PodcastSummaryView(JoinedView, ItemCreator, Search):
     search_options = {
         "name": ("text", "Name"),
         "rating": ("rating", "Minimum Rating"),
-        "date_published": ("date", "Published Since"),
+        "date_published": ("standard_date", "Published Since"),
     }
     search_checkboxes   = { "unrated": "Unrated Only" }
     search_sort_columns = [ "name" ]

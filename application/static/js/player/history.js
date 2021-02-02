@@ -16,6 +16,7 @@ function HistoryList(listTitle, options, id) {
     let addHistory = (timestamp) => {
         return {
             values: [ "", timestamp, "", null, "", null ],
+            rowId: null,
             expand: null,
         };
     }
@@ -30,7 +31,8 @@ function HistoryList(listTitle, options, id) {
                 "x" + track.count,
                 { name: "playlist_add", action: e => this.queue(track) },
             ],
-            expand: { id: track.filename, getRows: this.getTrackHistory, createRow: addHistory },
+            rowId: track.filename,
+            expand: { getRows: this.getTrackHistory, createRow: addHistory },
         };
     };
 

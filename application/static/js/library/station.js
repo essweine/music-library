@@ -29,6 +29,7 @@ function StationList(stationEditor) {
                 { name: "play_arrow", action: e => this.streamUrl(station.url) },
                 { name: "clear", action: e => this.deleteStation(station.id) },
             ],
+            rowId: null,
             expand: null,
         };
     }

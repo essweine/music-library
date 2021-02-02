@@ -77,6 +77,19 @@
 .recording-list-queue { grid-column: 7; }
 .recording-list-play { grid-column: 8; }
 
+#recording-list-select, .suggestion-options { margin: 5px 0 10px 0; }
+#recording-list-select > .options-text, 
+#recording-list-select > .options-action {
+    padding-right: 10px;
+    font-size: large;
+    font-weight: bold;
+}
+
+#recording-list-select > .options-action-selected, 
+#recording-list-select > .options-action:hover,
+#recording-list-toggle > .options-action-selected, 
+#recording-list-toggle > .options-action:hover { text-decoration: underline }
+
 /* -- Playlist list layout --- */
 #playlist-list-search { grid-column: 1 / 8; }
 .playlist-list-name { grid-column: 1 }

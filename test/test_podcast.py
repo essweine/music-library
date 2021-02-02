@@ -98,6 +98,9 @@ class TestPodcast(unittest.TestCase):
         for i in range(5):
             entry = StreamEntry(episodes[i].url)
             PodcastEpisodeTable.update_history(cursor, entry)
+
+        for i in range(10, 15):
+            PodcastEpisodeTable.set_listened(cursor, episodes[i].id)
         cursor.close()
 
     def test_004_search_podcasts(self):
@@ -126,7 +129,7 @@ class TestPodcast(unittest.TestCase):
         PodcastSummaryView.get_all(cursor, "name")
         podcasts = cursor.fetchall()
         self.assertEqual(podcasts[0].episodes, 100)
-        self.assertEqual(podcasts[0].unlistened, 95)
+        self.assertEqual(podcasts[0].unlistened, 90)
         PodcastSummaryView.get_episodes(cursor, self.podcasts[0]["id"], False, False)
         episodes = cursor.fetchall()
         self.assertEqual(len(episodes), 5)

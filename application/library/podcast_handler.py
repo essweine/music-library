@@ -1,7 +1,7 @@
 import sys
 import json
 
-from .podcast import PodcastTable, PodcastSummaryView
+from .podcast import PodcastTable, PodcastSummaryView, PodcastEpisodeTable
 from ..util import BaseApiHandler, BaseSearchHandler
 
 class PodcastRootHandler(BaseApiHandler):
@@ -93,4 +93,13 @@ class PodcastEpisodeHandler(BaseApiHandler):
                 self.write_error(404, messages = [ f"Episode not found: {episode_id}" ])
         except Exception as exc:
             self.write_error(500, log_message = f"Could not get episode {episode_id}", exc_info = sys.exc_info())
+
+    def put(self, podcast_id, episode_id):
+
+        try:
+            self.db_action(PodcastEpisodeTable.set_listened, episode_id)
+            episode = self.db_action(PodcastEpisodeTable.get, episode_id)
+            self.write(json.dumps(episode, cls = self.JsonEncoder))
+        except Exception as exc:
+            self.write_error(500, log_message = f"Could not update episode {episode_id}", exc_info = sys.exc_info())
 

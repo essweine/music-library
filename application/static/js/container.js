@@ -84,6 +84,8 @@ const Container = {
 
     updatePodcastEpisodes: function(podcastId, callback) { this.post(this.podcastApi + "/" + podcastId + "/episodes", null, callback); },
 
+    markEpisodeListened: function(podcastId, episodeId, callback) { this.put(this.podcastApi + "/" + podcastId + "/episodes/" + episodeId, null, callback); },
+
     updateRating: function(rating) { this.post(this.ratingApi, rating, NoOp); },
 
     setTags: function(recordingId) { this.post(this.recordingApi + "/" + recordingId + "/tags", null, NoOp); },

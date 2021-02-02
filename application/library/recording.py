@@ -225,7 +225,7 @@ class RecordingSummaryView(JoinedView, ItemCreator, Search):
         "recording": ("text", "Title"),
         "recording_rating": ("rating", "Minimum Rating"),
         "sound_rating": ("rating", "Minimum Sound Rating"),
-        "recording_date": ("date_search", "Date"),
+        "recording_date": ("wildcard_date", "Date"),
         "title": ("text", "Contains Track"),
         "artist": ("category", "Artist"),
         "composer": ("category", "Composer"),

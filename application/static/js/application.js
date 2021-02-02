@@ -8,7 +8,6 @@ import { PlaylistList, PlaylistEditor } from "./library/playlist.js";
 import { StationContainer } from "./library/station.js";
 import { PodcastContainer } from "./library/podcast.js";
 import { RatingManager } from "./library/rating-manager.js";
-import { SuggestionManager } from "./library/suggestions.js";
 import { LogManager } from "./log-manager.js";
 
 function ErrorDisplay(messages) {
@@ -47,8 +46,6 @@ function Application(action, arg, content) {
         container = new RecordingDisplay(arg);
     } else if (action == "recording") {
         container = new RecordingBrowser();
-    } else if (action == "suggestions") {
-        container = new SuggestionManager();
     } else if (action == "ratings") {
         container = new RatingManager();
     } else if (action == "history") {

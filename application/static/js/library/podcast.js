@@ -56,6 +56,14 @@ function PodcastList(podcastEditor) {
         pubDate.innerText       = podcast.date_published;
     }
 
+    let updateEpisodeRow = (episode) => {
+        let child = document.getElementById(episode.id);
+        let listenedDate = child.getElementsByClassName("podcast-list-episodes-unlistened").item(0);
+        listenedDate.innerText = episode.listened_date;
+        if (!episodeFilter.getValue("listened"))
+            child.remove();
+    }
+
     let filterEpisodes = (podcastId, createRow) => {
         let listened = episodeFilter.getValue("listened");
         let all = episodeFilter.getValue("all");
@@ -70,10 +78,11 @@ function PodcastList(podcastEditor) {
                 episode.listened_date,
                 episode.date_published,
                 null,
-                null,
                 { name: "play_arrow", action: e => this.streamUrl(episode.url) },
+                { name: "not_interested", action: e => this.markEpisodeListened(episode.podcast_id, episode.id, updateEpisodeRow) },
                 null,
             ],
+            rowId: episode.id,
             expand: null,
         }
     }
@@ -87,10 +96,11 @@ function PodcastList(podcastEditor) {
                 podcast.date_published,
                 Container.createRating("podcast", podcast.id, podcast.rating),
                 { name: "create", action: e => podcastEditor.setContent(podcast) },
-                { name: "refresh", action: e => this.updatePodcastEpisodes(podcast.id, (r) => updatePodcastRow(r)) },
+                { name: "refresh", action: e => this.updatePodcastEpisodes(podcast.id, updatePodcastRow) },
                 { name: "clear", action: e => this.deletePodcast(podcast.id) },
             ],
-            expand: { id: podcast.id, getRows: filterEpisodes, createRow: getEpisodeData },
+            rowId: podcast.id,
+            expand: { getRows: filterEpisodes, createRow: getEpisodeData },
         };
     }
 

@@ -39,7 +39,7 @@ class Table(object):
     @classmethod
     def drop(cls, cursor):
 
-        cursor.execute(f"drop table {cls.name}")
+        cursor.execute(f"drop table if exists {cls.name}")
 
     @classmethod
     def _convert_empty_strings(cls, data):
@@ -76,14 +76,7 @@ class JoinedView(type):
         cursor.execute(stmt)
 
     @classmethod
-    def get_all(cls, cursor, sort_col = None):
-
-        cursor.row_factory = cls.row_factory
-        order = f"order by {sort_col}" if sort_col else ""
-        cursor.execute(f"select distinct * from {cls.name} {order}")
-
-    @classmethod
     def drop(cls, cursor):
 
-        cursor.execute(f"drop view {cls.name}")
+        cursor.execute(f"drop view if exists {cls.name}")
 

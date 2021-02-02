@@ -100,6 +100,7 @@ function RatingManager() {
                 track.artist,
                 this.createRating("track", track.filename, track.rating)
             ],
+            rowId: null,
             expand: null,
         }
     }
@@ -118,6 +119,7 @@ function RatingManager() {
                 recording.title,
                 this.createRating("recording-rating", recording.id, recording.rating)
             ],
+            rowId: null,
             expand: null,
         }
     }

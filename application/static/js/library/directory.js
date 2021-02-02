@@ -27,6 +27,7 @@ function DirectoryList() {
                 { name: "play_arrow", action: e => preview(entry) },
                 { name: "add", action: e => window.location.href = "/importer/" + encodeURIComponent(entry.relative_path) },
             ],
+            rowId: null,
             expand: null,
         };
     }

@@ -25,7 +25,7 @@ class StationTable(Table, ItemTable, ItemCreator, Search):
         "name": ("text", "Name"),
         "rating": ("rating", "Minimum Rating"),
         "minutes_listened": ("number", "Minutes Listened"),
-        "last_listened": ("date", "Listened Since"),
+        "last_listened": ("standard_date", "Listened Since"),
     }
     search_checkboxes   = { "unrated": "Unrated Only" }
     search_sort_columns = [ "name" ]

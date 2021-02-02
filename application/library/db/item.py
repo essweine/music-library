@@ -34,6 +34,13 @@ class ItemCreator(object):
         return cls.create_item(**dict([ (attr, None) for attr in attrs ]))
 
     @classmethod
+    def get_all(cls, cursor, sort_col = None):
+
+        cursor.row_factory = cls.row_factory
+        order = f"order by {sort_col}" if sort_col else ""
+        cursor.execute(f"select * from {cls.name} {order}")
+
+    @classmethod
     def row_factory(cls, cursor, row):
 
         return cls.create_item(**dict([ (col[0], row[idx]) for idx, col in enumerate(cursor.description) ]))
@@ -53,13 +60,6 @@ class ItemTable(object):
         cursor.row_factory = cls.row_factory
         cursor.execute(f"select * from {cls.name} where {cls.identifier_col}=?", (item_id, ))
         return cursor.fetchone()
-
-    @classmethod
-    def get_all(cls, cursor, sort_col = None):
-
-        cursor.row_factory = cls.row_factory
-        order = f"order by {sort_col}" if sort_col else ""
-        cursor.execute(f"select * from {cls.name} {order}")
 
     @classmethod
     def create(cls, cursor, item):

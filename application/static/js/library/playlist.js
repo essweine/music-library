@@ -35,6 +35,7 @@ function PlaylistList() {
                 null,
                 null,
             ],
+            rowId: null,
             expand: null,
         }
     }
@@ -50,7 +51,8 @@ function PlaylistList() {
                 { name: "playlist_play", action: e => playTracks(entry) },
                 { name: "clear", action: e => deletePlaylist(entry.id) },
             ],
-            expand: { id: entry.id, getRows: this.getPlaylistTracks, createRow: getTrackData },
+            rowId: entry.id,
+            expand: { getRows: this.getPlaylistTracks, createRow: getTrackData },
         }
     }
 

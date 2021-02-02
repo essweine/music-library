@@ -19,7 +19,7 @@ OPERATORS = {
     "rating": ">=",
     "category": "like",
     "options": "like",
-    "timestamp": ">=",
+    "standard_date": ">=",
     "number": ">=",
 }
 
@@ -66,7 +66,7 @@ class Search(object):
             param_type, display = details
             config[param] = {
                 "display": display,
-                "type": param_type if param_type in [ "options", "rating", "date_search" ] else "text",
+                "type": param_type if param_type in [ "options", "rating", "wildcard_date" ] else "text",
                 "values": [ ],
             }
             if param_type == "options":
@@ -114,7 +114,7 @@ class Search(object):
         for item in params:
             param, val = item.popitem()
             param_type, display = cls.search_options[param]
-            if param_type == "date_search":
+            if param_type == "wildcard_date":
                 cls._parse_date(query, val, match)
             elif param_type in [ "category", "options" ]:
                 op = OPERATORS[param_type]
