@@ -147,7 +147,7 @@ const Container = {
         this.sendTasks(tasks);
     },
 
-    streamUrl: function(url) { this.sendTasks([ this.createTask("stream", { url: url }) ]); },
+    streamUrl: function(url, streamType) { this.sendTasks([ this.createTask("stream", { url: url, stream_type: streamType }) ]); },
 
     getCurrentState: function(callback) { this.get(this.playerApi, callback); },
 

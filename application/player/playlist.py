@@ -1,147 +1,115 @@
-import json
-from enum import Enum
-from datetime import datetime
 from random import shuffle, choice
-
-import requests
-from requests.exceptions import ConnectionError, Timeout
 
 from ..util import BaseObject
 
-class PlaylistState(BaseObject):
+class Playlist(BaseObject):
 
     def __init__(self, **state):
 
-        self.position = state.get("position", 0)
-        self.order = state.get("order", [ ])
         self.shuffled = state.get("shuffled", False)
         self.repeat = state.get("repeat", False)
         self.preview = state.get("preview", None)
+        self.entries = state.get("entries", [ ])
+        self.position = state.get("position", 0)
+
+        self._shuffle_position = 0
+        self._shuffle_order = [ ]
 
     @property
-    def current(self):
-        return self.order[self.position] if len(self.order) else 0
+    def current_entry(self):
+        return self.entries[self.position]
 
     @property
     def at_end(self):
-        return self.position == len(self.order)
+        return self._shuffle_position == len(self._shuffle_order)
+
+    def set_position(self):
+        self.position = self._shuffle_order[self._shuffle_position] if len(self._shuffle_order) else 0
 
     def advance(self):
 
-        self.position = self.position + 1
+        self._shuffle_position = self._shuffle_position + 1
         if self.repeat and self.at_end:
-            self.position = 0
+            self._shuffle_position = 0
 
     def clear(self):
 
+        self.entries.clear()
         self.position = 0
-        self.order = [ ]
+        self.preview = None
+        self._shuffle_position = 0
+        self._shuffle_order = [ ]
 
-    def shuffle(self, current):
-
-        if len(self.order):
-            self.position = self.order.index(current)
-        shuffle(self.order)
-        self.shuffled = True
-
-    def unshuffle(self, current):
-
-        self.order = list(range(len(self.order)))
-        self.position = current
-        self.shuffled = False
-
-    def move(self, destination):
+    def shuffle(self):
 
         if self.shuffled:
-            original = self.order[self.position]
-            idx = self.order.index(destination)
-            self.order[idx] = original
-            self.order[self.position] = destination
+            self._shuffle_order = list(range(len(self._shuffle_order)))
+            self._shuffle_position = self.position
         else:
-            self.position = destination
+            if len(self._shuffle_order):
+                self._shuffle_position = self._shuffle_order.index(self.position)
+            shuffle(self._shuffle_order)
+        self.shuffled = not self.shuffled
 
-    def add(self, position):
+    def move(self, task):
+
+        entry = self.entries.pop(task.original)
+        self.entries.insert(task.destination, entry)
+        if self.position == task.original:
+            self._move_current_entry(task.destination)
+        if self.position == task.destination:
+            self._move_current_entry(task.original)
+
+    def _move_current_entry(self, destination):
 
         if self.shuffled:
-            self.order = list(map(lambda v: v + 1 if v >= position else v, self.order))
-            idx = choice(list(range(self.position, len(self.order) + 1)))
-            self.order.insert(idx, position)
+            original = self._shuffle_order[self._shuffle_position]
+            idx = self._shuffle_order.index(destination)
+            self._shuffle_order[idx] = original
+            self._shuffle_order[self._shuffle_position] = destination
         else:
-            if position <= self.position and len(self.order) > 0:
-                self.position = self.position + 1
-            self.order.append(len(self.order))
+            self._shuffle_position = destination
 
-    def remove(self, position):
+    def add(self, task, duration):
 
-        if self.position > 0 and position < self.position:
-            self.position = self.position - 1
-        self.order.remove(position)
-        self.order = list(map(lambda v: v - 1 if v > position else v, self.order))
+        if self.preview is None:
+            entry = PlaylistEntry(task.filename, info = task.info, duration = duration)
+            position = task.position if task.position is not None else len(self.entries)
+            self.entries.insert(position, entry)
 
-    def skip(self, offset):
+            if self.shuffled:
+                self._shuffle_order = list(map(lambda v: v + 1 if v >= position else v, self._shuffle_order))
+                idx = choice(list(range(self._shuffle_position, len(self._shuffle_order) + 1)))
+                self._shuffle_order.insert(idx, position)
+            else:
+                if position <= self._shuffle_position and len(self._shuffle_order) > 0:
+                    self._shuffle_position = self._shuffle_position + 1
+                self._shuffle_order.append(len(self._shuffle_order))
 
-        position = self.position + offset
-        if position >= 0 and position < len(self.order):
-            self.position = position
+    def remove(self, task):
+
+        if task.position < len(self.entries):
+            self.entries.pop(task.position)
+            if self._shuffle_position > 0 and task.position < self._shuffle_position:
+                self._shuffle_position = self._shuffle_position - 1
+            self._shuffle_order.remove(task.position)
+            self._shuffle_order = list(map(lambda v: v - 1 if v > task.position else v, self._shuffle_order))
+
+    def skip(self, task):
+
+        position = self._shuffle_position + task.offset
+        if position >= 0 and position < len(self._shuffle_order):
+            self._shuffle_position = position
         elif position < 0 and self.repeat:
-            self.position = len(self.order) - 1
-        elif position >= len(self.order) and self.repeat:
-            self.position = 0
+            self._shuffle_position = len(self._shuffle_order) - 1
+        elif position >= len(self._shuffle_order) and self.repeat:
+            self._shuffle_position = 0
 
 class PlaylistEntry(BaseObject):
 
     def __init__(self, filename, **entry):
 
         self.filename = filename
-        self.start_time = entry.get("start_time")
-        self.end_time = entry.get("end_time")
-        self.error = entry.get("error", False)
-        self.error_output = entry.get("error_output")
+        self.duration = entry.get("duration", 0)
+        self.info = entry.get("info", { })
 
-class StreamEntry(BaseObject):
-
-    def __init__(self, url, **entry):
-
-        self.url = url
-        self.metadata = entry.get("metadata", { })
-        self.status = entry.get("status", { })
-        self.start_time = entry.get("start_time")
-        self.end_time = entry.get("end_time")
-
-        self._response = None
-        self._has_metadata = None
-        self._chunk_size = 16000
-
-    def connect(self):
-
-        try:
-            headers = { "icy-metadata": "1" }
-            resp = requests.get(self.url, headers = headers, stream = True)
-            self.status["status_code"] = resp.status_code
-            self.status["reason"] = resp.reason
-            self.start_time = datetime.utcnow()
-            resp.raise_for_status()
-            self._response = resp
-            if "icy-metaint" in resp.headers:
-                self._has_metadata = True
-                self._chunk_size = int(resp.headers["icy-metaint"])
-        except(ConnectionError, Timeout) as exc:
-            self.status["reason"] = str(exc)
-            raise
-
-    def read(self):
-
-        audio = self._response.raw.read(self._chunk_size)
-        if self._has_metadata:
-            meta_size = int(self._response.raw.read(1).hex(), base = 16) * 16
-            if meta_size > 0:
-                metadata = self._response.raw.read(meta_size).decode("utf-8").strip("\x00").strip()
-                items = [ item.split("=") for item in metadata.split(";") if len(item) > 1 ]
-                cleaned = [ [ token.strip("'") for token in item ]  for item in items ]
-                self.metadata = dict(([ (item[0], "=".join(item[1:])) for item in cleaned ]))
-        return audio
-
-    def close(self):
-
-        self.end_time = datetime.utcnow()
-        self._response.close()

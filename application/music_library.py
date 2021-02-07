@@ -69,7 +69,9 @@ class MusicLibrary(Application):
         while self.player.conn.poll():
             try:
                 cursor = self.conn.cursor()
-                self.player.update_history(cursor, self.player.conn.recv())
+                self.player.state = self.player.conn.recv()
+                if self.player.state.previous is not None:
+                    self.player.update_history(cursor)
                 for ws in self.player.websockets:
                     ws.write_message("state changed")
                 cursor.close()

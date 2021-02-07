@@ -21,7 +21,7 @@ if __name__ == "__main__":
                         help = "run tests from %(metavar)s: options are " + ", ".join(suites.keys()))
     parser.add_argument("-x", "--exclude", dest = "exclude", action = "store_true",
                         help = "exclude rather than run suite(s)")
-    parser.add_argument("-v", "--verbosity", metavar = "LEVEL", dest = "verbosity", default = 2,
+    parser.add_argument("-v", "--verbosity", metavar = "LEVEL", dest = "verbosity", type = int, default = 2,
                         help = "use verbosity level %(metavar)s [default %(default)d]")
     args = parser.parse_args()
 

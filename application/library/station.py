@@ -44,7 +44,7 @@ class StationTable(Table, ItemTable, ItemCreator, Search):
 
         duration = round((entry.end_time - entry.start_time).total_seconds() / 60)
         stmt = "update station set minutes_listened=minutes_listened + ?, last_listened=? where url=?"
-        values = (duration, entry.end_time, entry.url)
+        values = (duration, entry.end_time, entry.entry_id)
         cursor.execute(stmt, values)
 
     @classmethod

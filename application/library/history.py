@@ -14,6 +14,15 @@ class HistoryTable(Table):
         Column("end_time", "timestamp", False, False),
     ]
 
+    @classmethod
+    def update_history(cls, cursor, entry):
+        data = {
+            "filename": entry.entry_id, 
+            "start_time": entry.start_time,
+            "end_time": entry.end_time
+        }
+        cls.insert(cursor, data)
+
 class HistoryTrackView(JoinedView, ItemCreator):
 
     name = "history_track"

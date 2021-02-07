@@ -26,7 +26,7 @@ function StationList(stationEditor) {
                 station.last_listened,
                 Container.createRating("station", station.id, station.rating),
                 { name: "create", action: e => stationEditor.setContent(station) },
-                { name: "play_arrow", action: e => this.streamUrl(station.url) },
+                { name: "play_arrow", action: e => this.streamUrl(station.url, "station") },
                 { name: "clear", action: e => this.deleteStation(station.id) },
             ],
             rowId: null,

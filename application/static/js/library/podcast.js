@@ -78,7 +78,7 @@ function PodcastList(podcastEditor) {
                 episode.listened_date,
                 episode.date_published,
                 null,
-                { name: "play_arrow", action: e => this.streamUrl(episode.url) },
+                { name: "play_arrow", action: e => this.streamUrl(episode.url, "podcast") },
                 { name: "not_interested", action: e => this.markEpisodeListened(episode.podcast_id, episode.id, updateEpisodeRow) },
                 null,
             ],

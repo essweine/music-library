@@ -49,8 +49,8 @@ function PlayerTracklist() {
 
     this.update = function(state, updateDisplay) {
         this.clear();
-        this.setTracklist(state.playlist);
-        this.data.current = state.current;
+        this.setTracklist(state.entries.map(entry => entry.info));
+        this.data.current = state.position;
         updateDisplay();
     }
 
@@ -150,9 +150,9 @@ function CurrentPlaylist() {
     allTracks.root.append(heading);
 
     this.update = function(state) {
-        (state.shuffle) ? shuffleIcon.root.classList.remove("disabled-icon") : shuffleIcon.root.classList.add("disabled-icon");
+        (state.shuffled) ? shuffleIcon.root.classList.remove("disabled-icon") : shuffleIcon.root.classList.add("disabled-icon");
         (state.repeat) ? repeatIcon.root.classList.remove("disabled-icon") : repeatIcon.root.classList.add("disabled-icon");
-        nextTracks.update(state, nextTracks.updateView.bind(nextTracks, state.current + 1));
+        nextTracks.update(state, nextTracks.updateView.bind(nextTracks, state.position + 1));
         allTracks.update(state, allTracks.highlightCurrent.bind(allTracks))
         recentTracks.update();
     }

@@ -1,7 +1,24 @@
 from enum import Enum
 
 from ..util import BaseObject
-from .playlist import PlaylistState
+from .playlist import Playlist
+
+class Task(BaseObject):
+
+    ATTRIBUTES = {
+        "add": [ "filename", "position", "info" ],
+        "remove": [ "position" ],
+        "move": [ "original", "destination" ],
+        "skip": [ "offset" ],
+        "stream": [ "url", "stream_type", "info" ],
+        "preview": [ "filenames", "directory" ],
+    }
+
+    def __init__(self, **task):
+
+        self.__setattr__("name", task.get("name"))
+        for attr in self.ATTRIBUTES.get(self.name, [ ]):
+            self.__setattr__(attr, task.get(attr))
 
 class ProcState(Enum):
 
@@ -9,27 +26,25 @@ class ProcState(Enum):
     Stopped = "stopped"
     Paused  = "paused"
 
-class Task(BaseObject):
+class ProcData(BaseObject):
 
-    ATTRIBUTES = [ "name", "filename", "position", "original", "destination", "offset", "url", "filenames", "directory" ]
+    def __init__(self, **data):
 
-    def __init__(self, **task):
-
-        for attr in filter(lambda a: a in task, self.ATTRIBUTES):
-            self.__setattr__(attr, task.get(attr))
+        self.entry_id = data.get("entry_id")
+        self.entry_type = data.get("entry_type")
+        self.title = data.get("title")
+        self.duration = data.get("duration")
+        self.start_time = data.get("start_time")
+        self.end_time = data.get("end_time")
+        self.error = data.get("error")
 
 class State(BaseObject):
 
     def __init__(self, **state):
 
         self.proc_state = state.get("proc_state", ProcState.Stopped)
-        self.current = state.get("current", 0)
-        self.playlist = state.get("playlist", [ ])
-        self.history = state.get("history", [ ])
+        self.current = state.get("current", None)
+        self.previous = state.get("previous", None)
         self.stream = state.get("stream")
-        self.shuffle = state.get("shuffle", False)
-        self.repeat = state.get("repeat", False)
-        self.preview = state.get("preview", None)
-
-        self._playlist_state = PlaylistState()
+        self.playlist = state.get("playlist", Playlist())
 

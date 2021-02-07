@@ -14,7 +14,7 @@ from application.importer import DirectoryService
 from application.library.podcast import PodcastSummaryView, PodcastTable, PodcastEpisodeTable
 from application.library.db.search import DEFAULT_QUERY
 from application.library.rating_handler import Rating
-from application.player.playlist import StreamEntry
+from application.player.state import ProcData
 from . import ROOT_PATH, DEFAULT_INDEX, DB_NAME
 
 class TestPodcast(unittest.TestCase):
@@ -96,7 +96,7 @@ class TestPodcast(unittest.TestCase):
         self.assertEqual(episodes[0].date_published, date(2021, 1, 29))
 
         for i in range(5):
-            entry = StreamEntry(episodes[i].url)
+            entry = ProcData(entry_id = episodes[i].url, entry_type = "podcast")
             PodcastEpisodeTable.update_history(cursor, entry)
 
         for i in range(10, 15):

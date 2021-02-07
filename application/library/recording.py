@@ -241,6 +241,7 @@ class PlaylistTrackView(JoinedView, ItemCreator, Search):
     which contains all the data the player needs to display the track."""
 
     name       = "playlist_track"
+    props      = [ "artist" ]
     subqueries = (
         Query(RecordingTrackView, [
             ("recording_id", None),
@@ -268,6 +269,11 @@ class PlaylistTrackView(JoinedView, ItemCreator, Search):
     search_sort_columns = [ "title" ]
     search_source       = LibrarySearchView
     search_column       = "filename"
+
+    @classmethod
+    def get(cls, cursor, filename):
+        Query(cls).compare("filename", filename, "=").execute(cursor, cls.row_factory)
+        return cursor.fetchone()
 
     @classmethod
     def from_filenames(cls, cursor, filenames):

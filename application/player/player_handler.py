@@ -6,7 +6,7 @@ from tornado.websocket import WebSocketHandler
 from tornado import log as logger
 
 from ..util import BaseApiHandler
-from ..library import StationTable, PodcastSearchView, PlaylistTrackView
+from ..library import PlaylistTrackView, StationTable, PodcastSearchView
 
 class PlayerDisplayHandler(RequestHandler):
 
@@ -19,7 +19,7 @@ class PlayerHandler(BaseApiHandler):
     def get(self):
 
         try:
-            self.write(json.dumps(self._get_state(), cls = self.JsonEncoder))
+            self.write(json.dumps(self.application.player.state, cls = self.JsonEncoder))
         except:
             self.write_error(500, log_message = "Could not get current state", exc_info = sys.exc_info())
 
@@ -30,22 +30,20 @@ class PlayerHandler(BaseApiHandler):
 
         try:
             for task in self.json_body["tasks"]:
+                if task["name"] in [ "add", "stream"]:
+                    task["info"] = self._get_task_info(task).serialize()
                 self.application.player.send_task(task)
         except:
             self.write_error(500, log_message = "Could not update the current state", exc_info = sys.exc_info())
 
-    def _get_state(self):
+    def _get_task_info(self, task):
 
-        state = self.application.player.state
-        filenames = [ entry.filename for entry in state.playlist ]
-        if state.stream:
-            state.stream.station = self.db_action(StationTable.from_url, state.stream.url)
-            state.stream.podcast = self.db_action(PodcastSearchView.from_url, state.stream.url)
-        if state.preview is None:
-            state.playlist = self.db_action(PlaylistTrackView.from_filenames, filenames)
-        else:
-            state.playlist = [ PlaylistTrackView.create_item(filename = filename, title = filename) for filename in filenames ]
-        return state
+        if task["name"] == "add":
+            return self.db_action(PlaylistTrackView.get, task["filename"])
+        elif task["name"] == "stream" and task["stream_type"] == "station":
+            return self.db_action(StationTable.from_url, task["url"])
+        elif task["name"] == "stream" and task["stream_type"] == "podcast":
+            return self.db_action(PodcastSearchView.from_url, task["url"])
 
 class PlayerNotificationHandler(WebSocketHandler):
 
