@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 from ..library import StationTable, PodcastEpisodeTable, HistoryTable, PlaylistTrackView
 from .state import Task, State, ProcState, ProcData
 from .playlist import PlaylistEntry
-from .stream import StreamEntry
+from .stream import StationEntry, PodcastEntry
 
 FFMPEG = [ "ffmpeg", "-hide_banner", "-f", "alsa", "hw:0" ]
 FFPROBE = [
@@ -49,6 +49,8 @@ class Player(object):
                         self._pause()
                     elif task.name == "stop":
                         self._stop()
+                    elif task.name == "seek":
+                        self._handle_seek(task)
                     elif task.name == "skip":
                         self._handle_skip(task)
                     elif task.name == "move":
@@ -61,6 +63,8 @@ class Player(object):
                         self._handle_clear_playlist()
                     elif task.name == "stream":
                         self._handle_stream(task)
+                    elif task.name == "podcast":
+                        self._handle_podcast(task)
                     elif task.name == "repeat":
                         self._handle_repeat()
                     elif task.name == "shuffle":
@@ -76,6 +80,8 @@ class Player(object):
                         self._continue()
                     elif self.state.stream is not None:
                         self._subprocess.stdin.write(self.state.stream.read())
+                    if self.state.podcast is not None and not self.state.podcast._finished:
+                        self.state.podcast.read()
 
                 if self.state != initial_state:
                     conn.send(self.state.copy())
@@ -97,35 +103,39 @@ class Player(object):
         if entry.error is not None:
             self.logger.error(f"An error occured during playback for {entry.entry_id}: {entry.error}")
 
-        try:
-            if entry.entry_type == "track":
-                HistoryTable.update_history(cursor, entry)
-            elif entry.entry_type == "station":
-                StationTable.update_history(cursor, entry)
-            elif entry.entry_type == "podcast":
-                PodcastEpisodeTable.update_history(cursor, entry)
-        except Exception as exc:
-            self.logger.error("Could not create history entry for {entry.entry_id} of {entry.entry_type}", exc_info = True)
+        if entry.elapsed > 10000:
+            try:
+                if entry.entry_type == "track":
+                    HistoryTable.update_history(cursor, entry)
+                elif entry.entry_type == "station":
+                    StationTable.update_history(cursor, entry)
+                elif entry.entry_type == "podcast":
+                    PodcastEpisodeTable.update_history(cursor, entry)
+            except Exception as exc:
+                self.logger.error("Could not create history entry for {entry.entry_id} of {entry.entry_type}", exc_info = True)
+
+    def set_elapsed_time(self):
+
+        if self.state.proc_state == ProcState.Playing:
+            self.state.current.elapsed += int((datetime.utcnow() - self.state.current.last_updated).total_seconds() * 1000)
+            self.state.current.last_updated = datetime.utcnow()
 
     def _handle_stream(self, task):
 
         if self._subprocess_running():
             self._stop()
+        self.state.stream = StationEntry(task.url, info = task.info)
+        self._start()
+
+    def _handle_podcast(self, task):
+
+        if self._subprocess_running():
+            self._stop()
         meta = self._probe(task.url)
         duration = int(float(meta.get("format", { }).get("duration", 0)) * 1000)
-        self.state.stream = StreamEntry(task.url, info = task.info, duration = duration)
-
-        if task.stream_type == "station":
-            title = self.state.stream.info["name"]
-        elif task.stream_type == "podcast":
-            title = self.state.stream.info["podcast_name"]
-            
-        self.state.current = ProcData(
-            entry_id = task.url,
-            entry_type = task.stream_type,
-            title = title,
-            duration = duration
-        )
+        self.state.podcast = PodcastEntry(task.url, info = task.info, duration = duration)
+        self.state.podcast.download()
+        self.state.podcast.read()
         self._start()
 
     def _handle_skip(self, task):
@@ -188,22 +198,60 @@ class Player(object):
         try:
             if self.state.proc_state == ProcState.Paused and self._subprocess_running():
                 self._subprocess.send_signal(signal.SIGCONT)
+                self.state.current.start_time = self.state.current.last_updated = datetime.utcnow()
             if self.state.stream is not None:
                 self.state.stream.connect()
-                self.state.current.start_time = datetime.utcnow()
             self.state.proc_state = ProcState.Playing
         except Exception as exc:
             self.logger.error("An exception occurred during start", exc_info = True)
             self.state.proc_state = ProcState.Paused
 
+    def _handle_seek(self, task):
+
+        if self._subprocess_running():
+            self._stop()
+        self.state.current = self.state.previous
+        self.state.current.elapsed = int(task.time) 
+        self.state.previous = None
+        if self.state.current.entry_type in [ "track", "preview" ]:
+            filename = self._append_to_root(self.state.playlist.current_entry.filename)
+        else:
+            filename = self.state.podcast.filename
+        self._play(filename, int(task.time / 1000))
+
     def _continue(self):
 
         if self.state.stream is not None:
-            self._play(PlaylistEntry("-"))
+            self.state.current = ProcData(
+                entry_id = self.state.stream.url,
+                entry_type = "station",
+                title = self.state.stream.info["name"],
+            )
+            self._play("-")
+
+        elif self.state.podcast is not None:
+            self.state.current = ProcData(
+                entry_id = self.state.podcast.url,
+                entry_type = "podcast",
+                title = self.state.podcast.info["podcast_name"],
+                duration = self.state.podcast.duration,
+            )
+            self._play(self.state.podcast.filename)
+
         elif not self.state.playlist.at_end:
             self.state.playlist.set_position()
             entry = self.state.playlist.current_entry
-            self._play(entry)
+            entry_type = "preview" if self.state.playlist.preview else "track"
+            entry_id = entry.filename if entry_type == "track" else None
+            self.state.current = ProcData(
+                entry_id = entry_id,
+                entry_type = entry_type,
+                title = f"{entry.info['title']} ({' / '.join(entry.info['artist'])})",
+                duration = entry.duration
+            )
+            filename = self._append_to_root(entry.filename)
+            self._play(filename)
+
         else:
             self._stop()
             self.state.playlist._shuffle_position = 0
@@ -213,12 +261,12 @@ class Player(object):
 
         if self._subprocess_running():
             self._subprocess.send_signal(signal.SIGSTOP)
-            self.state.proc_state = ProcState.Paused
+            self.set_elapsed_time()
             if self.state.stream is not None:
                 self.state.stream.close()
                 self.state.previous = self.state.current.copy()
                 self.state.previous.end_time = datetime.utcnow()
-                self.state.current.start_time = None
+            self.state.proc_state = ProcState.Paused
 
     def _stop(self):
 
@@ -238,30 +286,22 @@ class Player(object):
         except Exception as exc:
             self.logger.error("An exception occurred during stop", exc_info = True)
 
-    def _play(self, entry):
+    def _play(self, filename, seek = None):
 
-        if self.state.stream is None:
-            filename = self._append_to_root(entry.filename)
-            entry_type = "preview" if self.state.playlist.preview else "track"
-            entry_id = entry.filename if entry_type == "track" else None
-            self.state.current = ProcData(
-                entry_id = entry_id,
-                entry_type = entry_type,
-                title = f"{entry.info['title']} ({' / '.join(entry.info['artist'])})",
-                duration = entry.duration
-            )
+        if seek is None:
+            args = [ "-i", filename ]
         else:
-            filename = entry.filename
+            args = [ "-ss", str(seek),  "-i", filename ]
 
         try:
             self._subprocess = subprocess.Popen(
-                FFMPEG + [ "-i", filename ],
+                FFMPEG + args,
                 stderr = subprocess.PIPE,
                 stdin = subprocess.PIPE,
             )
             stderr = self._subprocess.stderr.fileno()
             os.set_blocking(stderr, False)
-            self.state.current.start_time = datetime.utcnow()
+            self.state.current.start_time = self.state.current.last_updated = datetime.utcnow()
             self.state.proc_state = ProcState.Playing
         except Exception as exc:
             self.logger.error("An exception occurred during play", exc_info = True)
@@ -289,6 +329,7 @@ class Player(object):
         retval = self._subprocess.poll()
         if retval is not None:
             if retval > 0:
+                # TODO: figure out what different return values mean and handle accordingly
                 self.state.current.error = stderr.decode("utf-8")
             self._reset_subprocess(True)
 
@@ -298,12 +339,16 @@ class Player(object):
         os.set_blocking(stderr, True)
         self._subprocess.communicate()
 
+        self.set_elapsed_time()
+        self.state.current.end_time = datetime.utcnow()
         self.state.previous = self.state.current.copy()
-        self.state.previous.end_time = datetime.utcnow()
         self.state.current = None
 
         if advance:
             self.state.playlist.advance()
+            if self.state.podcast is not None:
+                self.state.podcast.remove()
+                self.state.podcast = None
 
         self._subprocess = None
 

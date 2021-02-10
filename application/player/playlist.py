@@ -21,7 +21,7 @@ class Playlist(BaseObject):
 
     @property
     def at_end(self):
-        return self._shuffle_position == len(self._shuffle_order)
+        return len(self.entries) == 0 or self._shuffle_position == len(self._shuffle_order)
 
     def set_position(self):
         self.position = self._shuffle_order[self._shuffle_position] if len(self._shuffle_order) else 0

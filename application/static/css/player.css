@@ -6,15 +6,36 @@
     grid-row-gap: 20px;
 }
 
+#audio-bar {
+    display: grid;
+    grid-auto-flow: column;
+    grid-template-columns: auto min-content;
+}
+#audio-bar-background {
+    border: solid 1px var(--dark-bg);
+    background-color: var(--light-bg);
+    margin-right: 10px;
+}
+#audio-current-position {
+    background-color: var(--action-hover);
+    height: 100%;
+}
+#audio-elapsed {
+    display: none;
+    position: absolute;
+    border: solid 1px #333;
+    background-color: var(--highlight-color);
+    padding: 2px 3px;
+}
+#audio-duration { font-size: large; }
+
 #player-controls {
     display: grid;
     grid-auto-flow: column;
     justify-content: center;
 }
-.control-container { width: min-content; }
 .control-icon {
     font-size: xx-large;
-    width: min-content;
 }
 
 /* --- Player current track --- */

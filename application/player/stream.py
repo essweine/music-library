@@ -1,16 +1,18 @@
+import tempfile, os
+import re
+
 import requests
 from requests.exceptions import ConnectionError, Timeout
 
 from ..util import BaseObject
 
-class StreamEntry(BaseObject):
+class StationEntry(BaseObject):
 
     def __init__(self, url, **entry):
 
         self.url = url
         self.metadata = entry.get("metadata", { })
         self.status = entry.get("status", { })
-        self.duration = entry.get("duration", 0)
         self.info = entry.get("info", { })
 
         self._response = None
@@ -48,3 +50,54 @@ class StreamEntry(BaseObject):
     def close(self):
 
         self._response.close()
+
+class PodcastEntry(BaseObject):
+
+    def __init__(self, url, **entry):
+
+        self.url = url
+        self.filename = entry.get("filename")
+        self.status = entry.get("status", { })
+        self.info = entry.get("info", { })
+        self.duration = entry.get("duration", 0)
+
+        self._chunk_size = 1000000
+        self._response = None
+        self._file = None
+        self._finished = False
+
+    def download(self):
+
+        try:
+            resp = requests.get(self.url, stream = True)
+            self.status["status_code"] = resp.status_code
+            self.status["reason"] = resp.reason
+            resp.raise_for_status()
+            self._response = resp
+        except (ConnectionError, Timeout) as exc:
+            self.status["reason"] = str(exc)
+            raise
+
+        try:
+            filename = re.sub("\?.*", "", self.url.split("/")[-1])
+            self.filename = os.path.join(tempfile.gettempdir(), filename)
+            self._file = open(self.filename, "wb")
+        except:
+            self._response.close()
+            raise
+
+    def read(self):
+
+        data = self._response.raw.read(self._chunk_size)
+        if len(data) > 0:
+            self._file.write(data)
+        else:
+            self._file.close()
+            self._finished = True
+
+    def remove(self):
+
+        if not self._finished:
+            self._response.close()
+            self._file.close()
+        os.remove(self.filename)

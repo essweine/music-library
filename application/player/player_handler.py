@@ -30,7 +30,7 @@ class PlayerHandler(BaseApiHandler):
 
         try:
             for task in self.json_body["tasks"]:
-                if task["name"] in [ "add", "stream"]:
+                if task["name"] in [ "add", "stream", "podcast" ]:
                     task["info"] = self._get_task_info(task).serialize()
                 self.application.player.send_task(task)
         except:
@@ -40,9 +40,9 @@ class PlayerHandler(BaseApiHandler):
 
         if task["name"] == "add":
             return self.db_action(PlaylistTrackView.get, task["filename"])
-        elif task["name"] == "stream" and task["stream_type"] == "station":
+        elif task["name"] == "stream":
             return self.db_action(StationTable.from_url, task["url"])
-        elif task["name"] == "stream" and task["stream_type"] == "podcast":
+        elif task["name"] == "podcast":
             return self.db_action(PodcastSearchView.from_url, task["url"])
 
 class PlayerNotificationHandler(WebSocketHandler):

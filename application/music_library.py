@@ -79,6 +79,8 @@ class MusicLibrary(Application):
             except:
                 self.logger.error("An exception occurred while updating the history", exc_info = True)
                 break
+        else:
+            self.player.set_elapsed_time()
 
         while not self.console.queue.empty():
             try:
@@ -88,3 +90,4 @@ class MusicLibrary(Application):
             except:
                 self.logger.error("An exception occurred while sending the log messages", exc_info = True)
                 break
+

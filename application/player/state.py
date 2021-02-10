@@ -10,8 +10,10 @@ class Task(BaseObject):
         "remove": [ "position" ],
         "move": [ "original", "destination" ],
         "skip": [ "offset" ],
-        "stream": [ "url", "stream_type", "info" ],
+        "stream": [ "url", "info" ],
+        "podcast": [ "url", "info" ],
         "preview": [ "filenames", "directory" ],
+        "seek": [ "time" ],
     }
 
     def __init__(self, **task):
@@ -36,6 +38,8 @@ class ProcData(BaseObject):
         self.duration = data.get("duration")
         self.start_time = data.get("start_time")
         self.end_time = data.get("end_time")
+        self.last_updated = data.get("last_updated")
+        self.elapsed = data.get("elapsed", 0)
         self.error = data.get("error")
 
 class State(BaseObject):
@@ -46,5 +50,6 @@ class State(BaseObject):
         self.current = state.get("current", None)
         self.previous = state.get("previous", None)
         self.stream = state.get("stream")
+        self.podcast = state.get("podcast")
         self.playlist = state.get("playlist", Playlist())
 

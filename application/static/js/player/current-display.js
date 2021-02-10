@@ -124,7 +124,7 @@ function PodcastDisplay() {
         podcastLink.href = podcast.website;
         podcastLink.innerText = podcast.podcast_name;
         pubDate.innerText = "Published " + podcast.date_published;
-        description.innerText = podcast.description;
+        description.innerHTML = podcast.description;
         ratingDisplay.setRating(this.createRating("podcast", podcast.podcast_id, podcast.rating));
     }
 }

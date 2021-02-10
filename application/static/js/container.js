@@ -132,6 +132,8 @@ const Container = {
 
     pause: function() { this.sendTasks([ this.createTask("pause") ]); },
 
+    seek: function(seekTime) { this.sendTasks([ this.createTask("seek", { time: seekTime }) ]); },
+
     clearCurrentPlaylist: function() { this.sendTasks([ this.createTask("clear") ]); },
 
     repeatCurrentPlaylist: function() { this.sendTasks([ this.createTask("repeat") ]); },
@@ -147,7 +149,9 @@ const Container = {
         this.sendTasks(tasks);
     },
 
-    streamUrl: function(url, streamType) { this.sendTasks([ this.createTask("stream", { url: url, stream_type: streamType }) ]); },
+    streamUrl: function(url) { this.sendTasks([ this.createTask("stream", { url: url }) ]); },
+
+    playPodcast: function(url) { this.sendTasks([ this.createTask("podcast", { url: url }) ]); },
 
     getCurrentState: function(callback) { this.get(this.playerApi, callback); },
 
