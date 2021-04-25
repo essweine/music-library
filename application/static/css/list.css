@@ -38,10 +38,9 @@
 .list-search-select { grid-column: 2; }
 .list-search-input { grid-column: 3; }
 .list-search-show { grid-column: 4; }
-.list-search-hide { grid-column: 5; }
-.list-search-official { grid-column: 7; align-content: center; }
-.list-search-nonofficial { grid-column: 8; align-content: center; }
-.list-search-unrated { grid-column: 9; align-content: center; }
+.list-search-official { grid-column: 6; align-content: center; }
+.list-search-nonofficial { grid-column: 7; align-content: center; }
+.list-search-unrated { grid-column: 8; align-content: center; }
 
 .list-search-criterion { display: contents; }
 
@@ -49,7 +48,7 @@
 
 .list-search-name { grid-column: 2; }
 .list-search-value { grid-column: 3; }
-.list-search-remove { grid-column: 5; }
+.list-search-remove { grid-column: 4; }
 
 /* --- List row filter --- */
 .row-filter-label, .row-filter-checkbox { padding-right: 15px; }

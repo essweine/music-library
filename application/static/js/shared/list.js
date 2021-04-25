@@ -37,10 +37,14 @@ ListRow.prototype = Container;
 function ListRoot(columns, defaultRow, id) {
 
     Container.init.call(this, "div", id, [ "list-root" ]);
-    this.data = columns;
+    this.data = {
+        columns: columns,
+        expanded: new Set(),
+    };
 
     let expand = (rowId, createRow) => {
         return function(items) {
+            this.data.expanded.add(rowId);
             let selected = document.getElementById(rowId);
             selected.classList.add([ "list-row-expanded" ]);
             let next = selected.nextElementSibling;
@@ -49,6 +53,7 @@ function ListRoot(columns, defaultRow, id) {
     }
 
     let collapse = (rowId) => {
+        this.data.expanded.delete(rowId);
         let selected = document.getElementById(rowId);
         selected.classList.remove("list-row-expanded");
         for (let row of Array.from(this.root.getElementsByClassName("child-" + rowId)))
@@ -69,7 +74,7 @@ function ListRoot(columns, defaultRow, id) {
             }
             let row = new ListRow(rowId, classes);
             for (let idx in data.values)
-                row.addColumn(data.values[idx], this.data[idx].type, this.data[idx].className, action);
+                row.addColumn(data.values[idx], this.data.columns[idx].type, this.data.columns[idx].className, action);
             let footer = this.root.getElementsByClassName("list-footer");
             if (before != null)
                 this.root.insertBefore(row.root, before);
@@ -82,7 +87,7 @@ function ListRoot(columns, defaultRow, id) {
 
     this.addHeading = function() {
         let heading = new ListRow(null, [ "list-heading" ]);
-        for (let column of this.data)
+        for (let column of this.data.columns)
             heading.addColumn(column.display, "text", column.className);
         this.root.append(heading.root);
     }

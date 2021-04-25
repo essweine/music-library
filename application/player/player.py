@@ -346,9 +346,11 @@ class Player(object):
 
         if advance:
             self.state.playlist.advance()
+            # TODO: Handle this better
             if self.state.podcast is not None:
                 self.state.podcast.remove()
                 self.state.podcast = None
+                self.state.proc_state = ProcState.Stopped
 
         self._subprocess = None
 

@@ -81,8 +81,8 @@ class HistoryTrackView(JoinedView, ItemCreator):
 
         to_value = lambda c, r: r[0].replace(tzinfo = UTC).astimezone(tzlocal()).strftime("%b %-d %Y %I:%M %P")
         query = Query(cls,
-            [ ("start_time", None) ],
-            order = "start_time desc",
+            [ ("end_time", None) ],
+            order = "end_time desc",
         ).compare("filename", filename, "=")
         query.execute(cursor, to_value)
 

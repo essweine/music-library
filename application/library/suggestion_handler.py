@@ -15,8 +15,8 @@ class Suggestion(BaseObject):
 
         today = datetime.now()
         subquery = Query(RecordingTable, [ ("id", None) ])
-        subquery.compare(f"strftime('%m', recording_date)", str(today.month), "=")
-        subquery.compare(f"strftime('%d', recording_date)", str(today.day), "=")
+        subquery.compare(f"strftime('%m', recording_date)", str(today.month).zfill(2), "=")
+        subquery.compare(f"strftime('%d', recording_date)", str(today.day).zfill(2), "=")
         subquery.compare("official", official, "=")
         query = Query(RecordingSummaryView).compare_subquery("id", subquery)
         query.execute(cursor, RecordingSummaryView.row_factory)

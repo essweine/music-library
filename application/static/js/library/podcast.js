@@ -12,7 +12,7 @@ function RowFilter(labelText) {
     label.innerText = labelText;
     this.root.append(label);
 
-    this.addCheckbox = (filterText, filterId, checked) => {
+    this.addCheckbox = (filterText, filterId, checked, action) => {
         let span = this.createElement("span", null, [ "row-filter-checkbox" ]);
         let text = document.createElement("span");
         text.innerText = filterText;
@@ -21,6 +21,7 @@ function RowFilter(labelText) {
         checkbox.type = "checkbox";
         checkbox.id = filterId;
         checkbox.checked = checked;
+        checkbox.onclick = action;
         span.append(checkbox);
         this.root.append(span);
     }
@@ -31,9 +32,18 @@ RowFilter.prototype = Container;
 
 function PodcastList(podcastEditor) {
 
+    let updateExpanded = (e) => {
+        for (let rowId of this.data.expanded) {
+            let elem = document.getElementById(rowId);
+            let text = elem.getElementsByClassName("podcast-list-name").item(0);
+            text.click(); // Trigger collapse
+            text.click(); // Trigger expand with current filter settings
+        }
+    }
+
     let episodeFilter = new RowFilter("Filter Episodes");
-    episodeFilter.addCheckbox("Listened Episodes", "listened", false);
-    episodeFilter.addCheckbox("Older Episodes", "all", false);
+    episodeFilter.addCheckbox("Listened Episodes", "listened", false, updateExpanded);
+    episodeFilter.addCheckbox("Older Episodes", "all", false, updateExpanded);
 
     let columns = [
         { display: "Name", className: "podcast-list-name", type: "text" },
@@ -62,6 +72,9 @@ function PodcastList(podcastEditor) {
         listenedDate.innerText = episode.listened_date;
         if (!episodeFilter.getValue("listened"))
             child.remove();
+        let podcast = document.getElementById(episode.podcast_id)
+        let unlistened = podcast.getElementsByClassName("podcast-list-episodes-unlistened").item(0);
+        unlistened.innerText = unlistened.innerText - 1;
     }
 
     let filterEpisodes = (podcastId, createRow) => {

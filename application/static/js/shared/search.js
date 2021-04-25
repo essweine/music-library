@@ -1,9 +1,10 @@
 import { Icon } from "./widgets.js";
 import { Container } from "../container.js";
 
-function SearchOptions() {
+function SearchOptions(update) {
 
     Container.init.call(this, "select", null, [ "list-search-select" ]);
+    this.root.onkeypress = e =>  { if (e.keyCode == 13) update(); };
 
     let ratingSelect = document.createElement("select");
     for (let rating of [ "1", "2", "3", "4", "5" ]) {
@@ -12,11 +13,13 @@ function SearchOptions() {
         option.innerText = rating;
         ratingSelect.append(option)
     }
+    ratingSelect.oninput = e => update();
 
     let createTextInput = () => {
         let input = this.createElement("input", null, [ "list-text-search" ]);
         input.type = "text";
         input.name = "search-criteria";
+        input.onkeypress = e => { if (e.keyCode == 13) update(); };
         return input;
     }
     let textInput = createTextInput();
@@ -27,7 +30,7 @@ function SearchOptions() {
     let paramInput = { };
     let currentElement = null;
 
-    this.configure = function(config) {
+    this.configure = function(config, update) {
         this.data = config;
         for (let [ param, details ] of Object.entries(config)) {
 
@@ -44,6 +47,8 @@ function SearchOptions() {
                     option.value = value;
                     propValues.append(option);
                 }
+                propValues.oninput = e => update();
+                propValues.onkeypress = e => { if (e.keyCode == 13) update(); }
                 paramInput[param] = propValues;
             } else if (details.type == "rating") {
                 paramInput[param] = ratingSelect;
@@ -105,33 +110,27 @@ function SearchBar(id, apiPath, update) {
     label.innerText = "Search";
     this.root.append(label);
 
-    let select = new SearchOptions(this.addParam);
-    this.root.append(select.root);
-
-    let showIcon = new Icon("visibility", e => this.addParam(false), [ "list-search-show" ]);
-    this.root.append(showIcon.root);
-
-    let hideIcon = new Icon("visibility_off", e => this.addParam(true), [ "list-search-hide" ]);
-    this.root.append(hideIcon.root);
-
     this.removeParam = function(param) {
-        let queryType = (param.data.exclude) ? this.data.exclude : this.data.match;
+        let queryType = (param.data.exclude) ? this.data.query.exclude : this.data.query.match;
         let queryData = Object.fromEntries([ [ param.data.name, param.data.value ] ]);
         queryType.splice(queryType.indexOf(queryData), 1);
         param.root.remove();
-        update(this.data);
+        update(this.data.query);
     }
 
-    this.addParam = function(exclude) {
-        let paramData = select.getParam(exclude);
+    this.addParam = function() {
+        let paramData = select.getParam(this.data.exclude);
         let queryData = Object.fromEntries([ [ paramData.name, paramData.value ] ]);
-        (exclude) ? this.data.exclude.push(queryData) : this.data.match.push(queryData);
+        (this.data.exclude) ? this.data.query.exclude.push(queryData) : this.data.query.match.push(queryData);
         let param = new SearchParam(paramData, this.removeParam.bind(this));
         this.root.append(param.root);
-        update(this.data);
+        update(this.data.query);
     }
 
-    this.setSort = (sort) => { this.data.sort = sort; }
+    let select = new SearchOptions(this.addParam.bind(this));
+    this.root.append(select.root);
+
+    this.setSort = (sort) => { this.data.query.sort = sort; }
 
     let addCheckbox = (paramText, queryParam, className) => {
         let span = this.createElement("span", null, [ className ]);
@@ -141,21 +140,33 @@ function SearchBar(id, apiPath, update) {
 
         let checkbox = document.createElement("input");
         checkbox.type = "checkbox";
-        checkbox.checked = this.data[queryParam];
+        checkbox.checked = this.data.query[queryParam];
         checkbox.oninput = e => {
-            this.data[queryParam] = checkbox.checked;
-            update(this.data);
+            this.data.query[queryParam] = checkbox.checked;
+            update(this.data.query);
         }
         span.append(checkbox);
         this.root.append(span);
     }
 
+    let visibility = this.createElement("span", null, [ "material-icons", "list-search-show" ]);
+    let setExclude = (val) => {
+        this.data.exclude = val;
+        visibility.innerText = (this.data.exclude) ? "visibility_off" : "visibility";
+    }
+    visibility.onclick = e => setExclude(!this.data.exclude);
+    this.root.append(visibility);
+
     let configure = (config) => {
-        this.data = config.default_query;
-        select.configure(config.search_options); 
+        this.data = {
+            query: config.default_query,
+            exclude: false,
+        };
+        select.configure(config.search_options, this.addParam.bind(this)); 
         for (let name of Object.keys(config.checkboxes))
             addCheckbox(config.checkboxes[name], name, "list-search-" + name);
-        update(this.data);
+        setExclude(this.data.exclude);
+        update(this.data.query);
     }
 
     this.getSearchConfig(apiPath, configure);
