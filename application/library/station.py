@@ -1,8 +1,7 @@
 from datetime import datetime
 from uuid import uuid4
 
-from .db import Column, ItemTable, Query
-from .db import Table, JoinedView, ItemTable, ItemCreator
+from .db import Column, Table, ItemTable, ItemCreator
 from .db.search import Search
 
 class StationTable(Table, ItemTable, ItemCreator, Search):

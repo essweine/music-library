@@ -24,6 +24,7 @@ OPERATORS = {
 }
 
 class Search(object):
+    """This class provides default search functionality."""
 
     def __init_subclass__(cls):
 

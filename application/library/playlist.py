@@ -2,7 +2,7 @@ from datetime import datetime
 from uuid import uuid4
 
 from .db import Column, Query
-from .db import Table, JoinedView, ItemTable, ItemCreator, Search
+from .db import Table, ItemTable, ItemCreator, Search
 from .recording import PlaylistTrackView
 
 class PlaylistEntryTable(Table):

@@ -3,7 +3,6 @@ import sys
 from datetime import datetime
 
 from tornado.web import RequestHandler
-from tornado import log as logger
 
 from ..util import BaseApiHandler
 from .history import HistoryTrackView
