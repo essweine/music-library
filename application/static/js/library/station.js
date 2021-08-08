@@ -38,7 +38,7 @@ function StationList(stationEditor) {
 
     this.refresh = function(query) { this.query(this.stationApi, query, this.update.bind(this)); }
 
-    this.deleteStation = function(stationId) { this.deleteItem(this.stationApi, stationId, this.refresh.bind(this, this.search.data)); }
+    this.deleteStation = function(stationId) { this.deleteItem(this.stationApi, stationId, this.refresh.bind(this, this.search.data.query)); }
 
     this.search = new SearchBar("station-list-search", this.stationApi, this.refresh.bind(this));
     this.root.append(this.search.root);
@@ -54,7 +54,7 @@ function StationContainer() {
     let stationList = new StationList(stationEditor);
     stationEditor.setContent(null);
     // This makes no fucking sense.
-    stationEditor.refreshStreams = () => stationList.refresh.call(stationList, stationList.search.data);
+    stationEditor.refreshStreams = () => stationList.refresh.call(stationList, stationList.search.data.query);
     this.root.append(stationEditor.root);
     this.root.append(stationList.root);
 

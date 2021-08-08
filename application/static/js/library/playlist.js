@@ -1,7 +1,7 @@
 import { Container } from "../container.js";
 import { ListRoot } from "../shared/list.js";
 import { SearchBar } from "../shared/search.js";
-import { Playlist} from "../shared/tracklist.js";
+import { Playlist } from "../shared/tracklist.js";
 import { Icon, EditableInfo } from "../shared/widgets.js";
 
 function PlaylistList() { 
@@ -22,7 +22,7 @@ function PlaylistList() {
         this.start();
     };
 
-    let deletePlaylist = (playlistId) => this.deleteItem(this.playlistApi, playlistId, this.refresh.bind(this, this.search.data));
+    let deletePlaylist = (playlistId) => this.deleteItem(this.playlistApi, playlistId, this.refresh.bind(this, this.search.data.query));
 
     let getTrackData = (track) => {
         return {
@@ -58,7 +58,7 @@ function PlaylistList() {
 
     ListRoot.call(this, columns, getPlaylistData, "playlist-list-root");
 
-    this.refresh = function(query = this.search.data) { this.query(this.playlistApi, query, this.update.bind(this)); }
+    this.refresh = function(query) { this.query(this.playlistApi, query, this.update.bind(this)); }
     this.search = new SearchBar("playlist-list-search", this.playlistApi, this.refresh.bind(this));
     this.root.append(this.search.root);
     this.addHeading();

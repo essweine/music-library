@@ -121,7 +121,7 @@ function PodcastList(podcastEditor) {
 
     this.refresh = function(query) { this.query(this.podcastApi, query, this.update.bind(this)); }
 
-    this.deletePodcast = function(podcastId) { this.deleteItem(this.podcastApi, podcastId, this.refresh.bind(this, this.search.data)); }
+    this.deletePodcast = function(podcastId) { this.deleteItem(this.podcastApi, podcastId, this.refresh.bind(this, this.search.data.query)); }
 
     this.search = new SearchBar("podcast-list-search", this.podcastApi, this.refresh.bind(this));
     this.root.append(this.search.root);
@@ -138,7 +138,7 @@ function PodcastContainer() {
     let podcastList = new PodcastList(podcastEditor);
     podcastEditor.setContent(null);
     // This makes no fucking sense.
-    podcastEditor.refreshStreams = () => podcastList.refresh.call(podcastList, podcastList.search.data);
+    podcastEditor.refreshStreams = () => podcastList.refresh.call(podcastList, podcastList.search.data.query);
     this.root.append(podcastEditor.root);
     this.root.append(podcastList.root);
 
