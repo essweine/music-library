@@ -144,21 +144,18 @@ class Player(object):
         if self._subprocess_running():
             self._stop()
         self.state.playlist.skip(task)
-        self.state.playlist.set_position()
         if playing == ProcState.Playing:
             self._start()
 
     def _handle_move(self, task):
 
         self.state.playlist.move(task)
-        self.state.playlist.set_position()
 
     def _handle_add_to_playlist(self, task):
 
         meta = self._probe(self._append_to_root(task.filename))
         duration = int(float(meta.get("format", { }).get("duration", 0)) * 1000)
         self.state.playlist.add(task, duration)
-        self.state.playlist.set_position()
 
     def _handle_remove_from_playlist(self, task):
 
@@ -166,7 +163,6 @@ class Player(object):
         if task.position == self.state.playlist.position and self._subprocess_running():
             self._stop()
         self.state.playlist.remove(task)
-        self.state.playlist.set_position()
         if playing == ProcState.Playing:
             self._start()
 
@@ -239,7 +235,6 @@ class Player(object):
             self._play(self.state.podcast.filename)
 
         elif not self.state.playlist.at_end:
-            self.state.playlist.set_position()
             entry = self.state.playlist.current_entry
             entry_type = "preview" if self.state.playlist.preview else "track"
             entry_id = entry.filename if entry_type == "track" else None
@@ -254,8 +249,7 @@ class Player(object):
 
         else:
             self._stop()
-            self.state.playlist._shuffle_position = 0
-            self.state.playlist.set_position()
+            self.state.playlist.reset()
 
     def _pause(self):
 
