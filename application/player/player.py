@@ -40,7 +40,6 @@ class Player(object):
         while True:
             try:
                 initial_state = self.state.copy()
-
                 while conn.poll():
                     task = Task(**conn.recv())
                     if task.name == "start":
@@ -75,21 +74,28 @@ class Player(object):
                 if self._subprocess is not None:
                     self._check_subprocess()
 
-                if self.state.proc_state == ProcState.Playing:
+                if self.state.current is not None and self.state.current.error is not None:
+                    raise Exception(f"FFMPEG error: {self.state.current.error}")
+
+                if self.state.proc_state is ProcState.Playing:
                     if self._subprocess is None:
                         self._continue()
                     elif self.state.stream is not None:
                         self._subprocess.stdin.write(self.state.stream.read())
-                    if self.state.podcast is not None and not self.state.podcast._finished:
-                        self.state.podcast.read()
+
+                if self.state.podcast is not None and not self.state.podcast._finished:
+                    self.state.podcast.read()
 
                 if self.state != initial_state:
                     conn.send(self.state.copy())
                     # Only send history once to prevent duplicates
                     self.state.previous = None
 
-            except:
-                self.logger.error("An unexpected error occurred", exc_info = True)
+            except Exception as exc:
+                self.state.proc_state = ProcState.Error
+                self.logger.error(str(exc), exc_info = True)
+                conn.send(self.state.copy())
+                self.state.current = None
 
             time.sleep(0.05)
 
@@ -100,9 +106,6 @@ class Player(object):
     def update_history(self, cursor):
 
         entry = self.state.previous
-        if entry.error is not None:
-            self.logger.error(f"An error occured during playback for {entry.entry_id}: {entry.error}")
-
         if entry.elapsed > 10000:
             try:
                 if entry.entry_type == "track":
@@ -116,7 +119,7 @@ class Player(object):
 
     def set_elapsed_time(self):
 
-        if self.state.proc_state == ProcState.Playing:
+        if self.state.proc_state is ProcState.Playing:
             self.state.current.elapsed += int((datetime.utcnow() - self.state.current.last_updated).total_seconds() * 1000)
             self.state.current.last_updated = datetime.utcnow()
 
@@ -144,7 +147,7 @@ class Player(object):
         if self._subprocess_running():
             self._stop()
         self.state.playlist.skip(task)
-        if playing == ProcState.Playing:
+        if playing is ProcState.Playing:
             self._start()
 
     def _handle_move(self, task):
@@ -163,7 +166,7 @@ class Player(object):
         if task.position == self.state.playlist.position and self._subprocess_running():
             self._stop()
         self.state.playlist.remove(task)
-        if playing == ProcState.Playing:
+        if playing is ProcState.Playing:
             self._start()
 
     def _handle_clear_playlist(self):
@@ -191,16 +194,12 @@ class Player(object):
 
     def _start(self):
 
-        try:
-            if self.state.proc_state == ProcState.Paused and self._subprocess_running():
-                self._subprocess.send_signal(signal.SIGCONT)
-                self.state.current.start_time = self.state.current.last_updated = datetime.utcnow()
-            if self.state.stream is not None:
-                self.state.stream.connect()
-            self.state.proc_state = ProcState.Playing
-        except Exception as exc:
-            self.logger.error("An exception occurred during start", exc_info = True)
-            self.state.proc_state = ProcState.Paused
+        if self.state.proc_state is ProcState.Paused and self._subprocess_running():
+            self._subprocess.send_signal(signal.SIGCONT)
+            self.state.current.start_time = self.state.current.last_updated = datetime.utcnow()
+        if self.state.stream is not None:
+            self.state.stream.connect()
+        self.state.proc_state = ProcState.Playing
 
     def _handle_seek(self, task):
 
@@ -264,21 +263,17 @@ class Player(object):
 
     def _stop(self):
 
-        try:
-            if self._subprocess_running():
-                if self.state.proc_state == ProcState.Paused:
-                    self._subprocess.send_signal(signal.SIGCONT)
-                self._subprocess.send_signal(signal.SIGTERM)
-                self._reset_subprocess(False)
+        if self._subprocess_running():
+            if self.state.proc_state is ProcState.Paused:
+                self._subprocess.send_signal(signal.SIGCONT)
+            self._subprocess.send_signal(signal.SIGTERM)
+            self._reset_subprocess(False)
 
-            if self.state.stream is not None:
-                self.state.stream.close()
-                self.state.stream = None
+        if self.state.stream is not None:
+            self.state.stream.close()
+            self.state.stream = None
 
-            self.state.proc_state = ProcState.Stopped
-
-        except Exception as exc:
-            self.logger.error("An exception occurred during stop", exc_info = True)
+        self.state.proc_state = ProcState.Stopped
 
     def _play(self, filename, seek = None):
 
@@ -287,18 +282,15 @@ class Player(object):
         else:
             args = [ "-ss", str(seek),  "-i", filename ]
 
-        try:
-            self._subprocess = subprocess.Popen(
-                FFMPEG + args,
-                stderr = subprocess.PIPE,
-                stdin = subprocess.PIPE,
-            )
-            stderr = self._subprocess.stderr.fileno()
-            os.set_blocking(stderr, False)
-            self.state.current.start_time = self.state.current.last_updated = datetime.utcnow()
-            self.state.proc_state = ProcState.Playing
-        except Exception as exc:
-            self.logger.error("An exception occurred during play", exc_info = True)
+        self._subprocess = subprocess.Popen(
+            FFMPEG + args,
+            stderr = subprocess.PIPE,
+            stdin = subprocess.PIPE,
+        )
+        stderr = self._subprocess.stderr.fileno()
+        os.set_blocking(stderr, False)
+        self.state.current.start_time = self.state.current.last_updated = datetime.utcnow()
+        self.state.proc_state = ProcState.Playing
 
     def _probe(self, filename):
 
@@ -325,7 +317,10 @@ class Player(object):
             if retval > 0:
                 # TODO: figure out what different return values mean and handle accordingly
                 self.state.current.error = stderr.decode("utf-8")
-            self._reset_subprocess(True)
+                self._reset_subprocess(False)
+                self.proc_state = ProcState.Error
+            else:
+                self._reset_subprocess(True)
 
     def _reset_subprocess(self, advance):
 
@@ -335,8 +330,9 @@ class Player(object):
 
         self.set_elapsed_time()
         self.state.current.end_time = datetime.utcnow()
-        self.state.previous = self.state.current.copy()
-        self.state.current = None
+        if self.state.current.error is None:
+            self.state.previous = self.state.current.copy()
+            self.state.current = None
 
         if advance:
             self.state.playlist.advance()

@@ -195,7 +195,7 @@ class TestPlayer(unittest.TestCase):
         add = { "name": "add", "filename": original.audio[0], "position": None, "info": { "title": "unknown", "artist": [ ] } }
         self.player.send_task(add)
         state_changed = self.player.conn.poll(1)
-        self.assertEqual(state_changed, False)
+        self.assertEqual(state_changed, True)
         self.assertEqual(len(state.playlist.entries), 6)
         self.assertEqual(state.playlist.entries[-1].filename, directory.audio[-1])
 

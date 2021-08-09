@@ -27,6 +27,7 @@ class ProcState(Enum):
     Playing = "playing"
     Stopped = "stopped"
     Paused  = "paused"
+    Error   = "error"
 
 class ProcData(BaseObject):
 
