@@ -40,7 +40,7 @@ class BaseObject(object):
 
     def __eq__(self, other):
 
-        if other is None:
+        if other is None or not isinstance(other, self.__class__):
             return False
         return all([ self.__getattribute__(attr) == other.__getattribute__(attr) for attr in self.__dict__ if not attr.startswith("_") ])
 

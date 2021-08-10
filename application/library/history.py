@@ -17,7 +17,7 @@ class HistoryTable(Table):
     @classmethod
     def update_history(cls, cursor, entry):
         data = {
-            "filename": entry.entry_id, 
+            "filename": entry.info["filename"], 
             "start_time": entry.start_time,
             "end_time": entry.end_time
         }

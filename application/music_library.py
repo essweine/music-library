@@ -80,7 +80,10 @@ class MusicLibrary(Application):
                 self.logger.error("An exception occurred while updating the history", exc_info = True)
                 break
         else:
-            self.player.set_elapsed_time()
+            try:
+                self.player.set_elapsed_time()
+            except:
+                pass
 
         while not self.console.queue.empty():
             try:

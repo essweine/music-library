@@ -96,7 +96,8 @@ function NowPlaying() {
     let displays = [ trackDisplay, previewDisplay, stationDisplay, podcastDisplay ];
     this.root.append(playerControls.root);
 
-    let setPlaylistEntry = (entry_type, playlist, elapsed) => {
+    let setPlaylistEntry = (playlist, elapsed) => {
+        let entry_type = (playlist.preview == null) ? "track" : "preview";
         let entry = playlist.entries[playlist.position];
         if (entry_type == "track") {
             trackDisplay.update(entry.info);
@@ -110,26 +111,25 @@ function NowPlaying() {
     }
 
     let configurePlaylist = (state) => {
-        let entry_type = (state.playlist.preview == null) ? "track" : "preview";
         if (state.current == null)
-            setPlaylistEntry(entry_type, state.playlist, 0);
+            setPlaylistEntry(state.playlist, 0);
         playlist.update(state.playlist);
-        if (entry_type == "preview")
+        if (state.playlist.preview != null)
             playlist.updateView(true);
         this.root.append(playlist.root);
     }
 
     let setDisplay = (state) => {
-        if (state.current.entry_type == "track" || state.current.entry_type == "preview") {
-            setPlaylistEntry(state.current.entry_type, state.playlist, state.current.elapsed);
+        if (state.mode == "playlist") {
+            setPlaylistEntry(state.playlist, state.current.elapsed);
             configurePlaylist(state);
-        } else if (state.current.entry_type == "podcast") {
-            podcastDisplay.update(state.podcast.info);
+        } else if (state.mode == "download") {
+            podcastDisplay.update(state.current.info);
             this.root.insertBefore(podcastDisplay.root, playerControls.root);
             audioBar.configure(state.current.duration, state.current.elapsed);
             this.root.insertBefore(audioBar.root, playerControls.root);
-        } else if (state.current.entry_type == "station") {
-            stationDisplay.update(state.stream);
+        } else if (state.mode == "stream") {
+            stationDisplay.update(state.current);
             this.root.insertBefore(stationDisplay.root, playerControls.root);
         }
     }

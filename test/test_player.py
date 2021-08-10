@@ -69,12 +69,12 @@ class TestPlayer(unittest.TestCase):
         forward = { "name": "skip", "offset": 2 }
         state = self.send_task(forward)
         self.assertEqual(state.playlist.position, 2)
-        self.assertEqual(state.previous.entry_id, self.recording.tracks[0].filename)
+        self.assertEqual(state.previous.info["filename"], self.recording.tracks[0].filename)
         back = { "name": "skip", "offset": -1 }
         state = self.send_task(back)
         self.assertEqual(state.playlist.position, 1)
         self.assertEqual(state.proc_state.value, "playing")
-        self.assertEqual(state.previous.entry_id, self.recording.tracks[2].filename)
+        self.assertEqual(state.previous.info["filename"], self.recording.tracks[2].filename)
 
     def test_004_pause(self):
 
@@ -110,7 +110,7 @@ class TestPlayer(unittest.TestCase):
         state = self.player.conn.recv()
         self.assertEqual(state.proc_state.value, "playing")
         self.assertEqual(state.playlist.position, 2)
-        self.assertEqual(state.previous.entry_id, state.playlist.entries[1].filename)
+        self.assertEqual(state.previous.info["filename"], state.playlist.entries[1].filename)
         self.assertNotEqual(state.previous.start_time, None)
         self.assertNotEqual(state.previous.end_time, None)
 
@@ -164,20 +164,21 @@ class TestPlayer(unittest.TestCase):
         task = { "name": "stream", "url": self.station["url"], "info": self.station }
         state = self.send_task(task)
         self.assertEqual(state.proc_state.value, "playing")
-        self.assertEqual(state.stream.url, self.station["url"])
+        self.assertEqual(state.mode.value, "stream")
+        self.assertEqual(state.current.url, self.station["url"])
 
         state = self.send_task({ "name": "pause" })
         self.assertEqual(state.proc_state.value, "paused")
-        self.assertEqual(state.stream.url, self.station["url"])
+        self.assertEqual(state.current.url, self.station["url"])
 
         state = self.send_task({ "name": "start" })
         self.assertEqual(state.proc_state.value, "playing")
-        self.assertEqual(state.stream.url, self.station["url"])
+        self.assertEqual(state.current.url, self.station["url"])
 
         state = self.send_task({ "name": "stop" })
         self.assertEqual(state.proc_state.value, "stopped")
-        self.assertEqual(state.stream, None)
-        self.assertEqual(state.previous.entry_id, self.station["url"])
+        self.assertEqual(state.mode.value, "playlist")
+        self.assertEqual(state.previous.url, self.station["url"])
         self.assertNotEqual(state.previous.start_time, None)
         self.assertNotEqual(state.previous.end_time, None)
 

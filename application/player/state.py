@@ -29,28 +29,19 @@ class ProcState(Enum):
     Paused  = "paused"
     Error   = "error"
 
-class ProcData(BaseObject):
+class PlayerMode(Enum):
 
-    def __init__(self, **data):
-
-        self.entry_id = data.get("entry_id")
-        self.entry_type = data.get("entry_type")
-        self.title = data.get("title")
-        self.duration = data.get("duration")
-        self.start_time = data.get("start_time")
-        self.end_time = data.get("end_time")
-        self.last_updated = data.get("last_updated")
-        self.elapsed = data.get("elapsed", 0)
-        self.error = data.get("error")
+    Playlist = "playlist"
+    Download = "download"
+    Stream   = "stream"
 
 class State(BaseObject):
 
     def __init__(self, **state):
 
         self.proc_state = state.get("proc_state", ProcState.Stopped)
+        self.mode = state.get("mode", PlayerMode.Playlist)
         self.current = state.get("current", None)
         self.previous = state.get("previous", None)
-        self.stream = state.get("stream")
-        self.podcast = state.get("podcast")
         self.playlist = state.get("playlist", Playlist())
 

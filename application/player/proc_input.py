@@ -6,14 +6,34 @@ from requests.exceptions import ConnectionError, Timeout
 
 from ..util import BaseObject
 
-class StationEntry(BaseObject):
+class ProcInput(BaseObject):
 
-    def __init__(self, url, **entry):
+    def __init__(self, filename, **data):
 
+        self.filename = filename
+        self.title = data.get("title")
+        self.start_time = data.get("start_time")
+        self.end_time = data.get("end_time")
+        self.last_updated = data.get("last_updated")
+        self.elapsed = data.get("elapsed", 0)
+        self.info = data.get("info", { })
+        self.error = data.get("error")
+
+class FileInput(ProcInput):
+
+    def __init__(self, filename, **data):
+
+        super().__init__(filename, **data)
+        self.duration = data.get("duration", 0)
+
+class StreamInput(ProcInput):
+
+    def __init__(self, url, **data):
+
+        super().__init__(**data)
         self.url = url
-        self.metadata = entry.get("metadata", { })
-        self.status = entry.get("status", { })
-        self.info = entry.get("info", { })
+        self.metadata = data.get("metadata", { })
+        self.status = data.get("status", { })
 
         self._response = None
         self._has_metadata = None
@@ -51,15 +71,14 @@ class StationEntry(BaseObject):
 
         self._response.close()
 
-class PodcastEntry(BaseObject):
+class DownloadInput(ProcInput):
 
-    def __init__(self, url, **entry):
+    def __init__(self, url, **data):
 
+        super().__init__(**data)
         self.url = url
-        self.filename = entry.get("filename")
-        self.status = entry.get("status", { })
-        self.info = entry.get("info", { })
-        self.duration = entry.get("duration", 0)
+        self.status = data.get("status", { })
+        self.duration = data.get("duration", 0)
 
         self._chunk_size = 1000000
         self._response = None
