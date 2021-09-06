@@ -1,13 +1,14 @@
-from multiprocessing import Process, Pipe
-import subprocess, signal, time, os
+import subprocess, signal, os
 import logging
 import json
 from datetime import datetime, timedelta
 
-from ..library import StationTable, PodcastEpisodeTable, HistoryTable, PlaylistTrackView
+from ..library import PlaylistTrackView
 from .state import Task, State, ProcState, PlayerMode
 from .proc_input import FileInput, DownloadInput, StreamInput
 from .playlist import PlaylistEntry
+
+logger = logging.getLogger('tornado.application')
 
 FFMPEG = [ "ffmpeg", "-hide_banner", "-f", "alsa", "hw:0" ]
 FFPROBE = [
@@ -21,119 +22,110 @@ class Player(object):
 
     def __init__(self, root):
 
-        self.logger = logging.getLogger(__name__)
         self.root = root
         self.state = State()
-        self._subprocess = None
-        self.logger = logging.getLogger('tornado.application')
         self.websockets = set()
+        self._subprocess = None
 
+    def send_state(self):
+
+        for ws in self.websockets:
+            ws.write_message("state changed")
+
+    def execute(self, task):
+
+        task = Task(**task)
         try:
-            self.conn, child_conn = Pipe()
-            self._process = Process(target = self.loop, args = (child_conn, ))
-            self._process.start()
-        except:
-            raise
+            if task.name == "start":
+                self._start()
+            elif task.name == "pause":
+                self._pause()
+            elif task.name == "stop":
+                self._stop()
+            elif task.name == "seek":
+                self._handle_seek(task)
+            elif task.name == "skip":
+                self._handle_skip(task)
+            elif task.name == "move":
+                self._handle_move(task)
+            elif task.name == "add":
+                self._handle_add_to_playlist(task)
+            elif task.name == "remove":
+                self._handle_remove_from_playlist(task)
+            elif task.name == "clear":
+                self._handle_clear_playlist()
+            elif task.name == "stream":
+                self._set_stream(task)
+            elif task.name == "podcast":
+                self._set_download(task)
+            elif task.name == "repeat":
+                self._handle_repeat()
+            elif task.name == "shuffle":
+                self._handle_shuffle()
+            elif task.name == "preview":
+                self._handle_preview(task)
 
-    def loop(self, conn):
+        except Exception as exc:
+            self.state.proc_state = ProcState.Error
+            logger.error(str(exc), exc_info = True)
 
-        while True:
-            try:
-                initial_state = self.state.copy()
-                while conn.poll():
+        self.send_state()
 
-                    if self.state.proc_state is ProcState.Error:
-                        self.logger.info("unset error state")
-                        self.state.proc_state = ProcState.Stopped
-                        self.state.current = None
-
-                    task = Task(**conn.recv())
-                    if task.name == "start":
-                        self._start()
-                    elif task.name == "pause":
-                        self._pause()
-                    elif task.name == "stop":
-                        self._stop()
-                    elif task.name == "seek":
-                        self._handle_seek(task)
-                    elif task.name == "skip":
-                        self._handle_skip(task)
-                    elif task.name == "move":
-                        self._handle_move(task)
-                    elif task.name == "add":
-                        self._handle_add_to_playlist(task)
-                    elif task.name == "remove":
-                        self._handle_remove_from_playlist(task)
-                    elif task.name == "clear":
-                        self._handle_clear_playlist()
-                    elif task.name == "stream":
-                        self._set_stream(task)
-                    elif task.name == "podcast":
-                        self._set_download(task)
-                    elif task.name == "repeat":
-                        self._handle_repeat()
-                    elif task.name == "shuffle":
-                        self._handle_shuffle()
-                    elif task.name == "preview":
-                        self._handle_preview(task)
-
-                if self._subprocess is not None:
-                    self._check_subprocess()
-
-                if self.state.proc_state is ProcState.Playing:
-                    if self._subprocess is None:
-                        if self.state.mode is PlayerMode.Playlist:
-                            self._set_file_input()
-                        if self.state.mode is PlayerMode.Download:
-                            self._stop()
-                    if self.state.mode is PlayerMode.Stream:
-                        self._subprocess.stdin.write(self.state.current.read())
-
-                if self.state.mode is PlayerMode.Download and not self.state.current._finished:
-                    self.state.current.read()
-
-                if self.state != initial_state:
-                    conn.send(self.state.copy())
-                    # Only send history once to prevent duplicates
-                    self.state.previous = None
-
-            except Exception as exc:
-                self.state.proc_state = ProcState.Error
-                self.logger.error(str(exc), exc_info = True)
-                conn.send(self.state.copy())
-
-            time.sleep(0.05)
-
-    def send_task(self, task):
-
-        self.conn.send(task)
-
-    def update_history(self, cursor):
-
-        entry = self.state.previous
-        if entry.elapsed > 10000:
-            try:
-                if isinstance(entry, FileInput):
-                    HistoryTable.update_history(cursor, entry)
-                elif isinstance(entry, StreamInput):
-                    StationTable.update_history(cursor, entry)
-                elif isinstance(entry, DownloadInput):
-                    PodcastEpisodeTable.update_history(cursor, entry)
-            except Exception as exc:
-                self.logger.error(f"Could not create history entry for {entry.title}", exc_info = True)
-
-    def set_elapsed_time(self):
+    def check_state(self, cursor):
 
         if self.state.proc_state is ProcState.Playing:
-            self.state.current.elapsed += int((datetime.utcnow() - self.state.current.last_updated).total_seconds() * 1000)
-            self.state.current.last_updated = datetime.utcnow()
+            self._set_elapsed_time()
+
+        initial_state = self.state.copy()
+        try:
+            if self._subprocess is not None:
+                self._check_subprocess()
+
+            if self.state.proc_state is ProcState.Playing:
+                if self._subprocess is None:
+                    if self.state.mode is PlayerMode.Playlist:
+                        self._set_file_input()
+                    if self.state.mode is PlayerMode.Download:
+                        self._stop()
+                if self.state.mode is PlayerMode.Stream:
+                    self._subprocess.stdin.write(self.state.current.read())
+
+        except Exception as exc:
+            self.state.proc_state = ProcState.Error
+            logger.error(str(exc), exc_info = True)
+
+        previous = self.state._previous
+        if previous is not None:
+            if self.state.playlist.preview is None and previous.elapsed > 10000:
+                try:
+                    previous.update_history(cursor)
+                except Exception as exc:
+                    logger.error(f"Could not create history entry for {previous.title}", exc_info = True)
+            if self.state.mode is PlayerMode.Download:
+                previous.remove()
+                self.state.mode = PlayerMode.Playlist
+        self.state._previous = None
+
+        try:
+            if self.state.mode is PlayerMode.Download and not self.state.current.download_finished:
+                self.state.current.read()
+        except Exception as exc:
+            logger.error(ste(exc), exc_info = True)
+
+        if self.state != initial_state or previous is not None:
+            self.send_state()
+
+    def _set_elapsed_time(self):
+
+        self.state.current.elapsed += int((datetime.utcnow() - self.state.current.last_updated).total_seconds() * 1000)
+        self.state.current.last_updated = datetime.utcnow()
 
     def _set_file_input(self):
 
         if not self.state.playlist.at_end:
             entry = self.state.playlist.current_entry
             self.state.current = FileInput(
-                filename = self._append_to_root(entry.filename),
+                filename = self._get_path(entry.filename),
                 title = f"{entry.info['title']} ({' / '.join(entry.info['artist'])})",
                 duration = entry.duration,
                 info = entry.info,
@@ -189,9 +181,10 @@ class Player(object):
 
     def _handle_add_to_playlist(self, task):
 
-        meta = self._probe(self._append_to_root(task.filename))
-        duration = int(float(meta.get("format", { }).get("duration", 0)) * 1000)
-        self.state.playlist.add(task, duration)
+        if self.state.playlist.preview is None:
+            meta = self._probe(self._get_path(task.filename))
+            duration = int(float(meta.get("format", { }).get("duration", 0)) * 1000)
+            self.state.playlist.add(task, duration)
 
     def _handle_remove_from_playlist(self, task):
 
@@ -234,6 +227,8 @@ class Player(object):
             self._subprocess.send_signal(signal.SIGCONT)
             self.state.current.start_time = self.state.current.last_updated = datetime.utcnow()
             self.state.proc_state = ProcState.Playing
+        elif self._subprocess_running():
+            pass
         elif self.state.mode is PlayerMode.Playlist and self.state.current is None:
             self._set_file_input()
         else:
@@ -243,20 +238,20 @@ class Player(object):
 
         if self._subprocess_running():
             self._stop()
-        self.state.current = self.state.previous
+        self.state.current = self.state._previous
         self.state.current.elapsed = int(task.time) 
-        self.state.previous = None
+        self.state._previous = None
         self._play(int(task.time / 1000))
 
     def _pause(self):
 
         if self._subprocess_running():
             self._subprocess.send_signal(signal.SIGSTOP)
-            self.set_elapsed_time()
+            self._set_elapsed_time()
             if self.state.mode is PlayerMode.Stream:
                 self.state.current.close()
-                self.state.previous = self.state.current.copy()
-                self.state.previous.end_time = datetime.utcnow()
+                self.state._previous = self.state.current.copy()
+                self.state._previous.end_time = datetime.utcnow()
 
         self.state.proc_state = ProcState.Paused
 
@@ -264,10 +259,6 @@ class Player(object):
 
         if self.state.mode is PlayerMode.Stream:
             self.state.current.close()
-            self.state.mode = PlayerMode.Playlist
-
-        if self.state.mode is PlayerMode.Download:
-            self.state.current.remove()
             self.state.mode = PlayerMode.Playlist
 
         if self._subprocess_running():
@@ -295,19 +286,6 @@ class Player(object):
         self.state.current.start_time = self.state.current.last_updated = datetime.utcnow()
         self.state.proc_state = ProcState.Playing
 
-    def _probe(self, filename):
-
-        try:
-            probe = subprocess.Popen(
-                FFPROBE + [ "-i", filename ],
-                stdout = subprocess.PIPE,
-                stderr = subprocess.PIPE,
-            )
-            probe.wait()
-            return json.loads(probe.stdout.read())
-        except Exception as exc:
-            self.logger.error("An exception occurred during probe", exc_info = True)
-
     def _subprocess_running(self):
 
         return self._subprocess is not None and self._subprocess.poll() is None
@@ -331,16 +309,29 @@ class Player(object):
         self._subprocess.communicate()
         self._subprocess = None
 
-        self.set_elapsed_time()
+        self._set_elapsed_time()
         self.state.current.end_time = datetime.utcnow()
         if self.state.current.error is not None:
             raise Exception(f"FFMPEG error: {self.state.current.error}")
 
-        self.state.previous = self.state.current.copy()
+        self.state._previous = self.state.current.copy()
         self.state.current = None
         if advance:
             self.state.playlist.advance()
 
-    def _append_to_root(self, filename):
+    def _probe(self, filename):
+
+        try:
+            probe = subprocess.Popen(
+                FFPROBE + [ "-i", filename ],
+                stdout = subprocess.PIPE,
+                stderr = subprocess.PIPE,
+            )
+            probe.wait()
+            return json.loads(probe.stdout.read())
+        except Exception as exc:
+            logger.error("An exception occurred during probe", exc_info = True)
+
+    def _get_path(self, filename):
 
         return os.path.join(self.root, filename)

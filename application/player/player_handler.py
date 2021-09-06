@@ -32,7 +32,7 @@ class PlayerHandler(BaseApiHandler):
             for task in self.json_body["tasks"]:
                 if task["name"] in [ "add", "stream", "podcast" ]:
                     task["info"] = self._get_task_info(task).serialize()
-                self.application.player.send_task(task)
+                self.application.player.execute(task)
         except:
             self.write_error(500, log_message = "Could not update the current state", exc_info = sys.exc_info())
 

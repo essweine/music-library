@@ -48,7 +48,6 @@ class MusicLibrary(Application):
             self.player = Player(self.root)
         except Exception as exc:
             self.logger.error("An error occurred whie initializing the player", exc_info = True)
-
         self.add_handlers(r".*", [ (r"/file/(.*)", StaticFileHandler, { "path": self.root }) ])
 
         try:
@@ -66,24 +65,9 @@ class MusicLibrary(Application):
 
     def update_state(self):
 
-        while self.player.conn.poll():
-            try:
-                cursor = self.conn.cursor()
-                self.player.state = self.player.conn.recv()
-                if self.player.state.previous is not None:
-                    self.player.update_history(cursor)
-                for ws in self.player.websockets:
-                    ws.write_message("state changed")
-                cursor.close()
-                self.conn.commit()
-            except:
-                self.logger.error("An exception occurred while updating the history", exc_info = True)
-                break
-        else:
-            try:
-                self.player.set_elapsed_time()
-            except:
-                pass
+        cursor = self.conn.cursor()
+        self.player.check_state(cursor)
+        cursor.close()
 
         while not self.console.queue.empty():
             try:

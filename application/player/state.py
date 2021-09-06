@@ -42,6 +42,6 @@ class State(BaseObject):
         self.proc_state = state.get("proc_state", ProcState.Stopped)
         self.mode = state.get("mode", PlayerMode.Playlist)
         self.current = state.get("current", None)
-        self.previous = state.get("previous", None)
         self.playlist = state.get("playlist", Playlist())
+        self._previous = None
 

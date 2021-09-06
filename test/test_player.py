@@ -2,6 +2,7 @@ import unittest
 import sqlite3
 import os, signal
 import sys
+import time
 
 from uuid import uuid4
 from datetime import date
@@ -39,173 +40,158 @@ class TestPlayer(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
 
-        cls.player.send_task({ "name": "stop" })
-        while cls.player.conn.poll():
-            cls.player.conn.recv()
-        cls.player._process.kill()
+        cls.player.execute({ "name": "stop" })
         cls.conn.close()
         os.remove(DB_NAME)
 
-    def send_task(self, task):
+    def execute(self, task):
 
-        self.player.send_task(task)
-        return self.player.conn.recv()
+        self.player.execute(task)
+        return self.player.state
+
+    def check_state(self):
+
+        cursor = self.conn.cursor()
+        self.player.check_state(cursor)
+        cursor.close()
+        return self.player.state
 
     def test_001_add_items_to_playlist(self):
 
         for idx, track in enumerate(self.recording.tracks):
             task = { "name": "add", "position": None, "filename": track.filename, "info": track.serialize() }
-            state = self.send_task(task)
+            state = self.execute(task)
             self.assertEqual(len(state.playlist.entries), idx + 1)
 
     def test_002_start(self):
 
-        state = self.send_task({ "name": "start" })
+        state = self.execute({ "name": "start" })
         self.assertEqual(state.proc_state.value, "playing")
         self.assertEqual(state.playlist.position, 0)
 
     def test_003_skip(self):
 
         forward = { "name": "skip", "offset": 2 }
-        state = self.send_task(forward)
+        state = self.execute(forward)
         self.assertEqual(state.playlist.position, 2)
-        self.assertEqual(state.previous.info["filename"], self.recording.tracks[0].filename)
         back = { "name": "skip", "offset": -1 }
-        state = self.send_task(back)
+        state = self.execute(back)
         self.assertEqual(state.playlist.position, 1)
         self.assertEqual(state.proc_state.value, "playing")
-        self.assertEqual(state.previous.info["filename"], self.recording.tracks[2].filename)
 
     def test_004_pause(self):
 
-        state = self.send_task({ "name": "pause" })
+        state = self.execute({ "name": "pause" })
         self.assertEqual(state.proc_state.value, "paused")
         self.assertEqual(state.playlist.position, 1)
-        state = self.send_task({ "name": "start" })
+        state = self.execute({ "name": "start" })
         self.assertEqual(state.proc_state.value, "playing")
         self.assertEqual(state.playlist.position, 1)
 
     def test_005_seek(self):
 
-        state = self.send_task({ "name": "seek", "time": 3000 })
+        state = self.execute({ "name": "seek", "time": 3000 })
         self.assertEqual(state.proc_state.value, "playing")
         self.assertEqual(state.current.elapsed, 3000)
-        self.assertEqual(state.previous, None)
 
     def test_006_stop(self):
 
-        state = self.send_task({ "name": "stop" })
+        state = self.execute({ "name": "stop" })
         self.assertEqual(state.proc_state.value, "stopped")
         self.assertEqual(state.playlist.position, 1)
-        state = self.send_task({ "name": "start" })
+        state = self.execute({ "name": "start" })
         self.assertEqual(state.proc_state.value, "playing")
         self.assertEqual(state.playlist.position, 1)
 
     def test_007_advance(self):
 
-        sys.stdout.write("\nWaiting for player to advance\n")
-        state_changed = self.player.conn.poll(8)
-        sys.stdout.write("\nDone waiting\n")
-        self.assertEqual(state_changed, True)
-        state = self.player.conn.recv()
+        wait = 1 + int(self.player.state.current.duration / 1000)
+        sys.stdout.write(f"\nWaiting {wait}s for player to advance...\n")
+        time.sleep(wait)
+        state = self.check_state()
         self.assertEqual(state.proc_state.value, "playing")
         self.assertEqual(state.playlist.position, 2)
-        self.assertEqual(state.previous.info["filename"], state.playlist.entries[1].filename)
-        self.assertNotEqual(state.previous.start_time, None)
-        self.assertNotEqual(state.previous.end_time, None)
 
     def test_008_stop_at_end(self):
 
-        sys.stdout.write("\nWaiting for player to stop\n")
-        state_changed = self.player.conn.poll(8)
-        sys.stdout.write("\nDone waiting\n")
-        self.assertEqual(state_changed, True)
-        state = self.player.conn.recv()
+        wait = 1 + int(self.player.state.current.duration / 1000)
+        sys.stdout.write(f"\nWaiting {wait}s for player to stop...\n")
+        time.sleep(wait)
+        state = self.check_state()
         self.assertEqual(state.proc_state.value, "stopped")
         self.assertEqual(state.playlist.position, 0)
 
     def test_009_repeat(self):
 
-        state = self.send_task({ "name": "skip", "offset": 2 })
-        state = self.send_task({ "name": "start" })
-        state = self.send_task({ "name": "repeat" })
+        state = self.execute({ "name": "skip", "offset": 2 })
+        state = self.execute({ "name": "start" })
+        state = self.execute({ "name": "repeat" })
         self.assertEqual(state.playlist.repeat, True)
 
-        sys.stdout.write("\nWaiting for player to advance\n")
-        state_changed = self.player.conn.poll(8)
-        sys.stdout.write("\nDone waiting\n")
-        self.assertEqual(state_changed, True)
-        state = self.player.conn.recv()
+        wait = 1 + int(self.player.state.current.duration / 1000)
+        sys.stdout.write(f"\nWaiting {wait}s for player to advance...\n")
+        time.sleep(wait)
+
+        state = self.check_state()
         self.assertEqual(state.proc_state.value, "playing")
         self.assertEqual(state.playlist.position, 0)
 
-        state = self.send_task({ "name":"skip", "offset": -1 })
+        state = self.execute({ "name":"skip", "offset": -1 })
         self.assertEqual(state.playlist.position, 2)
 
-        state = self.send_task({ "name":"skip", "offset": 1 })
+        state = self.execute({ "name":"skip", "offset": 1 })
         self.assertEqual(state.playlist.position, 0)
 
-        state = self.send_task({ "name": "repeat" })
+        state = self.execute({ "name": "repeat" })
         self.assertEqual(state.playlist.repeat, False)
 
     def test_010_move(self):
 
-        state = self.send_task({ "name": "move", "original": 2, "destination": 1 })
+        state = self.execute({ "name": "move", "original": 2, "destination": 1 })
         self.assertEqual(state.playlist.entries[1].filename, self.recording.tracks[2].filename)
 
     def test_011_remove(self):
 
-        state = self.send_task({ "name": "remove", "position": 1 })
+        state = self.execute({ "name": "remove", "position": 1 })
         self.assertEqual(len(state.playlist.entries), 2)
         self.assertNotIn(self.recording.tracks[2].filename, [ track.filename for track in state.playlist.entries ])
 
     def test_012_stream(self):
 
         task = { "name": "stream", "url": self.station["url"], "info": self.station }
-        state = self.send_task(task)
+        state = self.execute(task)
         self.assertEqual(state.proc_state.value, "playing")
         self.assertEqual(state.mode.value, "stream")
         self.assertEqual(state.current.url, self.station["url"])
 
-        state = self.send_task({ "name": "pause" })
+        state = self.execute({ "name": "pause" })
         self.assertEqual(state.proc_state.value, "paused")
         self.assertEqual(state.current.url, self.station["url"])
 
-        state = self.send_task({ "name": "start" })
+        state = self.execute({ "name": "start" })
         self.assertEqual(state.proc_state.value, "playing")
         self.assertEqual(state.current.url, self.station["url"])
 
-        state = self.send_task({ "name": "stop" })
+        state = self.execute({ "name": "stop" })
         self.assertEqual(state.proc_state.value, "stopped")
         self.assertEqual(state.mode.value, "playlist")
-        self.assertEqual(state.previous.url, self.station["url"])
-        self.assertNotEqual(state.previous.start_time, None)
-        self.assertNotEqual(state.previous.end_time, None)
 
     def test_013_preview(self):
 
         directory = self.directory_service.get_directory("root/Edge of the Sun")
         self.directory_service.aggregate(directory)
         preview = { "name": "preview", "directory": directory.relative_path, "filenames": directory.audio }
-        state = self.send_task(preview)
+        state = self.execute(preview)
         self.assertEqual(state.playlist.preview, directory.relative_path)
         self.assertEqual(len(state.playlist.entries), 6)
         self.assertEqual(state.playlist.entries[0].filename, directory.audio[0])
 
-        original = self.directory_service.get_directory("root/Keep It Like A Secret")
-        add = { "name": "add", "filename": original.audio[0], "position": None, "info": { "title": "unknown", "artist": [ ] } }
-        self.player.send_task(add)
-        state_changed = self.player.conn.poll(1)
-        self.assertEqual(state_changed, True)
+        recording = self.directory_service.get_directory("root/Keep It Like A Secret")
+        add = { "name": "add", "filename": recording.audio[0], "position": None, "info": { "title": "unknown", "artist": [ ] } }
+        state = self.execute(add)
         self.assertEqual(len(state.playlist.entries), 6)
         self.assertEqual(state.playlist.entries[-1].filename, directory.audio[-1])
 
-        state = self.send_task({ "name": "start" })
-        sys.stdout.write("\nWaiting for player to advance\n")
-        state_changed = self.player.conn.poll(8)
-        sys.stdout.write("\nDone waiting\n")
-        self.assertEqual(state_changed, True)
-        state = self.player.conn.recv()
-
-        state = self.send_task({ "name": "clear" })
+        state = self.execute({ "name": "start" })
+        state = self.execute({ "name": "clear" })
         self.assertEqual(state.playlist.preview, None)

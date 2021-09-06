@@ -5,6 +5,7 @@ import requests
 from requests.exceptions import ConnectionError, Timeout
 
 from ..util import BaseObject
+from ..library import StationTable, PodcastEpisodeTable, HistoryTable
 
 class ProcInput(BaseObject):
 
@@ -26,6 +27,10 @@ class FileInput(ProcInput):
         super().__init__(filename, **data)
         self.duration = data.get("duration", 0)
 
+    def update_history(self, cursor):
+
+        HistoryTable.update_history(cursor, self)
+
 class StreamInput(ProcInput):
 
     def __init__(self, url, **data):
@@ -38,6 +43,10 @@ class StreamInput(ProcInput):
         self._response = None
         self._has_metadata = None
         self._chunk_size = 16000
+
+    def update_history(self, cursor):
+
+        StationTable.update_history(cursor, self)
 
     def connect(self):
 
@@ -79,11 +88,15 @@ class DownloadInput(ProcInput):
         self.url = url
         self.status = data.get("status", { })
         self.duration = data.get("duration", 0)
+        self.download_finished = data.get("download_finished", False)
 
         self._chunk_size = 1000000
         self._response = None
         self._file = None
-        self._finished = False
+
+    def update_history(self, cursor):
+
+        PodcastEpisodeTable.update_history(cursor, self)
 
     def download(self):
 
@@ -112,11 +125,11 @@ class DownloadInput(ProcInput):
             self._file.write(data)
         else:
             self._file.close()
-            self._finished = True
+            self.download_finished = True
 
     def remove(self):
 
-        if not self._finished:
+        if not self.download_finished:
             self._response.close()
             self._file.close()
         os.remove(self.filename)
