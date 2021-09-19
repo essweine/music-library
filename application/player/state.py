@@ -6,12 +6,12 @@ from .playlist import Playlist
 class Task(BaseObject):
 
     ATTRIBUTES = {
-        "add": [ "filename", "position", "info" ],
+        "add": [ "filenames", "position" ],
         "remove": [ "position" ],
         "move": [ "original", "destination" ],
         "skip": [ "offset" ],
-        "stream": [ "url", "info" ],
-        "podcast": [ "url", "info" ],
+        "stream": [ "url" ],
+        "podcast": [ "url" ],
         "preview": [ "filenames", "directory" ],
         "seek": [ "time" ],
     }

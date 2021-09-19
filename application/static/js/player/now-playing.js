@@ -70,11 +70,11 @@ function PlayerControls() {
     let skipPrev = this.createTask("skip", { offset: -1 });
     let skipNext = this.createTask("skip", { offset: 1 });
 
-    let previous = new Icon("skip_previous", e => this.sendTasks([ skipPrev ]), classes);
+    let previous = new Icon("skip_previous", e => this.sendTask(skipPrev), classes);
     let stop     = new Icon("stop", e => this.stop(), classes);
     let pause    = new Icon("pause", e => this.pause(), classes);
     let play     = new Icon("play_arrow", e => this.start(), classes);
-    let next     = new Icon("skip_next", e => this.sendTasks([ skipNext ]), classes);
+    let next     = new Icon("skip_next", e => this.sendTask(skipNext), classes);
 
     [ previous, stop, pause, play, next ].map(icon => this.root.append(icon.root));
 }

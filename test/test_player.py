@@ -11,6 +11,7 @@ from application.library import TABLES, VIEWS
 from application.importer import DirectoryService
 from application.library import LibrarySearchView
 from application.player import player
+from application.player.state import Task
 from . import ROOT_PATH, DEFAULT_INDEX, DB_NAME
 
 class TestPlayer(unittest.TestCase):
@@ -40,13 +41,13 @@ class TestPlayer(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
 
-        cls.player.execute({ "name": "stop" })
+        cls.player.execute(Task(name = "stop"))
         cls.conn.close()
         os.remove(DB_NAME)
 
     def execute(self, task):
 
-        self.player.execute(task)
+        self.player.execute(Task(**task))
         return self.player.state
 
     def check_state(self):
@@ -58,10 +59,9 @@ class TestPlayer(unittest.TestCase):
 
     def test_001_add_items_to_playlist(self):
 
-        for idx, track in enumerate(self.recording.tracks):
-            task = { "name": "add", "position": None, "filename": track.filename, "info": track.serialize() }
-            state = self.execute(task)
-            self.assertEqual(len(state.playlist.entries), idx + 1)
+        task = { "name": "add", "position": None, "filenames": [ track.filename for track in self.recording.tracks ] }
+        state = self.execute(task)
+        self.assertEqual(len(state.playlist.entries), len(self.recording.tracks))
 
     def test_002_start(self):
 

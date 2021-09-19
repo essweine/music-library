@@ -5,8 +5,8 @@ from tornado.web import RequestHandler
 from tornado.websocket import WebSocketHandler
 from tornado import log as logger
 
+from .state import Task
 from ..util import BaseApiHandler
-from ..library import PlaylistTrackView, StationTable, PodcastSearchView
 
 class PlayerDisplayHandler(RequestHandler):
 
@@ -19,7 +19,8 @@ class PlayerHandler(BaseApiHandler):
     def get(self):
 
         try:
-            self.write(json.dumps(self.application.player.state, cls = self.JsonEncoder))
+            state = self.db_action(self.application.player.get_state)
+            self.write(json.dumps(state, cls = self.JsonEncoder))
         except:
             self.write_error(500, log_message = "Could not get current state", exc_info = sys.exc_info())
 
@@ -29,21 +30,10 @@ class PlayerHandler(BaseApiHandler):
             self.write_error(400, messages = [ "Expected json" ])
 
         try:
-            for task in self.json_body["tasks"]:
-                if task["name"] in [ "add", "stream", "podcast" ]:
-                    task["info"] = self._get_task_info(task).serialize()
-                self.application.player.execute(task)
+            task = Task(**self.json_body)
+            self.application.player.execute(task)
         except:
             self.write_error(500, log_message = "Could not update the current state", exc_info = sys.exc_info())
-
-    def _get_task_info(self, task):
-
-        if task["name"] == "add":
-            return self.db_action(PlaylistTrackView.get, task["filename"])
-        elif task["name"] == "stream":
-            return self.db_action(StationTable.from_url, task["url"])
-        elif task["name"] == "podcast":
-            return self.db_action(PodcastSearchView.from_url, task["url"])
 
 class PlayerNotificationHandler(WebSocketHandler):
 

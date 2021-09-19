@@ -12,10 +12,7 @@ function DirectoryList() {
         { display: "", className: "directory-list-add", type: "icon" },
     ];
 
-    let preview = (entry) => {
-        let task = this.createTask("preview", { directory: entry.relative_path, filenames: entry.audio });
-        this.sendTasks([ task ]);
-    }
+    let preview = (entry) => { this.sendTask(this.createTask("preview", { directory: entry.relative_path, filenames: entry.audio })); }
 
     let getDirectoryData = function(entry) {
         return {

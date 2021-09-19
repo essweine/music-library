@@ -57,14 +57,14 @@ class Playlist(BaseObject):
             shuffle(self._current_order)
         self.shuffled = not self.shuffled
 
-    def move(self, task):
+    def move(self, original, destination):
 
-        entry = self.entries.pop(task.original)
-        self.entries.insert(task.destination, entry)
-        if self.position == task.original:
-            self._move_current_entry(task.destination)
-        if self.position == task.destination:
-            self._move_current_entry(task.original)
+        entry = self.entries.pop(original)
+        self.entries.insert(destination, entry)
+        if self.position == original:
+            self._move_current_entry(destination)
+        if self.position == destination:
+            self._move_current_entry(original)
         self.set_position()
 
     def _move_current_entry(self, destination):
@@ -77,10 +77,11 @@ class Playlist(BaseObject):
         else:
             self._order_position = destination
 
-    def add(self, task, duration):
+    def add(self, entry, position = None):
 
-        entry = PlaylistEntry(task.filename, info = task.info, duration = duration)
-        position = task.position if task.position is not None else len(self.entries)
+        if position is None:
+            position = len(self.entries)
+
         self.entries.insert(position, entry)
 
         if self.shuffled:
@@ -94,19 +95,19 @@ class Playlist(BaseObject):
 
         self.set_position()
 
-    def remove(self, task):
+    def remove(self, position):
 
-        if task.position < len(self.entries):
-            self.entries.pop(task.position)
-            if self._order_position > 0 and task.position < self._order_position:
+        if position < len(self.entries):
+            self.entries.pop(position)
+            if self._order_position > 0 and position < self._order_position:
                 self._order_position = self._order_position - 1
-            self._current_order.remove(task.position)
-            self._current_order = list(map(lambda v: v - 1 if v > task.position else v, self._current_order))
+            self._current_order.remove(position)
+            self._current_order = list(map(lambda v: v - 1 if v > position else v, self._current_order))
         self.set_position()
 
-    def skip(self, task):
+    def skip(self, offset):
 
-        position = self._order_position + task.offset
+        position = self._order_position + offset
         if position >= 0 and position < len(self._current_order):
             self._order_position = position
         elif position < 0 and self.repeat:
@@ -117,9 +118,8 @@ class Playlist(BaseObject):
 
 class PlaylistEntry(BaseObject):
 
-    def __init__(self, filename, **entry):
+    def __init__(self, filename, duration):
 
         self.filename = filename
-        self.duration = entry.get("duration", 0)
-        self.info = entry.get("info", { })
+        self.duration = duration
 

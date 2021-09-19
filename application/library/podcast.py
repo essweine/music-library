@@ -57,7 +57,7 @@ class PodcastEpisodeTable(Table, ItemTable, ItemCreator):
     def update_history(cls, cursor, entry):
 
         stmt = "update podcast_episode set listened_date=? where url=?"
-        values = (datetime.utcnow().strftime("%Y-%m-%d"), entry.info["url"])
+        values = (datetime.utcnow().strftime("%Y-%m-%d"), entry.url)
         cursor.execute(stmt, values)
 
     @classmethod

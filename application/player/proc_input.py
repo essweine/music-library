@@ -5,7 +5,7 @@ import requests
 from requests.exceptions import ConnectionError, Timeout
 
 from ..util import BaseObject
-from ..library import StationTable, PodcastEpisodeTable, HistoryTable
+from ..library import StationTable, PodcastEpisodeTable, PodcastSearchView, PlaylistTrackView, HistoryTable
 
 class ProcInput(BaseObject):
 
@@ -17,18 +17,26 @@ class ProcInput(BaseObject):
         self.end_time = data.get("end_time")
         self.last_updated = data.get("last_updated")
         self.elapsed = data.get("elapsed", 0)
-        self.info = data.get("info", { })
         self.error = data.get("error")
 
 class FileInput(ProcInput):
 
-    def __init__(self, filename, **data):
+    def __init__(self, filename, track_id, **data):
 
         super().__init__(filename, **data)
+        self.track_id = track_id
         self.duration = data.get("duration", 0)
 
-    def update_history(self, cursor):
+    def set_info(self, cursor):
+        
+        if self.track_id is not None:
+            self.info = PlaylistTrackView.get(cursor, self.track_id)
+            self.title = self.info.title + "[" + " / ".join(self.info.artist) + "]"
+        else:
+            self.info = PlaylistTrackView.create_item(filename = self.filename, title = self.filename)
+            self.title = self.filename
 
+    def update_history(self, cursor):
         HistoryTable.update_history(cursor, self)
 
 class StreamInput(ProcInput):
@@ -44,8 +52,11 @@ class StreamInput(ProcInput):
         self._has_metadata = None
         self._chunk_size = 16000
 
-    def update_history(self, cursor):
+    def set_info(self, cursor):
+        self.info = StationTable.from_url(cursor, self.url)
+        self.title = self.info.name
 
+    def update_history(self, cursor):
         StationTable.update_history(cursor, self)
 
     def connect(self):
@@ -94,8 +105,11 @@ class DownloadInput(ProcInput):
         self._response = None
         self._file = None
 
-    def update_history(self, cursor):
+    def set_info(self, cursor):
+        self.info = PodcastSearchView.from_url(cursor, self.url)
+        self.title = self.info.podcast_name
 
+    def update_history(self, cursor):
         PodcastEpisodeTable.update_history(cursor, self)
 
     def download(self):

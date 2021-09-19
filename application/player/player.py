@@ -4,7 +4,7 @@ import json
 from datetime import datetime, timedelta
 
 from ..library import PlaylistTrackView
-from .state import Task, State, ProcState, PlayerMode
+from .state import State, ProcState, PlayerMode
 from .proc_input import FileInput, DownloadInput, StreamInput
 from .playlist import PlaylistEntry
 
@@ -27,14 +27,30 @@ class Player(object):
         self.websockets = set()
         self._subprocess = None
 
-    def send_state(self):
+    def notify(self):
 
         for ws in self.websockets:
             ws.write_message("state changed")
 
+    def get_state(self, cursor):
+
+        state = self.state.copy()
+        if state.current is not None:
+            state.current.set_info(cursor)
+
+        if state.playlist.preview is None:
+            playlist_info = PlaylistTrackView.from_filenames(cursor, [ entry.filename for entry in state.playlist.entries ])
+        else:
+            create_item = lambda filename: PlaylistTrackView.create_item(filename = filename, title = filename)
+            playlist_info = [ create_item(entry.filename) for entry in state.playlist.entries ]
+
+        for entry, info in zip(state.playlist.entries, playlist_info):
+            entry.info = info
+
+        return state
+
     def execute(self, task):
 
-        task = Task(**task)
         try:
             if task.name == "start":
                 self._start()
@@ -44,6 +60,10 @@ class Player(object):
                 self._stop()
             elif task.name == "seek":
                 self._handle_seek(task)
+            elif task.name == "stream":
+                self._set_stream(task)
+            elif task.name == "podcast":
+                self._set_download(task)
             elif task.name == "skip":
                 self._handle_skip(task)
             elif task.name == "move":
@@ -54,10 +74,6 @@ class Player(object):
                 self._handle_remove_from_playlist(task)
             elif task.name == "clear":
                 self._handle_clear_playlist()
-            elif task.name == "stream":
-                self._set_stream(task)
-            elif task.name == "podcast":
-                self._set_download(task)
             elif task.name == "repeat":
                 self._handle_repeat()
             elif task.name == "shuffle":
@@ -69,7 +85,7 @@ class Player(object):
             self.state.proc_state = ProcState.Error
             logger.error(str(exc), exc_info = True)
 
-        self.send_state()
+        self.notify()
 
     def check_state(self, cursor):
 
@@ -94,26 +110,26 @@ class Player(object):
             self.state.proc_state = ProcState.Error
             logger.error(str(exc), exc_info = True)
 
-        previous = self.state._previous
-        if previous is not None:
-            if self.state.playlist.preview is None and previous.elapsed > 10000:
+        if self.state._previous is not None:
+            if self.state.playlist.preview is None and self.state._previous.elapsed > 10000:
                 try:
-                    previous.update_history(cursor)
+                    self.state._previous.update_history(cursor)
                 except Exception as exc:
                     logger.error(f"Could not create history entry for {previous.title}", exc_info = True)
             if self.state.mode is PlayerMode.Download:
-                previous.remove()
+                self.state._previous.remove()
                 self.state.mode = PlayerMode.Playlist
-        self.state._previous = None
+            self.state._previous = None
 
         try:
             if self.state.mode is PlayerMode.Download and not self.state.current.download_finished:
                 self.state.current.read()
         except Exception as exc:
+            self.state.proc_state = ProcState.Error
             logger.error(ste(exc), exc_info = True)
 
-        if self.state != initial_state or previous is not None:
-            self.send_state()
+        if self.state != initial_state:
+            self.notify()
 
     def _set_elapsed_time(self):
 
@@ -126,9 +142,8 @@ class Player(object):
             entry = self.state.playlist.current_entry
             self.state.current = FileInput(
                 filename = self._get_path(entry.filename),
-                title = f"{entry.info['title']} ({' / '.join(entry.info['artist'])})",
+                track_id = entry.filename if self.state.playlist.preview is None else None,
                 duration = entry.duration,
-                info = entry.info,
             )
             self._play()
         else:
@@ -142,9 +157,7 @@ class Player(object):
         self.state.mode = PlayerMode.Stream
         self.state.current = StreamInput(
             url = task.url, 
-            filename = "-",
-            title = task.info["name"],
-            info = task.info
+            filename = "-"
         )
         self._start()
 
@@ -158,8 +171,6 @@ class Player(object):
         self.state.current = DownloadInput(
             url = task.url,
             filename = None,
-            title = task.info["podcast_name"],
-            info = task.info,
             duration = duration
         )
         self.state.current.download()
@@ -171,27 +182,28 @@ class Player(object):
         playing = self.state.proc_state
         if self._subprocess_running():
             self._stop()
-        self.state.playlist.skip(task)
+        self.state.playlist.skip(task.offset)
         if playing is ProcState.Playing:
             self._start()
 
     def _handle_move(self, task):
 
-        self.state.playlist.move(task)
+        self.state.playlist.move(task.original, task.destination)
 
     def _handle_add_to_playlist(self, task):
 
         if self.state.playlist.preview is None:
-            meta = self._probe(self._get_path(task.filename))
-            duration = int(float(meta.get("format", { }).get("duration", 0)) * 1000)
-            self.state.playlist.add(task, duration)
+            for filename in task.filenames:
+                meta = self._probe(self._get_path(filename))
+                duration = int(float(meta.get("format", { }).get("duration", 0)) * 1000)
+                self.state.playlist.add(PlaylistEntry(filename, duration), task.position)
 
     def _handle_remove_from_playlist(self, task):
 
         playing = self.state.proc_state
         if task.position == self.state.playlist.position and self._subprocess_running():
             self._stop()
-        self.state.playlist.remove(task)
+        self.state.playlist.remove(task.position)
         if playing is ProcState.Playing:
             self._start()
 
@@ -213,9 +225,9 @@ class Player(object):
 
         self._handle_clear_playlist()
         for filename in task.filenames:
-            info = PlaylistTrackView.create_item(filename = filename, title = filename).serialize()
-            add_task = Task(name = "add", filename = filename, info = info, position = None)
-            self._handle_add_to_playlist(add_task)
+            meta = self._probe(self._get_path(filename))
+            duration = int(float(meta.get("format", { }).get("duration", 0)) * 1000)
+            self.state.playlist.add(PlaylistEntry(filename, duration))
         self.state.playlist.preview = task.directory
 
     def _start(self):
@@ -250,7 +262,7 @@ class Player(object):
             self._set_elapsed_time()
             if self.state.mode is PlayerMode.Stream:
                 self.state.current.close()
-                self.state._previous = self.state.current.copy()
+                self.state._previous = self.state.current
                 self.state._previous.end_time = datetime.utcnow()
 
         self.state.proc_state = ProcState.Paused
@@ -314,7 +326,7 @@ class Player(object):
         if self.state.current.error is not None:
             raise Exception(f"FFMPEG error: {self.state.current.error}")
 
-        self.state._previous = self.state.current.copy()
+        self.state._previous = self.state.current
         self.state.current = None
         if advance:
             self.state.playlist.advance()

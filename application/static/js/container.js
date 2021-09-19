@@ -126,36 +126,33 @@ const Container = {
 
     /* -- Player requests --- */
 
-    start: function() { this.sendTasks([ this.createTask("start") ]); },
+    start: function() { this.sendTask(this.createTask("start")); },
 
-    stop: function() { this.sendTasks([ this.createTask("stop") ]); },
+    stop: function() { this.sendTask(this.createTask("stop")); },
 
-    pause: function() { this.sendTasks([ this.createTask("pause") ]); },
+    pause: function() { this.sendTask(this.createTask("pause")); },
 
-    seek: function(seekTime) { this.sendTasks([ this.createTask("seek", { time: seekTime }) ]); },
+    seek: function(seekTime) { this.sendTask(this.createTask("seek", { time: seekTime })); },
 
-    clearCurrentPlaylist: function() { this.sendTasks([ this.createTask("clear") ]); },
+    clearCurrentPlaylist: function() { this.sendTask(this.createTask("clear")); },
 
-    repeatCurrentPlaylist: function() { this.sendTasks([ this.createTask("repeat") ]); },
+    repeatCurrentPlaylist: function() { this.sendTask(this.createTask("repeat")); },
 
-    shuffleCurrentPlaylist: function() { this.sendTasks([ this.createTask("shuffle") ]); },
+    shuffleCurrentPlaylist: function() { this.sendTask(this.createTask("shuffle")); },
 
-    queue: function(track) { this.sendTasks([ this.createTask("add", { filename: track.filename, position: null }) ]); },
+    queue: function(track) { this.sendTask(this.createTask("add", { filenames: [ track.filename ], position: null })); },
 
     queueRecording: function(recording) { this.queueTracks(recording.tracks); },
 
-    queueTracks: function(tracks) {
-        let tasks = tracks.map(track => this.createTask("add", { filename: track.filename, position: null }));
-        this.sendTasks(tasks);
-    },
+    queueTracks: function(tracks) { this.sendTask(this.createTask("add", { filenames: tracks.map(track => track.filename), position: null })); },
 
-    streamUrl: function(url) { this.sendTasks([ this.createTask("stream", { url: url }) ]); },
+    streamUrl: function(url) { this.sendTask(this.createTask("stream", { url: url })); },
 
-    playPodcast: function(url) { this.sendTasks([ this.createTask("podcast", { url: url }) ]); },
+    playPodcast: function(url) { this.sendTask(this.createTask("podcast", { url: url })); },
 
     getCurrentState: function(callback) { this.get(this.playerApi, callback); },
 
-    sendTasks: function(tasks) { this.post(this.playerApi, { "tasks": tasks }, NoOp); },
+    sendTask: function(task) { this.post(this.playerApi, task, NoOp); },
 
     /* --- Generic http requests and helpers --- */
 

@@ -54,11 +54,9 @@ function PlayerTracklist() {
         updateDisplay();
     }
 
-    this.shiftTrackUp = function(position) {
-        this.sendTasks([ this.createTask("move", { original: position, destination: position - 1 }) ]);
-    }
+    this.shiftTrackUp = function(position) { this.sendTask(this.createTask("move", { original: position, destination: position - 1 })); }
 
-    this.removeTrack = function(position) { this.sendTasks([ this.createTask("remove", { position: position }) ]); }
+    this.removeTrack = function(position) { this.sendTask(this.createTask("remove", { position: position })); }
 }
 PlayerTracklist.prototype = new Tracklist;
 
