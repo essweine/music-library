@@ -162,7 +162,7 @@ class LibrarySearchView(JoinedView):
     @classmethod
     def get_tracks(cls, cursor, recording_id):
 
-        query = Query(LibraryTrackView).compare("recording_id", recording_id, "=")
+        query = Query(LibraryTrackView, order = "track_num").compare("recording_id", recording_id, "=")
         query.execute(cursor, LibraryTrackView.row_factory)
 
     @classmethod
