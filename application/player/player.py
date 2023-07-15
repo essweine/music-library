@@ -10,7 +10,7 @@ from .playlist import PlaylistEntry
 
 logger = logging.getLogger('tornado.application')
 
-FFMPEG = [ "ffmpeg", "-hide_banner", "-f", "alsa", "hw:0" ]
+FFMPEG = [ "ffmpeg", "-hide_banner", "-f", "pulse", "hw:0" ]
 FFPROBE = [
     "ffprobe", "-hide_banner",
     "-v", "quiet",
