@@ -20,7 +20,7 @@ class TestStation(unittest.TestCase):
 
         cls.conn = sqlite3.connect(DB_NAME, detect_types = sqlite3.PARSE_DECLTYPES)
         cls.stations = [
-            { "name": "Viva la Voce", "website": "", "url": "https://16803.live.streamtheworld.com/WETAVLV.mp3" },
+            { "name": "WRNR", "website": "", "url": "https://24223.live.streamtheworld.com/WRNRFMEB.mp3" },
             { "name": "Bluegrass Country", "website": "https://bluegrasscountry.org", "url": "https://ice24.securenetsystems.net/WAMU" },
         ]
         cls.default_query = DEFAULT_QUERY

@@ -1,6 +1,6 @@
-tornado==6.0.*
-python-dateutil==2.8.*
-requests==2.24.*
-mutagen==1.45.*
-lxml==4.6.*
-requests-mock==1.8.*
+tornado==6.3.*
+python-dateutil==2.8.* 
+requests==2.31.*
+mutagen==1.46.*
+lxml==4.9.3
+requests-mock==1.11.*

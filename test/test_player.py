@@ -33,7 +33,7 @@ class TestPlayer(unittest.TestCase):
 
         cursor.close()
 
-        cls.station = { "name": "Viva la Voce", "website": "", "url": "https://16803.live.streamtheworld.com/WETAVLV.mp3" }
+        cls.station = { "name": "WRNR", "website": "", "url": "https://24223.live.streamtheworld.com/WRNRFMEB.mp3" }
 
         player.FFMPEG = [ os.path.join(ROOT_PATH, "mock_play"), "5" ]
         cls.player = player.Player(ROOT_PATH)
